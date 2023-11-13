@@ -159,8 +159,7 @@ public:
 		double rate = 1 -  (1 - DECREASE_RATE)*timeDiff * 400;
 		if(rate < 0 )
 			rate = 0;
-		// this->setPower(getVelocity_X() * rate, getVelocity_Z() - 0.0005); //중력 설정 다시 손 봐야함
-		this->setPower(getVelocity_X() * rate, getVelocity_Y() - 0.0005, getVelocity_Z() * rate);
+		this->setPower(getVelocity_X() * rate, getVelocity_Y() - 0.0015, getVelocity_Z() * rate);
 	}
 
 	double getVelocity_X() { return this->m_velocity_x;	}
