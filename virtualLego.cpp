@@ -133,6 +133,7 @@ public:
 		if(vx > 0.01 || vz > 0.01)
 		{
 			float tX = cord.x + TIME_SCALE*timeDiff*m_velocity_x;
+			float tY = cord.y + TIME_SCALE * timeDiff * m_velocity_y;
 			float tZ = cord.z + TIME_SCALE*timeDiff*m_velocity_z;
 
 
@@ -147,7 +148,7 @@ public:
 			else if (tZ >= (3 - M_RADIUS))
 				tZ = 3 - M_RADIUS;
 
-			this->setCenter(tX, cord.y, tZ);
+			this->setCenter(tX, tY, tZ);
 			//카메라의 시점이 공을 중앙으로 하게 설정
 			g_camera_pos[0] = tX;
 			g_camera_pos[2] = tZ;
@@ -179,7 +180,6 @@ public:
 		this->m_velocity_x = vx;
 		this->m_velocity_y = vy;
 		this->m_velocity_z = vz;
-
 	}
 
 	void setCenter(float x, float y, float z)
