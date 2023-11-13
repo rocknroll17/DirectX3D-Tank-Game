@@ -51,6 +51,7 @@ private :
     float                   m_radius;
 	float					m_velocity_x;
 	float					m_velocity_z;
+	bool					created;  // 월드에 존재하는지
 
 public:
     CSphere(void)
@@ -76,6 +77,8 @@ public:
         m_mtrl.Emissive = d3d::BLACK;
         m_mtrl.Power    = 5.0f;
 		
+		created = true;
+
         if (FAILED(D3DXCreateSphere(pDevice, getRadius(), 50, 50, &m_pSphereMesh, NULL)))
             return false;
         return true;
@@ -83,6 +86,7 @@ public:
 	
     void destroy(void)
     {
+		created = false;
         if (m_pSphereMesh != NULL) {
             m_pSphereMesh->Release();
             m_pSphereMesh = NULL;
@@ -93,6 +97,7 @@ public:
     {
         if (NULL == pDevice)
             return;
+		if (!created) return;
         pDevice->SetTransform(D3DTS_WORLD, &mWorld);
         pDevice->MultiplyTransform(D3DTS_WORLD, &m_mLocal);
         pDevice->SetMaterial(&m_mtrl);
@@ -113,6 +118,7 @@ public:
 
 	void ballUpdate(float timeDiff) 
 	{
+		if (!created) return;
 		const float TIME_SCALE = 3.3;
 		D3DXVECTOR3 cord = this->getCenter();
 		double vx = abs(this->getVelocity_X());
@@ -370,6 +376,8 @@ CLight	g_light;
 
 double g_camera_pos[3] = {0.0, 5.0, -8.0};
 
+CSphere missile;   // c 누르면 나가는 미사일
+
 // -----------------------------------------------------------------------------
 // Functions
 // -----------------------------------------------------------------------------
@@ -478,6 +486,9 @@ bool Display(float timeDelta)
 			g_sphere[i].ballUpdate(timeDelta);
 			for(j = 0; j < 4; j++){ g_legowall[i].hitBy(g_sphere[j]); }
 		}
+		// 미사일 위치도 변경 & 벽과 충돌했는지 체크
+		missile.ballUpdate(timeDelta);
+		for (i = 0; i < 4; i++) { g_legowall[i].hitBy(missile); }
 
 		// check whether any two balls hit together and update the direction of balls
 		for(i = 0 ;i < 4; i++){
@@ -486,6 +497,8 @@ bool Display(float timeDelta)
 				g_sphere[i].hitBy(g_sphere[j]);
 			}
 		}
+		// 미사일과 공 충돌했는지 체크
+		for (i = 0; i < 3; i++) { g_sphere[i].hitBy(missile); }
 
 		// draw plane, walls, and spheres
 		g_legoPlane.draw(Device, g_mWorld);
@@ -494,6 +507,8 @@ bool Display(float timeDelta)
 			g_sphere[i].draw(Device, g_mWorld);
 		}
 		g_target_blueball.draw(Device, g_mWorld);
+		missile.draw(Device, g_mWorld);  // 미사일도 그림
+
         g_light.draw(Device);
 		
 		Device->EndScene();
@@ -563,6 +578,26 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				CSphere* moveTarget = &g_sphere[3];  // 움직일 대상
 				double speed = 0.45;
 				moveTarget->setPower(speed, 0);
+				break;
+			}
+
+			case 	0x43:
+			{
+				// c 버튼 누를 시
+				// 파란 공 쪽으로 미사일 발사
+				D3DXVECTOR3 targetpos = g_target_blueball.getCenter();
+				D3DXVECTOR3	whitepos = g_sphere[3].getCenter();
+				double theta = acos(sqrt(pow(targetpos.x - whitepos.x, 2)) / sqrt(pow(targetpos.x - whitepos.x, 2) +
+					pow(targetpos.z - whitepos.z, 2)));		// 기본 1 사분면
+				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x >= 0) { theta = -theta; }	//4 사분면
+				if (targetpos.z - whitepos.z >= 0 && targetpos.x - whitepos.x <= 0) { theta = PI - theta; } //2 사분면
+				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0) { theta = PI + theta; } // 3 사분면
+				double distance = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2));
+
+				missile.destroy();
+				missile.create(Device, d3d::BLACK);
+				missile.setCenter(whitepos.x, whitepos.y, whitepos.z);
+				missile.setPower(distance * cos(theta), distance * sin(theta));
 				break;
 			}
 		}
