@@ -51,6 +51,8 @@ private :
     float                   m_radius;
 	float					m_velocity_x;
 	float					m_velocity_z;
+	//임시
+	float					m_velocity_y;
 
 public:
     CSphere(void)
@@ -60,6 +62,8 @@ public:
         m_radius = 0;
 		m_velocity_x = 0;
 		m_velocity_z = 0;
+		//임시
+		m_velocity_y = 0;
         m_pSphereMesh = NULL;
     }
     ~CSphere(void) {}
@@ -117,11 +121,15 @@ public:
 		D3DXVECTOR3 cord = this->getCenter();
 		double vx = abs(this->getVelocity_X());
 		double vz = abs(this->getVelocity_Z());
+		//임시
+		double vy = abs(this->getVelocity_Y());
 
-		if(vx > 0.01 || vz > 0.01)
+		if(vx > 0.01 || vz > 0.01 || vy > 0.01) // vz 이후 임시
 		{
 			float tX = cord.x + TIME_SCALE*timeDiff*m_velocity_x;
 			float tZ = cord.z + TIME_SCALE*timeDiff*m_velocity_z;
+			//임시
+			float tY = cord.y + TIME_SCALE *timeDiff*m_velocity_y;
 
 			//correction of position of ball
 			// Please uncomment this part because this correction of ball position is necessary when a ball collides with a wall
@@ -134,23 +142,26 @@ public:
 			else if(tZ >= (3 - M_RADIUS))
 				tZ = 3 - M_RADIUS;*/
 			
-			this->setCenter(tX, cord.y, tZ);
+			this->setCenter(tX, tY, tZ); //임시, 원래 tY에 cord.y 저장
 		}
-		else { this->setPower(0,0);}
+		else { this->setPower(0,0,0);} //임시, 원래 0,0
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
 		double rate = 1 -  (1 - DECREASE_RATE)*timeDiff * 400;
 		if(rate < 0 )
 			rate = 0;
-		this->setPower(getVelocity_X() * rate, getVelocity_Z() * rate);
+		this->setPower(getVelocity_X() * rate, getVelocity_Z() * rate, getVelocity_Y() * rate); //임시, 원래 앞에 2개만
 	}
 
 	double getVelocity_X() { return this->m_velocity_x;	}
 	double getVelocity_Z() { return this->m_velocity_z; }
+	//임시
+	double getVelocity_Y() { return this->m_velocity_y; }
 
-	void setPower(double vx, double vz)
+	void setPower(double vx, double vz, double vy) //임시, 원래 앞에 2개만
 	{
 		this->m_velocity_x = vx;
 		this->m_velocity_z = vz;
+		this->m_velocity_y = vy;
 	}
 
 	void setCenter(float x, float y, float z)
@@ -406,7 +417,7 @@ bool Setup()
 	for (i=0;i<4;i++) {
 		if (false == g_sphere[i].create(Device, sphereColor[i])) return false;
 		g_sphere[i].setCenter(spherePos[i][0], (float)M_RADIUS , spherePos[i][1]);
-		g_sphere[i].setPower(0,0);
+		g_sphere[i].setPower(0,0,0);
 	}
 	
 	// create blue ball for set direction
@@ -429,7 +440,7 @@ bool Setup()
         return false;
 	
 	// Position and aim the camera.
-	D3DXVECTOR3 pos(0.0f, 5.0f, -8.0f);
+	D3DXVECTOR3 pos(0.0f, 5.0f, -8.0f); // 시점 거리, 시점 각도(머리로 다가오는 각도), 
 	D3DXVECTOR3 target(0.0f, 0.0f, 0.0f);
 	D3DXVECTOR3 up(0.0f, 2.0f, 0.0f);
 	D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
@@ -544,7 +555,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				if (targetpos.z - whitepos.z >= 0 && targetpos.x - whitepos.x <= 0) { theta = PI - theta; } //2 사분면
 				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0) { theta = PI + theta; } // 3 사분면
 				double distance = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2));
-				g_sphere[3].setPower(distance * cos(theta), distance * sin(theta));
+				g_sphere[3].setPower(distance * cos(theta), distance * sin(theta), 0);
 				break;
 			}
 
@@ -553,7 +564,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				// 키보드 좌측 버튼
 				CSphere* moveTarget = &g_sphere[3];  // 움직일 대상
 				double speed = 0.45;
-				moveTarget->setPower(-speed, 0);
+				moveTarget->setPower(-speed, 0, 0);
 				break;
 			}
 
@@ -562,7 +573,39 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				// 키보드 우측 버튼
 				CSphere* moveTarget = &g_sphere[3];  // 움직일 대상
 				double speed = 0.45;
-				moveTarget->setPower(speed, 0);
+				moveTarget->setPower(speed, 0, 0);
+				break;
+			}
+			case VK_UP:
+			{
+				// 키보드 위측 버튼
+				CSphere* moveTarget = &g_sphere[3];  // 움직일 대상
+				double speed = 0.45;
+				moveTarget->setPower(0, speed, 0);
+				break;
+			}
+			case VK_DOWN:
+			{
+				// 키보드 아래측 버튼
+				CSphere* moveTarget = &g_sphere[3];  // 움직일 대상
+				double speed = 0.45;
+				moveTarget->setPower(0, -speed, 0);
+				break;
+			}
+			case VK_F1:
+			{
+				// 키보드 F1 버튼
+				CSphere* moveTarget = &g_sphere[3];  // 움직일 대상
+				double speed = 0.45;
+				moveTarget->setPower(0, 0, speed);
+				break;
+			}
+			case VK_F2:
+			{
+				// 키보드 F2 버튼
+				CSphere* moveTarget = &g_sphere[3];  // 움직일 대상
+				double speed = 0.45;
+				moveTarget->setPower(0, 0, -speed);
 				break;
 			}
 		}
