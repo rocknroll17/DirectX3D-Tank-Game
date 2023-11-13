@@ -160,7 +160,7 @@ public:
 		if(rate < 0 )
 			rate = 0;
 		// this->setPower(getVelocity_X() * rate, getVelocity_Z() - 0.0005); //중력 설정 다시 손 봐야함
-		this->setPower(getVelocity_X() * rate, getVelocity_Z() * rate);
+		this->setPower(getVelocity_X() * rate, getVelocity_Y() - 0.0005, getVelocity_Z() * rate);
 	}
 
 	double getVelocity_X() { return this->m_velocity_x;	}
@@ -445,7 +445,7 @@ bool Setup()
 	
 	// create blue ball for set direction
     if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
-	g_target_blueball.setCenter(.0f, (float)M_RADIUS , .0f);
+	g_target_blueball.setCenter(.0f, (float)M_RADIUS + 1 , .0f);
 	
 	// light setting 
     D3DLIGHT9 lit;
