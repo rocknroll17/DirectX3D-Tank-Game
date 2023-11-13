@@ -52,6 +52,7 @@ private :
 	float					center_x, center_y, center_z;
     float                   m_radius;
 	float					m_velocity_x;
+	float					m_velocity_y;
 	float					m_velocity_z;
 	bool					created;  // 월드에 존재하는지
 
@@ -62,6 +63,7 @@ public:
         ZeroMemory(&m_mtrl, sizeof(m_mtrl));
         m_radius = 0;
 		m_velocity_x = 0;
+		m_velocity_y = 0;
 		m_velocity_z = 0;
 
         m_pSphereMesh = NULL;
@@ -117,6 +119,7 @@ public:
 	void hitBy(CSphere& ball) 
 	{ 
 		// Insert your code here.
+
 	}
 
 	void ballUpdate(float timeDiff) 
@@ -125,6 +128,7 @@ public:
 		const float TIME_SCALE = 3.3;
 		D3DXVECTOR3 cord = this->getCenter();
 		double vx = abs(this->getVelocity_X());
+		double vy = abs(this->getVelocity_Y());
 		double vz = abs(this->getVelocity_Z());
 		if(vx > 0.01 || vz > 0.01)
 		{
@@ -154,16 +158,26 @@ public:
 		double rate = 1 -  (1 - DECREASE_RATE)*timeDiff * 400;
 		if(rate < 0 )
 			rate = 0;
-		this->setPower(getVelocity_X() * rate, getVelocity_Z() - 0.0005);//중력 설정 다시 손 봐야함
+		// this->setPower(getVelocity_X() * rate, getVelocity_Z() - 0.0005); //중력 설정 다시 손 봐야함
+		this->setPower(getVelocity_X() * rate, getVelocity_Z() * rate);
 	}
 
 	double getVelocity_X() { return this->m_velocity_x;	}
+	double getVelocity_Y() { return this->m_velocity_y; }
 	double getVelocity_Z() { return this->m_velocity_z; }
 
 
 	void setPower(double vx, double vz)
 	{
 		this->m_velocity_x = vx;
+		this->m_velocity_z = vz;
+
+	}
+
+	void setPower(double vx, double vy, double vz)
+	{
+		this->m_velocity_x = vx;
+		this->m_velocity_y = vy;
 		this->m_velocity_z = vz;
 
 	}
@@ -257,12 +271,15 @@ public:
 	bool hasIntersected(CSphere& ball) 
 	{
 		// Insert your code here.
+
 		return false;
 	}
 
 	void hitBy(CSphere& ball) 
 	{
 		// Insert your code here.
+
+
 	}    
 	
 	void setPosition(float x, float y, float z)
@@ -621,7 +638,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x >= 0) { theta = -theta; }	//4 사분면
 				if (targetpos.z - whitepos.z >= 0 && targetpos.x - whitepos.x <= 0) { theta = PI - theta; } //2 사분면
 				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0) { theta = PI + theta; } // 3 사분면
-				double distance = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2));
+				double distance = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)); // y좌표도 계산할 수 있어야 함
 
 				missile.destroy();
 				missile.create(Device, d3d::BLACK);
