@@ -20,8 +20,8 @@
 IDirect3DDevice9* Device = NULL;
 
 // window size
-const int Width  = 1024;
-const int Height = 768;
+const int Width  = 1920;
+const int Height = 1080;
 
 // There are four balls
 // initialize the position (coordinate) of each ball (ball0 ~ ball3)
@@ -208,6 +208,7 @@ class CWall {
 private:
 	
     float					m_x;
+	float					m_y;
 	float					m_z;
 	float                   m_width;
     float                   m_depth;
@@ -274,18 +275,25 @@ public:
 	{
 		D3DXMATRIX m;
 		this->m_x = x;
+		this->m_y = y;
 		this->m_z = z;
 
 		D3DXMatrixTranslation(&m, x, y, z);
 		setLocalTransform(m);
 	}
+
+	D3DXVECTOR3 getCenter(void) const
+	{
+		D3DXVECTOR3 org(m_x, m_y, m_z);
+		return org;
+	}
 	
     float getHeight(void) const { return M_HEIGHT; }
-	
+	void setLocalTransform(const D3DXMATRIX& mLocal) { m_mLocal = mLocal; }
 	
 	
 private :
-    void setLocalTransform(const D3DXMATRIX& mLocal) { m_mLocal = mLocal; }
+    
 	
 	D3DXMATRIX              m_mLocal;
     D3DMATERIAL9            m_mtrl;
@@ -378,6 +386,41 @@ private:
     d3d::BoundingSphere m_bound;
 };
 
+class Tank {
+public:
+	CWall tank_part[3];
+	bool create(IDirect3DDevice9* pDevice, float ix, float iz, D3DXCOLOR color = d3d::WHITE) {
+		if (!tank_part[0].create(pDevice, ix, iz, 0.5f, 0.375f, 1.5f, color)) {
+			return false;
+		}
+		if (!tank_part[1].create(pDevice, ix, iz, 0.4f, 0.32f, 0.825f, color)) {
+			return false;
+		}
+		if (!tank_part[2].create(pDevice, ix, iz, 0.08f, 0.08f, 1.4f, color)) {
+			return false;
+		}
+		return true;
+	}
+
+	void setPosition(float x, float y, float z) {
+		tank_part[0].setPosition(x, y, z);
+		tank_part[1].setPosition(x, y+0.35f, z-0.3f);
+		tank_part[2].setPosition(x, y + 0.35f, z);
+	}
+
+	void draw(IDirect3DDevice9* pDevice, const D3DXMATRIX& mWorld)
+	{
+		tank_part[0].draw(pDevice, mWorld);
+		tank_part[1].draw(pDevice, mWorld);
+		tank_part[2].draw(pDevice, mWorld);
+	}
+
+	D3DXVECTOR3 getCenter(void) const
+	{
+		return tank_part[0].getCenter();
+	}
+};
+
 
 // -----------------------------------------------------------------------------
 // Global variables
@@ -387,9 +430,10 @@ CWall	g_legowall[4];
 CSphere	g_sphere[4];
 CSphere	g_target_blueball;
 CLight	g_light;
-CWall	g_test;
-
-
+Tank tank;
+CWall test;
+CWall top;
+CWall barrel;
 
 CSphere missile;   // c 누르면 나가는 미사일
 
@@ -414,9 +458,20 @@ bool Setup()
 	// create plane and set the position
     if (false == g_legoPlane.create(Device, -1, -1, 9, 0.03f, 6, d3d::GREEN)) return false;
     g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
+	/*
+	if (false == test.create(Device, -1, -1, 0.5f, 0.375f, 1.5f, d3d::BROWN)) return false;
+	test.setPosition(-1, 0.300f, -1);
 
-	if (false == g_test.create(Device, -1, -1, 0.12f, 0.12f, 0.12f, d3d::WHITE)) return false;
-	g_test.setPosition(0.0f, 0.15f, 0.0f);
+	if (false == top.create(Device, -1, -1, 0.4f, 0.32f, 0.825f, d3d::BROWN)) return false;
+	top.setPosition(-1, 0.65f, -1 - 0.3);
+
+	if (false == barrel.create(Device, -1, -1, 0.08f, 0.08f, 1.4f, d3d::BROWN)) return false;
+	barrel.setPosition(-1, 0.65f, -1);
+	*/
+
+	if (false == tank.create(Device, -1, -1, d3d::BROWN)) return false;
+	tank.setPosition(-1, 0.2f, -1);
+
 	//make wall
 	// create walls and set the position. note that there are four walls
 	if (false == g_legowall[0].create(Device, -1, -1, 9, 0.3f, 0.12f, d3d::DARKRED)) return false;
@@ -448,7 +503,7 @@ bool Setup()
     lit.Ambient      = d3d::WHITE * 0.9f;//원래 0.9배였음
     lit.Position     = D3DXVECTOR3(0.0f, 1.0f, 5.0f);
     lit.Range        = 100.0f;
-    lit.Attenuation0 = -0.2f;//상수 감쇠
+    lit.Attenuation0 = 0.0f;//상수 감쇠
     lit.Attenuation1 = 0.3f;//선형감쇠 원래 0.9f였음.
     lit.Attenuation2 = 0.0f;//제곱감쇠
     if (false == g_light.create(Device, lit))
@@ -492,8 +547,14 @@ bool Display(float timeDelta)
 {
 	int i=0;
 	int j = 0;
-	D3DXVECTOR3 pos(g_sphere[3].getCenter()[0], 10.0f, g_sphere[3].getCenter()[2] - 0.00001);//흰공의 위치에 따라 카메라 위치 이동 [2]에 조금이라도 값을 변경하지 않으면 왠지 모르는데 안됌
-	D3DXVECTOR3 target(g_sphere[3].getCenter()[0], 0.0f, g_sphere[3].getCenter()[2]);//카메라가 쳐다보는 방향을 공의 방향으로 설정
+
+	/*	if (false == test.create(Device, -1, -1, 1.5f, 0.375f, 0.5f, d3d::WHITE)) return false;
+	test.setPosition(-1, 0.300f, -1);
+
+	if (false == top.create(Device, -1, -1, 0.825f, 0.32f, 0.4f, d3d::WHITE)) return false;
+	top.setPosition(-1-0.3, 0.65f, -1);*/
+	D3DXVECTOR3 pos(tank.getCenter()[0], tank.getCenter()[1] + 2.0f, tank.getCenter()[2] - 4.4);
+	D3DXVECTOR3 target(tank.getCenter()[0], tank.getCenter()[1], tank.getCenter()[2]);//카메라가 쳐다보는 방향을 공의 방향으로 설정
 	D3DXVECTOR3 up(0.0f, 2.0f, 0.0f);
 	D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
 	Device->SetTransform(D3DTS_VIEW, &g_mView);
@@ -524,7 +585,13 @@ bool Display(float timeDelta)
 
 		// draw plane, walls, and spheres
 		g_legoPlane.draw(Device, g_mWorld);
-		g_test.draw(Device, g_mWorld);
+		/*
+		test.draw(Device, g_mWorld);
+		top.draw(Device, g_mWorld);
+		barrel.draw(Device, g_mWorld);
+		*/
+		tank.draw(Device, g_mWorld);
+
 		for (i=0;i<4;i++) 	{
 			g_legowall[i].draw(Device, g_mWorld);
 			g_sphere[i].draw(Device, g_mWorld);
@@ -533,6 +600,7 @@ bool Display(float timeDelta)
 		missile.draw(Device, g_mWorld);  // 미사일도 그림
 
         g_light.draw(Device);
+
 		
 		Device->EndScene();
 		Device->Present(0, 0, 0, 0);
@@ -643,27 +711,58 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 
-	case WM_MOUSEMOVE://좌클릭 코드 삭제
+	case WM_MOUSEMOVE:
 	{
 		int new_x = LOWORD(lParam);
 		int new_y = HIWORD(lParam);
 		float dx;
 		float dy;
 
-		// 우클릭
-		if (LOWORD(wParam) & MK_RBUTTON) {
-			dx = (old_x - new_x);
-			dy = (old_y - new_y);
+		if (LOWORD(wParam) & MK_LBUTTON) {
+			// 좌클릭
+			// 화면 이동
+			if (isReset) {
+				isReset = false;
+			}
+			else {
+				D3DXVECTOR3 vDist;
+				D3DXVECTOR3 vTrans;
+				D3DXMATRIX mTrans;
+				D3DXMATRIX mX;
+				D3DXMATRIX mY;
 
-			D3DXVECTOR3 coord3d = g_target_blueball.getCenter();
-			g_target_blueball.setCenter(coord3d.x + dx * (-0.007f), coord3d.y, coord3d.z + dy * 0.007f);
+				switch (move) {
+				case WORLD_MOVE:
+					dx = (old_x - new_x) * 0.01f;
+					dy = (old_y - new_y) * 0.01f;
+					D3DXMatrixRotationY(&mX, dx);
+					D3DXMatrixRotationX(&mY, dy);
+					g_mWorld = g_mWorld * mX * mY;
+
+					break;
+				}
+			}
+
+			old_x = new_x;
+			old_y = new_y;
+
 		}
+		else {
+			isReset = true;
+			// 우클릭
+			// blue ball 움직이기
+			if (LOWORD(wParam) & MK_RBUTTON) {
+				dx = (old_x - new_x);// * 0.01f;
+				dy = (old_y - new_y);// * 0.01f;
 
-		old_x = new_x;
-		old_y = new_y;
+				D3DXVECTOR3 coord3d = g_target_blueball.getCenter();
+				g_target_blueball.setCenter(coord3d.x + dx * (-0.007f), coord3d.y, coord3d.z + dy * 0.007f);
+			}
+			old_x = new_x;
+			old_y = new_y;
 
-		move = WORLD_MOVE;
-
+			move = WORLD_MOVE;
+		}
 		break;
 	}
 	}
