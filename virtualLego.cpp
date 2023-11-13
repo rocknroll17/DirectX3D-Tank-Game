@@ -40,6 +40,7 @@ D3DXMATRIX g_mProj;
 #define PI 3.14159265
 #define M_HEIGHT 0.01
 #define DECREASE_RATE 0.9982
+#define TANK_VELOCITY_RATE 0.8
 
 double g_camera_pos[3] = { 0.0, 5.0, -8.0 };
 
@@ -387,8 +388,16 @@ private:
 };
 
 class Tank {
-public:
+private:
+	float					m_velocity_x;
+	float					m_velocity_z;
 	CWall tank_part[3];
+	bool created;
+public:
+	Tank() {
+		m_velocity_x = 0;
+		m_velocity_z = 0;
+	}
 	bool create(IDirect3DDevice9* pDevice, float ix, float iz, D3DXCOLOR color = d3d::WHITE) {
 		if (!tank_part[0].create(pDevice, ix, iz, 0.5f, 0.375f, 1.5f, color)) {
 			return false;
@@ -399,6 +408,7 @@ public:
 		if (!tank_part[2].create(pDevice, ix, iz, 0.08f, 0.08f, 1.4f, color)) {
 			return false;
 		}
+		created = true;
 		return true;
 	}
 
@@ -419,6 +429,51 @@ public:
 	{
 		return tank_part[0].getCenter();
 	}
+
+	void tankUpdate(float timeDiff)
+	{
+		if (!created) return;
+		const float TIME_SCALE = 3.3;
+		D3DXVECTOR3 cord = this->getCenter();
+
+		float tX = cord.x + TIME_SCALE * timeDiff * m_velocity_x;
+		float tZ = cord.z + TIME_SCALE * timeDiff * m_velocity_z;
+
+
+		//correction of position of ball
+		// Please uncomment this part because this correction of ball position is necessary when a ball collides with a wall
+		if (tX >= (4.5 - M_RADIUS))
+			tX = 4.5 - M_RADIUS;
+		else if (tX <= (-4.5 + M_RADIUS))
+			tX = -4.5 + M_RADIUS;
+		else if (tZ <= (-3 + M_RADIUS))
+			tZ = -3 + M_RADIUS;
+		else if (tZ >= (3 - M_RADIUS))
+			tZ = 3 - M_RADIUS;
+
+		this->setPosition(tX, cord.y, tZ);
+		//카메라의 시점이 공을 중앙으로 하게 설정
+		g_camera_pos[0] = tX;
+		g_camera_pos[2] = tZ;
+		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
+		double rate = 1 - (1 - TANK_VELOCITY_RATE) * timeDiff * 400;
+		if (rate < 0)
+			rate = 0;
+		this->setPower(getVelocity_X() * rate, getVelocity_Z() * rate);//중력 설정 다시 손 봐야함
+	}
+
+	double getVelocity_X() { return this->m_velocity_x; }
+	double getVelocity_Z() { return this->m_velocity_z; }
+
+
+	void setPower(double vx, double vz)
+	{
+		this->m_velocity_x = vx;
+		this->m_velocity_z = vz;
+
+	}
+
+
 };
 
 
@@ -492,7 +547,7 @@ bool Setup()
 	
 	// create blue ball for set direction
     if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
-	g_target_blueball.setCenter(.0f, (float)M_RADIUS , .0f);
+	g_target_blueball.setCenter(-1, 1.0f, -1+3);
 	
 	// light setting 
     D3DLIGHT9 lit;
@@ -569,6 +624,7 @@ bool Display(float timeDelta)
 			g_sphere[i].ballUpdate(timeDelta);
 			for(j = 0; j < 4; j++){ g_legowall[i].hitBy(g_sphere[j]); }
 		}
+		tank.tankUpdate(timeDelta);
 		// 미사일 위치도 변경 & 벽과 충돌했는지 체크
 		missile.ballUpdate(timeDelta);
 		for (i = 0; i < 4; i++) { g_legowall[i].hitBy(missile); }
@@ -657,8 +713,8 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			case VK_LEFT:
 			{
 				// 키보드 좌측 버튼
-				CSphere* moveTarget = &g_sphere[3];  // 움직일 대상
-				double speed = 0.45;
+				Tank* moveTarget = &tank;  // 움직일 대상
+				double speed = 2;
 				moveTarget->setPower(-speed, 0);
 				break;
 			}
@@ -666,24 +722,24 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			case VK_RIGHT:
 			{
 				// 키보드 우측 버튼
-				CSphere* moveTarget = &g_sphere[3];  // 움직일 대상
-				double speed = 0.45;
+				Tank* moveTarget = &tank;;  // 움직일 대상
+				double speed = 2;
 				moveTarget->setPower(speed, 0);
 				break;
 			}
 			case VK_UP:
 			{
 				// 키보드 위측 버튼
-				CSphere* moveTarget = &g_sphere[3];  // 움직일 대상
-				double speed = 0.45;
+				Tank* moveTarget = &tank;  // 움직일 대상
+				double speed = 2;
 				moveTarget->setPower(0, speed);
 				break;
 			}
 			case VK_DOWN:
 			{
 				// 키보드 아래측 버튼
-				CSphere* moveTarget = &g_sphere[3];  // 움직일 대상
-				double speed = 0.45;
+				Tank* moveTarget = &tank;;  // 움직일 대상
+				double speed = 2;
 				moveTarget->setPower(0, -speed);
 				break;
 			}
@@ -693,7 +749,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				// c 버튼 누를 시
 				// 파란 공 쪽으로 미사일 발사
 				D3DXVECTOR3 targetpos = g_target_blueball.getCenter();
-				D3DXVECTOR3	whitepos = g_sphere[3].getCenter();
+				D3DXVECTOR3	whitepos = tank.getCenter();
 				double theta = acos(sqrt(pow(targetpos.x - whitepos.x, 2)) / sqrt(pow(targetpos.x - whitepos.x, 2) +
 					pow(targetpos.z - whitepos.z, 2)));		// 기본 1 사분면
 				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x >= 0) { theta = -theta; }	//4 사분면
