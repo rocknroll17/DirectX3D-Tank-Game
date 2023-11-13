@@ -144,6 +144,7 @@ public:
 				tZ = 3 - M_RADIUS;
 
 			this->setCenter(tX, cord.y, tZ);
+			//카메라의 시점이 공을 중앙으로 하게 설정
 			g_camera_pos[0] = tX;
 			g_camera_pos[2] = tZ;
 			
@@ -153,7 +154,7 @@ public:
 		double rate = 1 -  (1 - DECREASE_RATE)*timeDiff * 400;
 		if(rate < 0 )
 			rate = 0;
-		this->setPower(getVelocity_X() * rate, getVelocity_Z() - 0.0005);
+		this->setPower(getVelocity_X() * rate, getVelocity_Z() - 0.0005);//중력 설정 다시 손 봐야함
 	}
 
 	double getVelocity_X() { return this->m_velocity_x;	}
@@ -482,8 +483,8 @@ bool Display(float timeDelta)
 {
 	int i=0;
 	int j = 0;
-	D3DXVECTOR3 pos(g_sphere[3].getCenter()[0], 10.0f, g_sphere[3].getCenter()[2] - 0.00001);
-	D3DXVECTOR3 target(g_sphere[3].getCenter()[0], 0.0f, g_sphere[3].getCenter()[2]);
+	D3DXVECTOR3 pos(g_sphere[3].getCenter()[0], 10.0f, g_sphere[3].getCenter()[2] - 0.00001);//흰공의 위치에 따라 카메라 위치 이동 [2]에 조금이라도 값을 변경하지 않으면 왠지 모르는데 안됌
+	D3DXVECTOR3 target(g_sphere[3].getCenter()[0], 0.0f, g_sphere[3].getCenter()[2]);//카메라가 쳐다보는 방향을 공의 방향으로 설정
 	D3DXVECTOR3 up(0.0f, 2.0f, 0.0f);
 	D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
 	Device->SetTransform(D3DTS_VIEW, &g_mView);
@@ -632,7 +633,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 
-	case WM_MOUSEMOVE:
+	case WM_MOUSEMOVE://좌클릭 시점 변경 코드 삭제
 	{
 		int new_x = LOWORD(lParam);
 		int new_y = HIWORD(lParam);
