@@ -126,35 +126,40 @@ public:
 		D3DXVECTOR3 cord = this->getCenter();
 		double vx = abs(this->getVelocity_X());
 		double vz = abs(this->getVelocity_Z());
+		/*
 		if(vx > 0.01 || vz > 0.01)
 		{
-			float tX = cord.x + TIME_SCALE*timeDiff*m_velocity_x;
-			float tZ = cord.z + TIME_SCALE*timeDiff*m_velocity_z;
-
-
-			//correction of position of ball
-			// Please uncomment this part because this correction of ball position is necessary when a ball collides with a wall
-			if (tX >= (4.5 - M_RADIUS))
-				tX = 4.5 - M_RADIUS;
-			else if (tX <= (-4.5 + M_RADIUS))
-				tX = -4.5 + M_RADIUS;
-			else if (tZ <= (-3 + M_RADIUS))
-				tZ = -3 + M_RADIUS;
-			else if (tZ >= (3 - M_RADIUS))
-				tZ = 3 - M_RADIUS;
-
-			this->setCenter(tX, cord.y, tZ);
-			//카메라의 시점이 공을 중앙으로 하게 설정
-			g_camera_pos[0] = tX;
-			g_camera_pos[2] = tZ;
-			
+			원래 이 자리에 밑에 있는 코드가 존재했음 하지만 수직으로 상승했다가
+			잠시 x,y속도가 0이 되는 경우가 생기면 공중에서 움직이지 않는 버그 발생,
+			또는 애초에 생성할때 속도가 0이라서 떨어지지 않고 고정되어 있는 버그 발생
+			else문에는 setpower(0,0)이 들어있었음.
 		}
-		else { this->setPower(0,0);}
+		*/
+
+		float tX = cord.x + TIME_SCALE * timeDiff * m_velocity_x;
+		float tZ = cord.z + TIME_SCALE * timeDiff * m_velocity_z;
+
+
+		//correction of position of ball
+		// Please uncomment this part because this correction of ball position is necessary when a ball collides with a wall
+		if (tX >= (4.5 - M_RADIUS))
+			tX = 4.5 - M_RADIUS;
+		else if (tX <= (-4.5 + M_RADIUS))
+			tX = -4.5 + M_RADIUS;
+		else if (tZ <= (-3 + M_RADIUS))
+			tZ = -3 + M_RADIUS;
+		else if (tZ >= (3 - M_RADIUS))
+			tZ = 3 - M_RADIUS;
+
+		this->setCenter(tX, cord.y, tZ);
+		//카메라의 시점이 공을 중앙으로 하게 설정
+		g_camera_pos[0] = tX;
+		g_camera_pos[2] = tZ;
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
 		double rate = 1 -  (1 - DECREASE_RATE)*timeDiff * 400;
 		if(rate < 0 )
 			rate = 0;
-		this->setPower(getVelocity_X() * rate, getVelocity_Z() - 0.0005);//중력 설정 다시 손 봐야함
+		this->setPower(getVelocity_X() * rate, getVelocity_Z() - 0.0005f);//중력 설정 다시 손 봐야함
 	}
 
 	double getVelocity_X() { return this->m_velocity_x;	}
@@ -633,58 +638,27 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 
-	case WM_MOUSEMOVE://좌클릭 시점 변경 코드 삭제
+	case WM_MOUSEMOVE://좌클릭 코드 삭제
 	{
 		int new_x = LOWORD(lParam);
 		int new_y = HIWORD(lParam);
 		float dx;
 		float dy;
 
-		if (LOWORD(wParam) & MK_LBUTTON) {
-			// 좌클릭
-			// 화면 이동
-			if (isReset) {
-				isReset = false;
-			}
-			else {
-				D3DXVECTOR3 vDist;
-				D3DXVECTOR3 vTrans;
-				D3DXMATRIX mTrans;
-				D3DXMATRIX mX;
-				D3DXMATRIX mY;
+		// 우클릭
+		if (LOWORD(wParam) & MK_RBUTTON) {
+			dx = (old_x - new_x);
+			dy = (old_y - new_y);
 
-				switch (move) {
-				case WORLD_MOVE:
-					dx = (old_x - new_x) * 0.01f;
-					dy = (old_y - new_y) * 0.01f;
-					D3DXMatrixRotationY(&mX, dx);
-					D3DXMatrixRotationX(&mY, dy);
-					g_mWorld = g_mWorld * mX * mY;
-
-					break;
-				}
-			}
-
-			old_x = new_x;
-			old_y = new_y;
-
+			D3DXVECTOR3 coord3d = g_target_blueball.getCenter();
+			g_target_blueball.setCenter(coord3d.x + dx * (-0.007f), coord3d.y, coord3d.z + dy * 0.007f);
 		}
-		else {
-			isReset = true;
-			// 우클릭
-			// blue ball 움직이기
-			if (LOWORD(wParam) & MK_RBUTTON) {
-				dx = (old_x - new_x);// * 0.01f;
-				dy = (old_y - new_y);// * 0.01f;
 
-				D3DXVECTOR3 coord3d = g_target_blueball.getCenter();
-				g_target_blueball.setCenter(coord3d.x + dx * (-0.007f), coord3d.y, coord3d.z + dy * 0.007f);
-			}
-			old_x = new_x;
-			old_y = new_y;
+		old_x = new_x;
+		old_y = new_y;
 
-			move = WORLD_MOVE;
-		}
+		move = WORLD_MOVE;
+
 		break;
 	}
 	}
