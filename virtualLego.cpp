@@ -41,6 +41,8 @@ D3DXMATRIX g_mProj;
 #define M_HEIGHT 0.01
 #define DECREASE_RATE 0.9982
 
+double g_camera_pos[3] = { 0.0, 5.0, -8.0 };
+
 // -----------------------------------------------------------------------------
 // CSphere class definition
 // -----------------------------------------------------------------------------
@@ -132,23 +134,26 @@ public:
 
 			//correction of position of ball
 			// Please uncomment this part because this correction of ball position is necessary when a ball collides with a wall
-			/*if(tX >= (4.5 - M_RADIUS))
+			if (tX >= (4.5 - M_RADIUS))
 				tX = 4.5 - M_RADIUS;
-			else if(tX <=(-4.5 + M_RADIUS))
+			else if (tX <= (-4.5 + M_RADIUS))
 				tX = -4.5 + M_RADIUS;
-			else if(tZ <= (-3 + M_RADIUS))
+			else if (tZ <= (-3 + M_RADIUS))
 				tZ = -3 + M_RADIUS;
-			else if(tZ >= (3 - M_RADIUS))
-				tZ = 3 - M_RADIUS;*/
-			
+			else if (tZ >= (3 - M_RADIUS))
+				tZ = 3 - M_RADIUS;
+
 			this->setCenter(tX, cord.y, tZ);
+			g_camera_pos[0] = tX;
+			g_camera_pos[2] = tZ;
+			
 		}
 		else { this->setPower(0,0);}
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
 		double rate = 1 -  (1 - DECREASE_RATE)*timeDiff * 400;
 		if(rate < 0 )
 			rate = 0;
-		this->setPower(getVelocity_X() * rate, getVelocity_Z() * rate);
+		this->setPower(getVelocity_X() * rate, getVelocity_Z() - 0.0005);
 	}
 
 	double getVelocity_X() { return this->m_velocity_x;	}
@@ -377,7 +382,7 @@ CSphere	g_sphere[4];
 CSphere	g_target_blueball;
 CLight	g_light;
 
-double g_camera_pos[3] = {0.0, 5.0, -8.0};
+
 
 CSphere missile;   // c 누르면 나가는 미사일
 
@@ -477,7 +482,11 @@ bool Display(float timeDelta)
 {
 	int i=0;
 	int j = 0;
-
+	D3DXVECTOR3 pos(g_sphere[3].getCenter()[0], 10.0f, g_sphere[3].getCenter()[2] - 0.00001);
+	D3DXVECTOR3 target(g_sphere[3].getCenter()[0], 0.0f, g_sphere[3].getCenter()[2]);
+	D3DXVECTOR3 up(0.0f, 2.0f, 0.0f);
+	D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
+	Device->SetTransform(D3DTS_VIEW, &g_mView);
 
 	if( Device )
 	{
