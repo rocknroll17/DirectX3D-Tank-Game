@@ -580,7 +580,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				// 키보드 우측 버튼
 				CSphere* moveTarget = &g_sphere[3];  // 움직일 대상
 				double speed = 0.45;
-				moveTarget->setPower(speed, 0, 0);
+				moveTarget->setPower(speed, 0);
 				break;
 			}
 			case VK_UP:
@@ -588,7 +588,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				// 키보드 위측 버튼
 				CSphere* moveTarget = &g_sphere[3];  // 움직일 대상
 				double speed = 0.45;
-				moveTarget->setPower(0, speed, 0);
+				moveTarget->setPower(0, speed);
 				break;
 			}
 			case VK_DOWN:
@@ -596,7 +596,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				// 키보드 아래측 버튼
 				CSphere* moveTarget = &g_sphere[3];  // 움직일 대상
 				double speed = 0.45;
-				moveTarget->setPower(0, -speed, 0);
+				moveTarget->setPower(0, -speed);
 				break;
 			}
 
