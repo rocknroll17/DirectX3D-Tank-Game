@@ -228,7 +228,7 @@ public:
     {
         if (NULL == pDevice)
             return false;
-		
+
         m_mtrl.Ambient  = color;
         m_mtrl.Diffuse  = color;
         m_mtrl.Specular = color;
@@ -387,6 +387,7 @@ CWall	g_legowall[4];
 CSphere	g_sphere[4];
 CSphere	g_target_blueball;
 CLight	g_light;
+CWall	g_test;
 
 
 
@@ -413,7 +414,10 @@ bool Setup()
 	// create plane and set the position
     if (false == g_legoPlane.create(Device, -1, -1, 9, 0.03f, 6, d3d::GREEN)) return false;
     g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
-	
+
+	if (false == g_test.create(Device, -1, -1, 0.12f, 0.12f, 0.12f, d3d::WHITE)) return false;
+	g_test.setPosition(0.0f, 0.15f, 0.0f);
+	//make wall
 	// create walls and set the position. note that there are four walls
 	if (false == g_legowall[0].create(Device, -1, -1, 9, 0.3f, 0.12f, d3d::DARKRED)) return false;
 	g_legowall[0].setPosition(0.0f, 0.12f, 3.06f);
@@ -439,14 +443,14 @@ bool Setup()
     D3DLIGHT9 lit;
     ::ZeroMemory(&lit, sizeof(lit));
     lit.Type         = D3DLIGHT_POINT;
-    lit.Diffuse      = d3d::WHITE; 
-	lit.Specular     = d3d::WHITE * 0.9f;
-    lit.Ambient      = d3d::WHITE * 0.9f;
-    lit.Position     = D3DXVECTOR3(0.0f, 3.0f, 0.0f);
+	lit.Diffuse = d3d::WHITE * 1.8f;  // 원래 1배였음
+	lit.Specular = d3d::WHITE * 1.5f;  //원래 0.9배였음
+    lit.Ambient      = d3d::WHITE * 0.9f;//원래 0.9배였음
+    lit.Position     = D3DXVECTOR3(0.0f, 1.0f, 5.0f);
     lit.Range        = 100.0f;
-    lit.Attenuation0 = 0.0f;
-    lit.Attenuation1 = 0.9f;
-    lit.Attenuation2 = 0.0f;
+    lit.Attenuation0 = -0.2f;//상수 감쇠
+    lit.Attenuation1 = 0.3f;//선형감쇠 원래 0.9f였음.
+    lit.Attenuation2 = 0.0f;//제곱감쇠
     if (false == g_light.create(Device, lit))
         return false;
 	
@@ -520,6 +524,7 @@ bool Display(float timeDelta)
 
 		// draw plane, walls, and spheres
 		g_legoPlane.draw(Device, g_mWorld);
+		g_test.draw(Device, g_mWorld);
 		for (i=0;i<4;i++) 	{
 			g_legowall[i].draw(Device, g_mWorld);
 			g_sphere[i].draw(Device, g_mWorld);
