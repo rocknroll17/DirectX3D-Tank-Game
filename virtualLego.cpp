@@ -633,17 +633,27 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				// 파란 공 쪽으로 미사일 발사
 				D3DXVECTOR3 targetpos = g_target_blueball.getCenter();
 				D3DXVECTOR3	whitepos = g_sphere[3].getCenter();
-				double theta = acos(sqrt(pow(targetpos.x - whitepos.x, 2)) / sqrt(pow(targetpos.x - whitepos.x, 2) +
-					pow(targetpos.z - whitepos.z, 2)));		// 기본 1 사분면
+				double theta = acos(
+					sqrt(pow(targetpos.x - whitepos.x, 2)) / 
+					sqrt( pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2) )
+				);		// 기본 1 사분면
 				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x >= 0) { theta = -theta; }	//4 사분면
 				if (targetpos.z - whitepos.z >= 0 && targetpos.x - whitepos.x <= 0) { theta = PI - theta; } //2 사분면
 				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0) { theta = PI + theta; } // 3 사분면
-				double distance = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)); // y좌표도 계산할 수 있어야 함
+				double distance_land = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)); // xz만 고려한 거리
+
+
+				double theta_sky = acos(
+					sqrt( pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2) ) /
+					sqrt( pow(targetpos.x - whitepos.x, 2) + pow(targetpos.y - whitepos.y, 2) + pow(targetpos.z - whitepos.z, 2) )
+					);
+				double distance_sky = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.y - whitepos.y, 2) + pow(targetpos.z - whitepos.z, 2));  // y좌표 고려한 거리
+				//double distance = sqrt( sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)) + pow(targetpos.y - whitepos.y, 2)); // y좌표 포함 계산
 
 				missile.destroy();
 				missile.create(Device, d3d::BLACK);
 				missile.setCenter(whitepos.x, whitepos.y, whitepos.z);
-				missile.setPower(distance * cos(theta), distance * sin(theta));
+				missile.setPower(distance_land* cos(theta), distance_sky * sin(theta_sky), distance_land* sin(theta));
 				break;
 			}
 		}
