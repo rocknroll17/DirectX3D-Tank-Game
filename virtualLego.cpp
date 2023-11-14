@@ -776,8 +776,8 @@ bool Display(float timeDelta)
 		}
 		g_target_blueball.draw(Device, g_mWorld);
 		missile.draw(Device, g_mWorld);  // 미사일도 그림
-		obstacle1.draw(Device, g_mWorld); // 장애물도 그림
-		for (CObstacle partition : obstacle_wall) { partition.draw(Device, g_mWorld); } // 장애물(벽) 그림
+		//obstacle1.draw(Device, g_mWorld); // 장애물도 그림
+		//for (CObstacle partition : obstacle_wall) { partition.draw(Device, g_mWorld); } // 장애물(벽) 그림
 
 		
 		// 미사일과 공 충돌했는지 체크
