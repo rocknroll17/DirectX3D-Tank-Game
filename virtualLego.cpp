@@ -211,6 +211,8 @@ private:
 
 
 
+
+
 // -----------------------------------------------------------------------------
 // CWall class definition
 // -----------------------------------------------------------------------------
@@ -305,6 +307,20 @@ private :
 	D3DXMATRIX              m_mLocal;
     D3DMATERIAL9            m_mtrl;
     ID3DXMesh*              m_pBoundMesh;
+};
+
+// -----------------------------------------------------------------------------
+// CObstacle class definition
+// -----------------------------------------------------------------------------
+
+class CObstacle : public CWall {
+	void hitBy(CSphere& missile) {
+		// 미사일에 맞닿으면, 파괴됨
+		if (hasIntersected(missile)) {
+			this->destroy();
+			missile.destroy();
+		}
+	}
 };
 
 // -----------------------------------------------------------------------------
@@ -403,7 +419,10 @@ CSphere	g_sphere[4];
 CSphere	g_target_blueball;
 CLight	g_light;
 
+CObstacle obstacle1; // 장애물 (테스트용)
+std::vector<CObstacle> obstacles; // 장애물 저장
 
+LPD3DXFONT fonts; // test -> 화면에 숫자표시 이걸로 하는듯
 
 CSphere missile;   // c 누르면 나가는 미사일
 
@@ -438,6 +457,10 @@ bool Setup()
 	g_legowall[2].setPosition(4.56f, 0.12f, 0.0f);
 	if (false == g_legowall[3].create(Device, -1, -1, 0.12f, 0.3f, 6.24f, d3d::DARKRED)) return false;
 	g_legowall[3].setPosition(-4.56f, 0.12f, 0.0f);
+
+	// 장애물 생성
+	if (false == obstacle1.create(Device, -1, -1, 0.3f, 0.3f, 9, d3d::BLACK)) return false;
+	obstacle1.setPosition(0.0f, 0.12f, -1.0f);
 
 	// create four balls and set the position
 	for (i=0;i<4;i++) {
@@ -541,6 +564,7 @@ bool Display(float timeDelta)
 		}
 		g_target_blueball.draw(Device, g_mWorld);
 		missile.draw(Device, g_mWorld);  // 미사일도 그림
+		obstacle1.draw(Device, g_mWorld); // 장애물도 그림
 
         g_light.draw(Device);
 		
