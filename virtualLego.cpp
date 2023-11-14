@@ -426,7 +426,7 @@ CSphere	g_target_blueball;
 CLight	g_light;
 
 CObstacle obstacle1; // 장애물 (테스트용)
-std::vector<CObstacle> obstacles; // 장애물 저장
+std::vector<CObstacle> obstacle_wall; // 장애물 (벽)
 
 LPD3DXFONT fonts; // test -> 화면에 숫자표시 이걸로 하는듯
 
@@ -465,9 +465,37 @@ bool Setup()
 	g_legowall[3].setPosition(-4.56f, 0.12f, 0.0f);
 
 	// 장애물 생성
-	if (false == obstacle1.create(Device, -1, -1, 0.3f, 0.3f, 9, d3d::BLACK)) return false;
-	obstacle1.setPosition(0.0f, 0.12f, -1.0f);
-	obstacle1.rotate(45);
+	if (false == obstacle1.create(Device, -1, -1, 0.12f, 0.6f, 1, d3d::BLACK)) return false;
+	obstacle1.setPosition(0.0f, 0.3f, 0.0f);
+	//obstacle1.rotate(45);
+
+	// 장애물(벽) 생성
+	// 벽 하나는 여러개의 파티션으로 나누어짐
+	D3DXCOLOR wall_color = d3d::WHITE; // 벽 색상
+	float wallPartition_width = 0.12f; // 각 파티션의 가로넓이
+	float wallPartition_height = 0.6f; // 각 파티션의 높이
+	float wallPartition_depth = 1; // 각 파티션의 세로넓이
+	int partitionCount_land = 3; // 가로로 몇 개 놓을지
+	int partitionCount_sky = 1; // 세로로 몇 개 놓을지
+	float base_x = 0.0f , base_y = wallPartition_height * 0.5 ,  base_z = 0.0f; // 벽 생성 위치
+
+	for (int i = 0; i < partitionCount_land; i++) {
+		for (int j = 0; j < partitionCount_sky; j++) {
+			// 좌표 결정
+			float nx, ny, nz;
+			nx = base_x;
+			ny = base_y + wallPartition_height * j;
+			nz = base_z + wallPartition_depth * i;
+
+			// 장애물 생성
+			CObstacle partition;
+			if (false == partition.create(Device, -1, -1, wallPartition_width, wallPartition_height, wallPartition_depth, wall_color)) return false;
+			partition.setPosition(nx, ny, nz);
+
+			// 전역변수에 저장
+			obstacle_wall.push_back(partition);
+		}
+	}
 
 	// create four balls and set the position
 	for (i=0;i<4;i++) {
@@ -572,6 +600,7 @@ bool Display(float timeDelta)
 		g_target_blueball.draw(Device, g_mWorld);
 		missile.draw(Device, g_mWorld);  // 미사일도 그림
 		obstacle1.draw(Device, g_mWorld); // 장애물도 그림
+		for (CObstacle partition : obstacle_wall) { partition.draw(Device, g_mWorld); } // 장애물(벽) 그림
 
         g_light.draw(Device);
 		
