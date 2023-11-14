@@ -436,6 +436,27 @@ CSphere missile;   // c 누르면 나가는 미사일
 // Functions
 // -----------------------------------------------------------------------------
 
+bool createWall(float partitionWidth, float partitionHeight, float partitonDepth, int partitionCount_land, int partitionCount_sky, float x, float y, float z, D3DXCOLOR wallColor=d3d::WHITE) {
+	// (partitionCount_land * partitionCount_sky) 크기의 벽을 생성함.
+	// 각 partition의 크기는 (partitionWidth, partitionHeight, partitionDepth)
+	for (int i = 0; i < partitionCount_land; i++) {
+		for (int j = 0; j < partitionCount_sky; j++) {
+			// 좌표 결정
+			float nx, ny, nz;
+			nx = x;
+			ny = y + partitionHeight * j;
+			nz = z + partitonDepth * i;
+			// 장애물 생성 & 배치
+			CObstacle partition;
+			if (false == partition.create(Device, -1, -1, partitionWidth, partitionHeight, partitonDepth, wallColor)) return false;
+			partition.setPosition(nx, ny, nz);
+			// 전역변수에 저장
+			obstacle_wall.push_back(partition);
+		}
+	}
+	return true;
+}
+
 
 void destroyAllLegoBlock(void)
 {
@@ -479,6 +500,9 @@ bool Setup()
 	int partitionCount_sky = 1; // 세로로 몇 개 놓을지
 	float base_x = 0.0f , base_y = wallPartition_height * 0.5 ,  base_z = 0.0f; // 벽 생성 위치
 
+	// 벽 생성 & 배치
+	createWall(wallPartition_width, wallPartition_height, wallPartition_depth, partitionCount_land, partitionCount_sky, base_x, base_y, base_z, wall_color);
+	/*
 	for (int i = 0; i < partitionCount_land; i++) {
 		for (int j = 0; j < partitionCount_sky; j++) {
 			// 좌표 결정
@@ -496,6 +520,7 @@ bool Setup()
 			obstacle_wall.push_back(partition);
 		}
 	}
+	*/
 
 	// create four balls and set the position
 	for (i=0;i<4;i++) {
