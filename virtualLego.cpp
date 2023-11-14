@@ -156,11 +156,11 @@ public:
 		//카메라의 시점이 공을 중앙으로 하게 설정
 		g_camera_pos[0] = tX;
 		g_camera_pos[2] = tZ;
-		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
 		double rate = 1 -  (1 - DECREASE_RATE)*timeDiff * 400;
 		if(rate < 0 )
 			rate = 0;
-		this->setPower(getVelocity_X() * rate, getVelocity_Z() - 0.0005f);//중력 설정 다시 손 봐야함
+		this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
+		//this->setPower(getVelocity_X() * rate, getVelocity_Z() - 0.0005f);//중력 설정 다시 손 봐야함
 	}
 
 	double getVelocity_X() { return this->m_velocity_x;	}
@@ -393,7 +393,7 @@ private:
 };
 
 class Tank {
-private:
+public:
 	float					m_velocity_x;
 	float					m_velocity_z;
 	CWall tank_part[3];
