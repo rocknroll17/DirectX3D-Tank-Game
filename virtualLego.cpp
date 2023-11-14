@@ -301,7 +301,8 @@ public:
 	
 	
 	
-private :
+//private :
+protected:
     void setLocalTransform(const D3DXMATRIX& mLocal) { m_mLocal = mLocal; }
 	
 	D3DXMATRIX              m_mLocal;
@@ -314,12 +315,17 @@ private :
 // -----------------------------------------------------------------------------
 
 class CObstacle : public CWall {
+public:
 	void hitBy(CSphere& missile) {
 		// 미사일에 맞닿으면, 파괴됨
 		if (hasIntersected(missile)) {
 			this->destroy();
 			missile.destroy();
 		}
+	}
+
+	void rotate(float degree) {
+		D3DXMatrixRotationY(&m_mLocal, D3DXToRadian(degree));
 	}
 };
 
@@ -461,6 +467,7 @@ bool Setup()
 	// 장애물 생성
 	if (false == obstacle1.create(Device, -1, -1, 0.3f, 0.3f, 9, d3d::BLACK)) return false;
 	obstacle1.setPosition(0.0f, 0.12f, -1.0f);
+	obstacle1.rotate(45);
 
 	// create four balls and set the position
 	for (i=0;i<4;i++) {
