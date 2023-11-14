@@ -288,6 +288,11 @@ public:
 		D3DXVECTOR3 org(m_x, m_y, m_z);
 		return org;
 	}
+
+	void setRotation(float angle)
+	{
+		D3DXMatrixRotationY(&m_mLocal, angle);
+	}
 	
     float getHeight(void) const { return M_HEIGHT; }
 	void setLocalTransform(const D3DXMATRIX& mLocal) { m_mLocal = mLocal; }
@@ -473,6 +478,10 @@ public:
 
 	}
 
+	void rotate(float degree) {
+		tank_part[2].setRotation(D3DXToRadian(degree));
+	}
+
 
 };
 
@@ -526,6 +535,7 @@ bool Setup()
 
 	if (false == tank.create(Device, -1, -1, d3d::BROWN)) return false;
 	tank.setPosition(-1, 0.2f, -1);
+	tank.rotate(45);
 
 	//make wall
 	// create walls and set the position. note that there are four walls
