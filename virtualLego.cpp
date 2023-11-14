@@ -137,7 +137,7 @@ public:
 			float tZ = cord.z + TIME_SCALE*timeDiff*m_velocity_z;
 
 
-			//correction of position of ball
+			// correction of position of ball
 			// Please uncomment this part because this correction of ball position is necessary when a ball collides with a wall
 			if (tX >= (4.5 - M_RADIUS))
 				tX = 4.5 - M_RADIUS;
@@ -147,6 +147,10 @@ public:
 				tZ = -3 + M_RADIUS;
 			else if (tZ >= (3 - M_RADIUS))
 				tZ = 3 - M_RADIUS;
+
+			// y가 0 이하로 떨어지지 않도록 (임시)
+			if (tY < 0 + M_RADIUS)
+				tY = M_RADIUS;
 
 			this->setCenter(tX, tY, tZ);
 			//카메라의 시점이 공을 중앙으로 하게 설정
