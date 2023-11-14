@@ -436,7 +436,10 @@ CSphere missile;   // c 누르면 나가는 미사일
 // Functions
 // -----------------------------------------------------------------------------
 
-bool createWall(float partitionWidth, float partitionHeight, float partitonDepth, int partitionCount_land, int partitionCount_sky, float x, float y, float z, D3DXCOLOR wallColor=d3d::WHITE) {
+bool createWall( float partitionWidth, float partitionHeight, float partitonDepth, 
+	int partitionCount_land, int partitionCount_sky, 
+	float x, float y, float z,
+	D3DXCOLOR wallColor=d3d::WHITE ) {
 	// (partitionCount_land * partitionCount_sky) 크기의 벽을 생성함.
 	// 각 partition의 크기는 (partitionWidth, partitionHeight, partitionDepth)
 	for (int i = 0; i < partitionCount_land; i++) {
