@@ -43,7 +43,7 @@ D3DXMATRIX g_mProj;
 #define DECREASE_RATE 0.9982
 #define TANK_VELOCITY_RATE 0.99
 
-#define BLUEBALL_MOVE_DISTANCE 0.03
+#define BLUEBALL_MOVE_DISTANCE 0.07
 #define MAX_BLUEBALL_RADIUS 2  // blueball 어디까지 멀어질 수 있는지
 
 #define MISSILE_POWER 1.88
@@ -523,7 +523,7 @@ public:
 		if (!tank_part[1].create(pDevice, ix, iz, 0.55f, 0.32f, 0.825f, color)) {
 			return false;
 		}
-		if (!tank_part[2].create(pDevice, ix, iz, 0.08f, 0.08f, 1.4f, color)) {
+		if (!tank_part[2].create(pDevice, ix, iz, 0.12f, 0.12f, 1.4f, color)) {
 			return false;
 		}
 		created = true;
@@ -875,8 +875,9 @@ void Cleanup(void)
 
 }
 
-float y_camera = 0.0f;
 float x_camera = 0.0f;
+float y_camera = 0.8f;
+float camera_prefix = 0.05f;
 
 // timeDelta represents the time between the current image frame and the last image frame.
 // the distance of moving balls should be "velocity * timeDelta"
@@ -888,7 +889,7 @@ bool Display(float timeDelta)
 	D3DXVECTOR3 target;
 
 	if (camera_option == 0) {
-		pos = D3DXVECTOR3(tank.getHead()[0], tank.getHead()[1] + 2.0f, tank.getHead()[2] - 4.4f);
+		pos = D3DXVECTOR3(tank.getHead()[0], tank.getHead()[1] + 1.0f, tank.getHead()[2] - 4.4f);
 		target = D3DXVECTOR3(tank.getHead()[0]+ x_camera, tank.getHead()[1]+ y_camera, tank.getHead()[2]);
 	}
 	else {
@@ -1125,52 +1126,52 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		case 0x61:
 		{
-			x_camera = x_camera - 0.05f;
-			y_camera = y_camera - 0.05f;
+			x_camera = x_camera - camera_prefix;
+			y_camera = y_camera - camera_prefix;
 			break;
 		}
 		case 0x62:
 		{
-			y_camera = y_camera - 0.05f;
+			y_camera = y_camera - camera_prefix;
 			break;
 		}
 		case 0x63:
 		{
-			y_camera = y_camera - 0.05f;
-			x_camera = x_camera + 0.05f;
+			y_camera = y_camera - camera_prefix;
+			x_camera = x_camera + camera_prefix;
 			break;
 		}
 		case 0x64:
 		{
-			x_camera = x_camera - 0.05f;
+			x_camera = x_camera - camera_prefix;
 			break;
 		}
 		case 0x65:
 		{
 			x_camera = 0.0f;
-			y_camera = 0.0f;
+			y_camera = 0.5f;
 			break;
 		}
 		case 0x66:
 		{
-			x_camera = x_camera + 0.05f;
+			x_camera = x_camera + camera_prefix;
 			break;
 		}
 		case 0x67:
 		{
-			x_camera = x_camera - 0.05f;
-			y_camera = y_camera + 0.05f;
+			x_camera = x_camera - camera_prefix;
+			y_camera = y_camera + camera_prefix;
 			break;
 		}
 		case 0x68:
 		{
-			y_camera = y_camera + 0.05f;
+			y_camera = y_camera + camera_prefix;
 			break;
 		}
 		case 0x69:
 		{
-			x_camera = x_camera + 0.05f;
-			y_camera = y_camera + 0.05f;
+			x_camera = x_camera + camera_prefix;
+			y_camera = y_camera + camera_prefix;
 			break;
 		}
 
