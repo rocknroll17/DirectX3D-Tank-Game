@@ -986,10 +986,11 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				double distance_sky = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.y - whitepos.y, 2) + pow(targetpos.z - whitepos.z, 2));  // y좌표 고려한 거리
 				//double distance = sqrt( sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)) + pow(targetpos.y - whitepos.y, 2)); // y좌표 포함 계산
 
-			missile.destroy();
-			missile.create(Device, d3d::BLACK);
-			missile.setCenter(whitepos.x, whitepos.y, whitepos.z);
-			missile.setPower(distance_land * cos(theta) * MISSILE_POWER, distance_sky * sin(theta_sky) * MISSILE_POWER, distance_land * sin(theta) * MISSILE_POWER);
+				missile.destroy();
+				missile.create(Device, d3d::BLACK);
+				missile.setCenter(whitepos.x, whitepos.y, whitepos.z);
+				missile.setPower(distance_land * cos(theta) * MISSILE_POWER, distance_sky * sin(theta_sky) * MISSILE_POWER, distance_land * sin(theta) * MISSILE_POWER);
+			}
 			break;
 		}
 
@@ -1034,7 +1035,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			double distance = BLUEBALL_MOVE_DISTANCE;
 			D3DXVECTOR3 tankcoord = shooter->getCenter();
 			D3DXVECTOR3 targetcoord = moveTarget->getCenter();
-			double dz = tankcoord.z - targetcoord.z;
+			double dz = targetcoord.z - tankcoord.z;
 			if(dz < MAX_BLUEBALL_RADIUS) moveTarget->setCenter(targetcoord.x, targetcoord.y, targetcoord.z + distance);
 			break;
 		}
