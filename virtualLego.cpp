@@ -591,7 +591,7 @@ class CBlueBall : public CSphere
 private:
 	double radius; // 최대 반지름
 	Tank* linkedTank; // 연결된 탱크
-	double tank_x, tank_y; // 탱크의 이전 좌표
+	double tankLastX, tankLastZ; // 탱크의 이전 좌표
 public:
 	CBlueBall(void) {
 		radius = MAX_BLUEBALL_RADIUS;
@@ -639,7 +639,11 @@ public:
 	double getMaxRadius() { return radius; }
 	void setRadius(double r) { if (r > 0) radius = r; }
 	//void setMaxRadius(double r) { if (r > 0)maxRadius = r; }
-	void linkTank(Tank* const t) { linkedTank = t; }
+	void linkTank(Tank* const t) { 
+		linkedTank = t;
+		tankLastX = linkedTank->getCenter().x;
+		tankLastZ = linkedTank->getCenter().z;
+	}
 	
 	
 	void ballUpdate(float timeDiff)
@@ -651,44 +655,31 @@ public:
 		double vy = abs(this->getVelocity_Y());
 		double vz = abs(this->getVelocity_Z());
 
+		double tankX = linkedTank->getCenter().x;
+		double tankZ = linkedTank->getCenter().z;
+
 		float tX = cord.x + TIME_SCALE * timeDiff * m_velocity_x;
 		float tY = cord.y + TIME_SCALE * timeDiff * m_velocity_y;
 		float tZ = cord.z + TIME_SCALE * timeDiff * m_velocity_z;
 
-		// 탱크와 거리가 radius 이상이면 radius로 조정
-		/*
-		double distanceFromTank = getDistanceFromTank2D(tX, tZ);
-		if (distanceFromTank > radius) {
-			double scale = radius / distanceFromTank;
-			tX *= scale; tZ *= scale;
-		}*/
-		
-
-
-
-		// correction of position of ball
-		// Please uncomment this part because this correction of ball position is necessary when a ball collides with a wall
-		// blueball은 벽 밖으로 나가도 됨
-		/*
-		if (tX >= ((WORLD_WIDTH / 2) - M_RADIUS))
-			tX = (WORLD_WIDTH / 2) - M_RADIUS;
-		else if (tX <= (-(WORLD_WIDTH / 2) + M_RADIUS))
-			tX = -(WORLD_WIDTH / 2) + M_RADIUS;
-		else if (tZ <= (-(WORLD_DEPTH / 2) + M_RADIUS))
-			tZ = -(WORLD_DEPTH / 2) + M_RADIUS;
-		else if (tZ >= ((WORLD_DEPTH / 2) - M_RADIUS))
-			tZ = (WORLD_DEPTH / 2) - M_RADIUS;
-		*/
 		// y가 0 이하로 떨어지지 않도록 (임시)
 		if (tY < 0 + M_RADIUS)
 			tY = M_RADIUS;
 
+		// 탱크가 움직이면 blueball도 움직임
+		
+		double dX = tankX - tankLastX;
+		double dZ = tankZ - tankLastZ;
+		tX += dX;
+		tZ += dZ;
 		this->setCenter(tX, tY, tZ);
 		double rate = 1 - (1 - DECREASE_RATE) * timeDiff * 400;
 		if (rate < 0)
 			rate = 0;
 		this->setPower(getVelocity_X() * rate, getVelocity_Y() * rate, getVelocity_Z() * rate);
-
+		
+		tankLastX = tankX;
+		tankLastZ = tankZ;
 	}
 	
 };
