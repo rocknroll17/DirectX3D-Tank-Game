@@ -43,6 +43,10 @@ D3DXMATRIX g_mProj;
 #define TANK_VELOCITY_RATE 0.99
 #define BLUEBALL_MOVE_DISTANCE 0.03
 
+#define WORLD_WIDTH 24
+#define WORLD_DEPTH 16
+#define BORDER_WIDTH 0.12f // 가장자리 벽 굵기
+
 double g_camera_pos[3] = { 0.0, 5.0, -8.0 };
 
 // -----------------------------------------------------------------------------
@@ -50,7 +54,8 @@ double g_camera_pos[3] = { 0.0, 5.0, -8.0 };
 // -----------------------------------------------------------------------------
 
 class CSphere {
-private:
+//private
+protected:
 	float					center_x, center_y, center_z;
 	float                   m_radius;
 	float					m_velocity_x;
@@ -149,14 +154,14 @@ public:
 
 		//correction of position of ball
 		// Please uncomment this part because this correction of ball position is necessary when a ball collides with a wall
-		if (tX >= (4.5 - M_RADIUS))
-			tX = 4.5 - M_RADIUS;
-		else if (tX <= (-4.5 + M_RADIUS))
-			tX = -4.5 + M_RADIUS;
-		else if (tZ <= (-3 + M_RADIUS))
-			tZ = -3 + M_RADIUS;
-		else if (tZ >= (3 - M_RADIUS))
-			tZ = 3 - M_RADIUS;
+		if (tX >= ((WORLD_WIDTH / 2) - M_RADIUS))
+			tX = (WORLD_WIDTH / 2) - M_RADIUS;
+		else if (tX <= (-(WORLD_WIDTH / 2) + M_RADIUS))
+			tX = -(WORLD_WIDTH / 2) + M_RADIUS;
+		else if (tZ <= (-(WORLD_DEPTH / 2) + M_RADIUS))
+			tZ = -(WORLD_DEPTH / 2) + M_RADIUS;
+		else if (tZ >= ((WORLD_DEPTH / 2) - M_RADIUS))
+			tZ = (WORLD_DEPTH / 2) - M_RADIUS;
 		if (tY < 0 + M_RADIUS)
 			tY = M_RADIUS;
 		// y가 0 이하로 떨어지지 않도록 (임시)
@@ -171,41 +176,41 @@ public:
 	}
 
 
-		double getVelocity_X() { return this->m_velocity_x; }
-		double getVelocity_Y() { return this->m_velocity_y; }
-		double getVelocity_Z() { return this->m_velocity_z; }
+	double getVelocity_X() { return this->m_velocity_x; }
+	double getVelocity_Y() { return this->m_velocity_y; }
+	double getVelocity_Z() { return this->m_velocity_z; }
 
 
-		void setPower(double vx, double vz)
-		{
-			this->m_velocity_x = vx;
-			this->m_velocity_z = vz;
+	void setPower(double vx, double vz)
+	{
+		this->m_velocity_x = vx;
+		this->m_velocity_z = vz;
 
-		}
+	}
 
-		void setPower(double vx, double vy, double vz)
-		{
-			this->m_velocity_x = vx;
-			this->m_velocity_y = vy;
-			this->m_velocity_z = vz;
-		}
+	void setPower(double vx, double vy, double vz)
+	{
+		this->m_velocity_x = vx;
+		this->m_velocity_y = vy;
+		this->m_velocity_z = vz;
+	}
 
-		void setCenter(float x, float y, float z)
-		{
-			D3DXMATRIX m;
-			center_x = x;	center_y = y;	center_z = z;
-			D3DXMatrixTranslation(&m, x, y, z);
-			setLocalTransform(m);
-		}
+	void setCenter(float x, float y, float z)
+	{
+		D3DXMATRIX m;
+		center_x = x;	center_y = y;	center_z = z;
+		D3DXMatrixTranslation(&m, x, y, z);
+		setLocalTransform(m);
+	}
 
-		float getRadius(void)  const { return (float)(M_RADIUS); }
-		const D3DXMATRIX& getLocalTransform(void) const { return m_mLocal; }
-		void setLocalTransform(const D3DXMATRIX& mLocal) { m_mLocal = mLocal; }
-		D3DXVECTOR3 getCenter(void) const
-		{
-			D3DXVECTOR3 org(center_x, center_y, center_z);
-			return org;
-		}
+	float getRadius(void)  const { return (float)(M_RADIUS); }
+	const D3DXMATRIX& getLocalTransform(void) const { return m_mLocal; }
+	void setLocalTransform(const D3DXMATRIX& mLocal) { m_mLocal = mLocal; }
+	D3DXVECTOR3 getCenter(void) const
+	{
+		D3DXVECTOR3 org(center_x, center_y, center_z);
+		return org;
+	}
 
 private:
 	D3DXMATRIX              m_mLocal;
@@ -215,7 +220,55 @@ private:
 };
 
 
+// -----------------------------------------------------------------------------
+// CBlueBall class definition
+// -----------------------------------------------------------------------------
+class CBlueBall : public CSphere
+{
+private:
+	double radius;
+	double max_radius;
 
+	void ballUpdate(float timeDiff)
+	{
+		if (!created) return;
+		const float TIME_SCALE = 3.3;
+		D3DXVECTOR3 cord = this->getCenter();
+		double vx = abs(this->getVelocity_X());
+		double vy = abs(this->getVelocity_Y());
+		double vz = abs(this->getVelocity_Z());
+
+		float tX = cord.x + TIME_SCALE * timeDiff * m_velocity_x;
+		float tY = cord.y + TIME_SCALE * timeDiff * m_velocity_y;
+		float tZ = cord.z + TIME_SCALE * timeDiff * m_velocity_z;
+
+
+		//correction of position of ball
+		// Please uncomment this part because this correction of ball position is necessary when a ball collides with a wall
+		if (tX >= (4.5 - M_RADIUS))
+			tX = 4.5 - M_RADIUS;
+		else if (tX <= (-4.5 + M_RADIUS))
+			tX = -4.5 + M_RADIUS;
+		else if (tZ <= (-3 + M_RADIUS))
+			tZ = -3 + M_RADIUS;
+		else if (tZ >= (3 - M_RADIUS))
+			tZ = 3 - M_RADIUS;
+		// y가 0 이하로 떨어지지 않도록 (임시)
+		if (tY < 0 + M_RADIUS)
+			tY = M_RADIUS;
+
+		// 탱크와 거리가 radius 이상이면 radius로 조정
+
+		// 탱크와 거리가 radius 이하이면 radius로 조정 (이건 없어도 될듯)
+
+		this->setCenter(tX, tY, tZ);
+		double rate = 1 - (1 - DECREASE_RATE) * timeDiff * 400;
+		if (rate < 0)
+			rate = 0;
+		this->setPower(getVelocity_X() * rate, getVelocity_Y() * rate, getVelocity_Z() * rate);
+
+	}
+};
 
 
 // -----------------------------------------------------------------------------
@@ -589,7 +642,8 @@ bool Setup()
 	D3DXMatrixIdentity(&g_mProj);
 
 	// create plane and set the position
-	if (false == g_legoPlane.create(Device, -1, -1, 9, 0.03f, 6, d3d::GREEN)) return false;
+	//if (false == g_legoPlane.create(Device, -1, -1, 9, 0.03f, 6, d3d::GREEN)) return false;
+	if (false == g_legoPlane.create(Device, -1, -1, WORLD_WIDTH, 0.03f, WORLD_DEPTH, d3d::GREEN)) return false;
 	g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
 	/*
 	if (false == test.create(Device, -1, -1, 0.5f, 0.375f, 1.5f, d3d::BROWN)) return false;
@@ -608,14 +662,14 @@ bool Setup()
 
 	//make wall
 	// create walls and set the position. note that there are four walls
-	if (false == g_legowall[0].create(Device, -1, -1, 9, 0.3f, 0.12f, d3d::DARKRED)) return false;
-	g_legowall[0].setPosition(0.0f, 0.12f, 3.06f);
-	if (false == g_legowall[1].create(Device, -1, -1, 9, 0.3f, 0.12f, d3d::DARKRED)) return false;
-	g_legowall[1].setPosition(0.0f, 0.12f, -3.06f);
-	if (false == g_legowall[2].create(Device, -1, -1, 0.12f, 0.3f, 6.24f, d3d::DARKRED)) return false;
-	g_legowall[2].setPosition(4.56f, 0.12f, 0.0f);
-	if (false == g_legowall[3].create(Device, -1, -1, 0.12f, 0.3f, 6.24f, d3d::DARKRED)) return false;
-	g_legowall[3].setPosition(-4.56f, 0.12f, 0.0f);
+	if (false == g_legowall[0].create(Device, -1, -1, WORLD_WIDTH, 0.3f, 0.12f, d3d::DARKRED)) return false;
+	g_legowall[0].setPosition(0.0f, BORDER_WIDTH, (WORLD_DEPTH + BORDER_WIDTH)/2);
+	if (false == g_legowall[1].create(Device, -1, -1, WORLD_WIDTH, 0.3f, 0.12f, d3d::DARKRED)) return false;
+	g_legowall[1].setPosition(0.0f, BORDER_WIDTH, - (WORLD_DEPTH + BORDER_WIDTH)/2);
+	if (false == g_legowall[2].create(Device, -1, -1, 0.12f, 0.3f, WORLD_DEPTH + 2 * BORDER_WIDTH, d3d::DARKRED)) return false;
+	g_legowall[2].setPosition((WORLD_WIDTH+BORDER_WIDTH)/2, BORDER_WIDTH, 0.0f);
+	if (false == g_legowall[3].create(Device, -1, -1, 0.12f, 0.3f, WORLD_DEPTH + 2 * BORDER_WIDTH, d3d::DARKRED)) return false;
+	g_legowall[3].setPosition(-(WORLD_WIDTH + BORDER_WIDTH)/2, BORDER_WIDTH, 0.0f);
 
 	// 장애물 생성
 	if (false == obstacle1.create(Device, -1, -1, 0.12f, 0.6f, 1, d3d::BLACK)) return false;
