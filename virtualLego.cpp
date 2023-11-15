@@ -412,10 +412,6 @@ public:
 			destroy();
 		}
 	}
-
-	void rotate(float degree) {
-		D3DXMatrixRotationY(&m_mLocal, D3DXToRadian(degree));
-	}
 };
 
 // -----------------------------------------------------------------------------
@@ -510,7 +506,7 @@ private:
 // -----------------------------------------------------------------------------
 
 class Tank {
-private:
+protected:
 	float					m_velocity_x;
 	float					m_velocity_z;
 	CWall tank_part[3];
@@ -520,7 +516,7 @@ public:
 		m_velocity_x = 0;
 		m_velocity_z = 0;
 	}
-	bool create(IDirect3DDevice9* pDevice, float ix, float iz, D3DXCOLOR color = d3d::WHITE) {
+	virtual bool create(IDirect3DDevice9* pDevice, float ix, float iz, D3DXCOLOR color = d3d::WHITE) {
 		if (!tank_part[0].create(pDevice, ix, iz, 0.7f, 0.375f, 1.5f, color)) {
 			return false;
 		}
@@ -534,7 +530,7 @@ public:
 		return true;
 	}
 
-	void setPosition(float x, float y, float z) {
+	virtual void setPosition(float x, float y, float z) {
 		tank_part[0].setPosition(x, y, z);
 		tank_part[1].setPosition(x, y + 0.35f, z - 0.3f);
 		tank_part[2].setPosition(x, y + 0.35f, z);
@@ -568,7 +564,6 @@ public:
 
 
 		//correction of position of ball
-// Please uncomment this part because this correction of ball position is necessary when a ball collides with a wall
 		if (tX >= ((WORLD_WIDTH / 2) - M_RADIUS))
 			tX = (WORLD_WIDTH / 2) - M_RADIUS;
 		else if (tX <= (-(WORLD_WIDTH / 2) + M_RADIUS))
@@ -600,16 +595,29 @@ public:
 		this->m_velocity_z = vz;
 
 	}
-
-	void rotate(float degree) {
-		tank_part[2].setRotation(D3DXToRadian(degree));
-	}
-
-
 };
 
 class OTank : public Tank {
+public:
+	bool create(IDirect3DDevice9* pDevice, float ix, float iz, D3DXCOLOR color = d3d::WHITE) override {
+		if (!tank_part[0].create(pDevice, ix, iz, 0.7f, 0.375f, 1.5f, color)) {
+			return false;
+		}
+		if (!tank_part[1].create(pDevice, ix, iz, 0.55f, 0.32f, 0.825f, color)) {
+			return false;
+		}
+		if (!tank_part[2].create(pDevice, ix, iz, 0.08f, 0.08f, 1.4f, color)) {
+			return false;
+		}
+		created = true;
+		return true;
+	}
 
+	void setPosition(float x, float y, float z) override {
+		tank_part[0].setPosition(x, y, z);
+		tank_part[1].setPosition(x, y + 0.35f, z + 0.3f);
+		tank_part[2].setPosition(x, y + 0.35f, z);
+	}
 };
 
 // -----------------------------------------------------------------------------
@@ -723,6 +731,7 @@ CWall	g_legowall[4];
 CBlueBall	g_target_blueball;
 CLight	g_light;
 Tank tank;
+OTank otank;
 
 CObstacle obstacle1; // 장애물 (테스트용)
 std::vector<CObstacle> obstacle_wall; // 장애물 (벽)
@@ -781,7 +790,9 @@ bool Setup()
 
 	if (false == tank.create(Device, -1, -1, d3d::BROWN)) return false;
 	tank.setPosition(-1, 0.2f, -1);
-	//tank.rotate(45);
+
+	if (false == otank.create(Device, -1, -1, d3d::BROWN)) return false;
+	otank.setPosition(-1, 0.2f, 1);
 
 	// tank랑 blue ball 연결
 	g_target_blueball.linkTank(&tank);
@@ -895,6 +906,7 @@ bool Display(float timeDelta)
 		Device->BeginScene();
 		// 탱크 위치 변경
 		tank.tankUpdate(timeDelta);
+		otank.tankUpdate(timeDelta);
 		// 미사일 위치도 변경 & 벽과 충돌했는지 체크
 		missile.ballUpdate(timeDelta);
 		for (i = 0; i < 4; i++) { g_legowall[i].hitBy(missile); }
@@ -905,6 +917,7 @@ bool Display(float timeDelta)
 		// draw plane, walls, and spheres
 		g_legoPlane.draw(Device, g_mWorld);
 		tank.draw(Device, g_mWorld);
+		otank.draw(Device, g_mWorld);
 
 		for (i = 0; i < 4; i++) {
 			g_legowall[i].draw(Device, g_mWorld);
@@ -914,20 +927,23 @@ bool Display(float timeDelta)
 		if (missile.get_created() == true) {
 			missile.hitBy();
 		}
-
-		if (obstacle1.hasIntersected(missile)) {
-			obstacle1.hitBy(missile);
-		}
-		else if (obstacle1.get_created()) {
-			obstacle1.draw(Device, g_mWorld);
+		if (obstacle1.get_created()) {
+			if (obstacle1.hasIntersected(missile)) {
+				obstacle1.hitBy(missile);
+			}
+			else if (obstacle1.get_created()) {
+				obstacle1.draw(Device, g_mWorld);
+			}
 		}
 
 		for (int i = 0; i < obstacle_wall.size(); i++) {
-			if (obstacle_wall[i].hasIntersected(missile)) {
-				obstacle_wall[i].hitBy(missile);
-			}
-			else if (obstacle_wall[i].get_created()) {
-				obstacle_wall[i].draw(Device, g_mWorld);
+			if(obstacle_wall[i].get_created()){
+				if (obstacle_wall[i].hasIntersected(missile)) {
+					obstacle_wall[i].hitBy(missile);
+				}
+				else if (obstacle_wall[i].get_created()) {
+					obstacle_wall[i].draw(Device, g_mWorld);
+				}
 			}
 		}
 
