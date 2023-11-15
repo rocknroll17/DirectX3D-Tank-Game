@@ -526,7 +526,7 @@ public:
 		if (!tank_part[1].create(pDevice, ix, iz, 0.55f, 0.32f, 0.825f, color)) {
 			return false;
 		}
-		if (!tank_part[2].create(pDevice, ix, iz, 0.08f, 0.08f, 1.4f, color)) {
+		if (!tank_part[2].create(pDevice, ix, iz, 0.12f, 0.12f, 1.4f, color)) {
 			return false;
 		}
 		created = true;
@@ -535,7 +535,7 @@ public:
 
 	void setPosition(float x, float y, float z) {
 		tank_part[0].setPosition(x, y, z);
-		if (!isO)
+		if (isO)
 			tank_part[1].setPosition(x, y + 0.35f, z + 0.3f);
 		else
 			tank_part[1].setPosition(x, y + 0.35f, z - 0.3f);
@@ -889,7 +889,7 @@ bool Display(float timeDelta)
 	{
 		double currTime = (double)timeGetTime();
 		double timediff = currTime - startTime;
-		if (timediff > 10000.0) {
+		if (timediff > 5000.0) {
 			Tank tempTank = tank;
 			tank = otank;
 			otank = tempTank;
