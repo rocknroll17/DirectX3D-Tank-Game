@@ -509,14 +509,17 @@ class Tank {
 protected:
 	float					m_velocity_x;
 	float					m_velocity_z;
+	bool					isO;
 	CWall tank_part[3];
 	bool created;
 public:
-	Tank() {
+	Tank(bool isOtank) {
 		m_velocity_x = 0;
 		m_velocity_z = 0;
+		isO = isOtank;
 	}
-	virtual bool create(IDirect3DDevice9* pDevice, float ix, float iz, D3DXCOLOR color = d3d::WHITE) {
+
+	bool create(IDirect3DDevice9* pDevice, float ix, float iz, D3DXCOLOR color = d3d::WHITE) {
 		if (!tank_part[0].create(pDevice, ix, iz, 0.7f, 0.375f, 1.5f, color)) {
 			return false;
 		}
@@ -530,9 +533,12 @@ public:
 		return true;
 	}
 
-	virtual void setPosition(float x, float y, float z) {
+	void setPosition(float x, float y, float z) {
 		tank_part[0].setPosition(x, y, z);
-		tank_part[1].setPosition(x, y + 0.35f, z - 0.3f);
+		if (isO)
+			tank_part[1].setPosition(x, y + 0.35f, z + 0.3f);
+		else
+			tank_part[1].setPosition(x, y + 0.35f, z - 0.3f);
 		tank_part[2].setPosition(x, y + 0.35f, z);
 	}
 
@@ -591,29 +597,6 @@ public:
 		this->m_velocity_x = vx;
 		this->m_velocity_z = vz;
 
-	}
-};
-
-class OTank : public Tank {
-public:
-	bool create(IDirect3DDevice9* pDevice, float ix, float iz, D3DXCOLOR color = d3d::WHITE) override {
-		if (!tank_part[0].create(pDevice, ix, iz, 0.7f, 0.375f, 1.5f, color)) {
-			return false;
-		}
-		if (!tank_part[1].create(pDevice, ix, iz, 0.55f, 0.32f, 0.825f, color)) {
-			return false;
-		}
-		if (!tank_part[2].create(pDevice, ix, iz, 0.08f, 0.08f, 1.4f, color)) {
-			return false;
-		}
-		created = true;
-		return true;
-	}
-
-	void setPosition(float x, float y, float z) override {
-		tank_part[0].setPosition(x, y, z);
-		tank_part[1].setPosition(x, y + 0.35f, z + 0.3f);
-		tank_part[2].setPosition(x, y + 0.35f, z);
 	}
 };
 
@@ -727,8 +710,8 @@ CWall	g_legoPlane;
 CWall	g_legowall[4];
 CBlueBall	g_target_blueball;
 CLight	g_light;
-Tank tank;
-OTank otank;
+Tank tank(0);
+Tank otank(1);
 
 CObstacle obstacle1; // 장애물 (테스트용)
 std::vector<CObstacle> obstacle_wall; // 장애물 (벽)
@@ -901,8 +884,19 @@ bool Display(float timeDelta)
 	D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
 	Device->SetTransform(D3DTS_VIEW, &g_mView);
 
+	static double startTime = (double)timeGetTime();
+
 	if (Device)
 	{
+		double currTime = (double)timeGetTime();
+		double timediff = currTime - startTime;
+		if (timediff > 5000.0) {
+			Tank tempTank = tank;
+			tank = otank;
+			otank = tempTank;
+
+			startTime = currTime;
+		}
 		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
 		Device->BeginScene();
 		// 탱크 위치 변경
