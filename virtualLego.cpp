@@ -645,8 +645,8 @@ bool Setup()
 	g_legowall[3].setPosition(-4.56f, 0.12f, 0.0f);
 
 	// 장애물 생성
-	if (false == obstacle1.create(Device, -1, -1, 0.12f, 0.6f, 1, d3d::BLACK)) return false;
-	obstacle1.setPosition(0.0f, 0.3f, 0.0f);
+	if (false == obstacle1.create(Device, -1, -1, 0.12f, 1.6f, 1, d3d::BLACK)) return false;
+	obstacle1.setPosition(0.0f, 0.8f, 0.0f);
 	//obstacle1.rotate(45);
 
 	// 장애물(벽) 생성
@@ -930,6 +930,27 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			if (camera_option == 0){ camera_option = 1; }
 				
 			else{ camera_option = 0; }
+			break;
+		}
+		case 0x10:
+		case 0x51:
+		{
+			// Shift, Q키
+			// blueball 올림
+			CSphere* moveTarget = &g_target_blueball;
+			double distance = 0.1;
+			D3DXVECTOR3 v = moveTarget->getCenter();
+			moveTarget->setCenter(v.x, v.y + distance, v.z);
+			break;
+		}
+		case 0x11:
+		{
+			// Ctrl키
+			// blueball 내림
+			CSphere* moveTarget = &g_target_blueball;
+			double distance = 0.1;
+			D3DXVECTOR3 v = moveTarget->getCenter();
+			moveTarget->setCenter(v.x, v.y - distance, v.z);
 			break;
 		}
 		}
