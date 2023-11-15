@@ -575,9 +575,6 @@ public:
 
 
 		this->setPosition(tX, cord.y, tZ);
-		//카메라의 시점이 탱크 중앙으로 하게 설정
-		g_camera_pos[0] = tX;
-		g_camera_pos[2] = tZ;
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
 		double rate = 1 - (1 - TANK_VELOCITY_RATE) * timeDiff * 400;
 		if (rate < 0)
@@ -892,7 +889,7 @@ bool Display(float timeDelta)
 		target = D3DXVECTOR3(tank.getHead()[0], tank.getHead()[1], tank.getHead()[2]);
 	}
 	else {
-		pos = D3DXVECTOR3(8.0, 5.0, 0.0);
+		pos = D3DXVECTOR3(20.0, 10.0, 0.0);
 		target = D3DXVECTOR3(0, 1, 0);
 	}
 
