@@ -227,7 +227,24 @@ class CBlueBall : public CSphere
 {
 private:
 	double radius;
-	double max_radius;
+	double maxRadius;
+
+public:
+	double getDistanceFromTank() {
+		double x = getCenter().x, 
+			y = getCenter().y, 
+			z = getCenter().z;
+		double tx = tank.getCenter().x,
+			ty = 0,
+			tz = tank.getCenter().z;
+
+		return sqrt(pow(x - tx, 2) + pow(y - ty, 2) + pow(z - tz, 2));
+	}
+
+	double getRadius() { return radius; }
+	double getMaxRadius() { return radius; }
+	void setRadius(double r) { if (r > 0) radius = r; }
+	void setMaxRadius(double r) { if (r > 0)maxRadius = r; }
 
 	void ballUpdate(float timeDiff)
 	{
@@ -816,11 +833,7 @@ bool Display(float timeDelta)
 
 		// draw plane, walls, and spheres
 		g_legoPlane.draw(Device, g_mWorld);
-		/*
-		test.draw(Device, g_mWorld);
-		top.draw(Device, g_mWorld);
-		barrel.draw(Device, g_mWorld);
-		*/
+
 		tank.draw(Device, g_mWorld);
 
 		for (i = 0; i < 4; i++) {
