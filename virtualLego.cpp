@@ -173,7 +173,7 @@ public:
 		double rate = 1 - (1 - DECREASE_RATE) * timeDiff * 400;
 		if (rate < 0)
 			rate = 0;
-		this->setPower(getVelocity_X() * rate, getVelocity_Y() - 0.0015, getVelocity_Z() * rate);
+		this->setPower(getVelocity_X() * rate, getVelocity_Y() - 0.002, getVelocity_Z() * rate);
 
 	}
 
@@ -970,7 +970,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			double distance_sky = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.y - whitepos.y, 2) + pow(targetpos.z - whitepos.z, 2));  // y좌표 고려한 거리
 			//double distance = sqrt( sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)) + pow(targetpos.y - whitepos.y, 2)); // y좌표 포함 계산
 
-			double missilePower = 1.5;
+			double missilePower = 1.8;
 
 			missile.destroy();
 			missile.create(Device, d3d::BLACK);
@@ -1019,8 +1019,9 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 		case 0x10:
+		case 0x51:
 		{
-			// Shift키
+			// Shift, Q키
 			// blueball 올림
 			CBlueBall* moveTarget = &g_target_blueball;
 			double distance = BLUEBALL_MOVE_DISTANCE;
