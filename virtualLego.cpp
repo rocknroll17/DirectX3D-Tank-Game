@@ -723,10 +723,10 @@ CSphere missile;   // c 누르면 나가는 미사일
 // Functions
 // -----------------------------------------------------------------------------
 
-bool createWall(float partitionWidth, float partitionHeight, float partitonDepth,
+bool createVerticalWall( float partitionWidth, float partitionHeight, float partitionDepth,
 	int partitionCount_land, int partitionCount_sky,
 	float x, float y, float z,
-	D3DXCOLOR wallColor = d3d::WHITE) {
+	D3DXCOLOR wallColor = d3d::WHITE ) {
 	// (partitionCount_land * partitionCount_sky) 크기의 벽을 생성함.
 	// 각 partition의 크기는 (partitionWidth, partitionHeight, partitionDepth)
 	for (int i = 0; i < partitionCount_land; i++) {
@@ -735,10 +735,10 @@ bool createWall(float partitionWidth, float partitionHeight, float partitonDepth
 			float nx, ny, nz;
 			nx = x;
 			ny = y + partitionHeight * j;
-			nz = z + partitonDepth * i;
+			nz = z + partitionDepth * i;
 			// 장애물 생성 & 배치
 			CObstacle partition;
-			if (false == partition.create(Device, -1, -1, partitionWidth, partitionHeight, partitonDepth, wallColor)) return false;
+			if (false == partition.create(Device, -1, -1, partitionWidth, partitionHeight, partitionDepth, wallColor)) return false;
 			partition.setPosition(nx, ny, nz);
 			obstacle_wall.push_back(partition);
 			// 전역변수에 저장
@@ -747,6 +747,29 @@ bool createWall(float partitionWidth, float partitionHeight, float partitonDepth
 	return true;
 }
 
+bool createHorizontalWall( float partitionWidth, float partitionHeight, float partitionDepth,
+	int partitionCount_land, int partitionCount_sky,
+	float x, float y, float z,
+	D3DXCOLOR wallColor = d3d::WHITE ) {
+	// (partitionCount_land * partitionCount_sky) 크기의 벽을 생성함.
+	// 각 partition의 크기는 (partitionWidth, partitionHeight, partitionDepth)
+	for (int i = 0; i < partitionCount_land; i++) {
+		for (int j = 0; j < partitionCount_sky; j++) {
+			// 좌표 결정
+			float nx, ny, nz;
+			nx = x + partitionWidth * i;
+			ny = y + partitionHeight * j;
+			nz = z;
+			// 장애물 생성 & 배치
+			CObstacle partition;
+			if (false == partition.create(Device, -1, -1, partitionWidth, partitionHeight, partitionDepth, wallColor)) return false;
+			partition.setPosition(nx, ny, nz);
+			obstacle_wall.push_back(partition);
+			// 전역변수에 저장
+		}
+	}
+	return true;
+}
 
 void destroyAllLegoBlock(void)
 {
@@ -792,15 +815,15 @@ bool Setup()
 	// 장애물(벽) 생성
 	// 벽 하나는 여러개의 파티션으로 나누어짐
 	D3DXCOLOR wall_color = d3d::BLUE; // 벽 색상
-	float wallPartition_width = 0.12f; // 각 파티션의 가로넓이
+	float wallPartition_width = 1; // 각 파티션의 가로넓이
 	float wallPartition_height = 0.6f; // 각 파티션의 높이
-	float wallPartition_depth = 1; // 각 파티션의 세로넓이
-	int partitionCount_land = 3; // 가로로 몇 개 놓을지
-	int partitionCount_sky = 3; // 세로로 몇 개 놓을지
+	float wallPartition_depth = 0.12f; // 각 파티션의 세로넓이
+	int partitionCount_land = 9; // 가로로 몇 개 놓을지
+	int partitionCount_sky = 9; // 세로로 몇 개 놓을지
 	float base_x = 0.0f, base_y = wallPartition_height * 0.5, base_z = -3.0f; // 벽 생성 위치
 
 	// 벽 생성 & 배치
-	createWall(wallPartition_width, wallPartition_height, wallPartition_depth, partitionCount_land, partitionCount_sky, base_x, base_y, base_z, wall_color);
+	createHorizontalWall(wallPartition_width, wallPartition_height, wallPartition_depth, partitionCount_land, partitionCount_sky, base_x, base_y, base_z, wall_color);
 
 
 
