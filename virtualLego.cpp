@@ -37,13 +37,13 @@ D3DXMATRIX g_mWorld;
 D3DXMATRIX g_mView;
 D3DXMATRIX g_mProj;
 
-#define M_RADIUS 0.13   // ball radius
+#define M_RADIUS 0.1   // ball radius
 #define PI 3.14159265
 #define M_HEIGHT 0.01
 #define DECREASE_RATE 0.9982
 #define TANK_VELOCITY_RATE 0.99
 
-#define BLUEBALL_MOVE_DISTANCE 0.03
+#define BLUEBALL_MOVE_DISTANCE 0.05
 #define MIN_BLUEBALL_RADIUS 0.2 // blueball 어디 이상 멀어져야 하는지 (앞으로)
 #define MAX_BLUEBALL_RADIUS 2  // blueball 어디까지 멀어질 수 있는지 (앞으로)
 #define MAX_BLUEBALL_WIDTH 0.3 // blueball 어디까지 멀어질 수 있는지 (옆으로)
@@ -196,9 +196,7 @@ public:
 			tZ = -(WORLD_DEPTH / 2) + M_RADIUS;
 		else if (tZ >= ((WORLD_DEPTH / 2) - M_RADIUS))
 			tZ = (WORLD_DEPTH / 2) - M_RADIUS;
-		if (tY < 0 + M_RADIUS)
-			tY = M_RADIUS;
-		// y가 0 이하로 떨어지지 않도록 (임시)
+
 
 		this->setCenter(tX, tY, tZ);
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
@@ -517,7 +515,7 @@ public:
 		if (!tank_part[1].create(pDevice, ix, iz, 0.55f, 0.32f, 0.825f, color)) {
 			return false;
 		}
-		if (!tank_part[2].create(pDevice, ix, iz, 0.08f, 0.08f, 1.4f, color)) {
+		if (!tank_part[2].create(pDevice, ix, iz, 0.12f, 0.12f, 1.4f, color)) {
 			return false;
 		}
 		created = true;
@@ -717,7 +715,7 @@ Tank tank;
 CObstacle obstacle1; // 장애물 (테스트용)
 std::vector<CObstacle> obstacle_wall; // 장애물 (벽)
 
-LPD3DXFONT fonts; // test -> 화면에 숫자표시 이걸로 하는듯
+LPD3DXFONT m_pFont; // test -> 화면에 숫자표시 이걸로 하는듯
 
 CSphere missile;   // c 누르면 나가는 미사일
 
@@ -773,6 +771,33 @@ bool createHorizontalWall( float partitionWidth, float partitionHeight, float pa
 	return true;
 }
 
+bool createBlock(float partitionWidth, float partitionHeight, float partitionDepth,
+	int partitionCount_x, int partitionCount_y, int partitionCount_z,
+	float x, float y, float z,
+	D3DXCOLOR wallColor = d3d::WHITE) {
+	// (partitionCount_land * partitionCount_sky) 크기의 벽을 생성함.
+	// 각 partition의 크기는 (partitionWidth, partitionHeight, partitionDepth)
+	for (int i = 0; i < partitionCount_x; i++) {
+		for (int j = 0; j < partitionCount_y; j++) {
+			for (int k = 0; k < partitionCount_z; k++) {
+				// 좌표 결정
+				float nx, ny, nz;
+				nx = x + partitionWidth * i;
+				ny = y + partitionHeight * j;
+				nz = z + partitionDepth * k;
+				// 장애물 생성 & 배치
+				CObstacle partition;
+				if (false == partition.create(Device, -1, -1, partitionWidth, partitionHeight, partitionDepth, wallColor)) return false;
+				partition.setPosition(nx, ny, nz);
+				obstacle_wall.push_back(partition);
+				// 전역변수에 저장
+			}
+		}
+	}
+	return true;
+}
+
+
 void destroyAllLegoBlock(void)
 {
 }
@@ -827,7 +852,7 @@ bool Setup()
 	// 벽 생성 & 배치
 	createHorizontalWall(wallPartition_width, wallPartition_height, wallPartition_depth, partitionCount_land, partitionCount_sky, base_x, base_y, base_z, wall_color);
 
-
+	createBlock(0.3, 0.3, 0.3, 2, 2, 2, 1, 1, 1, d3d::WHITE);
 
 	// create blue ball for set direction
 	if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
