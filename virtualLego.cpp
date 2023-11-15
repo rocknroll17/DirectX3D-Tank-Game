@@ -245,14 +245,14 @@ private:
 
 		//correction of position of ball
 		// Please uncomment this part because this correction of ball position is necessary when a ball collides with a wall
-		if (tX >= (4.5 - M_RADIUS))
-			tX = 4.5 - M_RADIUS;
-		else if (tX <= (-4.5 + M_RADIUS))
-			tX = -4.5 + M_RADIUS;
-		else if (tZ <= (-3 + M_RADIUS))
-			tZ = -3 + M_RADIUS;
-		else if (tZ >= (3 - M_RADIUS))
-			tZ = 3 - M_RADIUS;
+		if (tX >= ((WORLD_WIDTH / 2) - M_RADIUS))
+			tX = (WORLD_WIDTH / 2) - M_RADIUS;
+		else if (tX <= (-(WORLD_WIDTH / 2) + M_RADIUS))
+			tX = -(WORLD_WIDTH / 2) + M_RADIUS;
+		else if (tZ <= (-(WORLD_DEPTH / 2) + M_RADIUS))
+			tZ = -(WORLD_DEPTH / 2) + M_RADIUS;
+		else if (tZ >= ((WORLD_DEPTH / 2) - M_RADIUS))
+			tZ = (WORLD_DEPTH / 2) - M_RADIUS;
 		// y가 0 이하로 떨어지지 않도록 (임시)
 		if (tY < 0 + M_RADIUS)
 			tY = M_RADIUS;
@@ -485,6 +485,10 @@ private:
 	d3d::BoundingSphere m_bound;
 };
 
+// -----------------------------------------------------------------------------
+// Tank class definition
+// -----------------------------------------------------------------------------
+
 class Tank {
 private:
 	float					m_velocity_x;
@@ -539,15 +543,16 @@ public:
 
 
 		//correction of position of ball
-		// Please uncomment this part because this correction of ball position is necessary when a ball collides with a wall
-		if (tX >= (4.5 - M_RADIUS))
-			tX = 4.5 - M_RADIUS;
-		else if (tX <= (-4.5 + M_RADIUS))
-			tX = -4.5 + M_RADIUS;
-		else if (tZ <= (-3 + M_RADIUS))
-			tZ = -3 + M_RADIUS;
-		else if (tZ >= (3 - M_RADIUS))
-			tZ = 3 - M_RADIUS;
+// Please uncomment this part because this correction of ball position is necessary when a ball collides with a wall
+		if (tX >= ((WORLD_WIDTH / 2) - M_RADIUS))
+			tX = (WORLD_WIDTH / 2) - M_RADIUS;
+		else if (tX <= (-(WORLD_WIDTH / 2) + M_RADIUS))
+			tX = -(WORLD_WIDTH / 2) + M_RADIUS;
+		else if (tZ <= (-(WORLD_DEPTH / 2) + M_RADIUS))
+			tZ = -(WORLD_DEPTH / 2) + M_RADIUS;
+		else if (tZ >= ((WORLD_DEPTH / 2) - M_RADIUS))
+			tZ = (WORLD_DEPTH / 2) - M_RADIUS;
+
 
 		this->setPosition(tX, cord.y, tZ);
 		//카메라의 시점이 공을 중앙으로 하게 설정
