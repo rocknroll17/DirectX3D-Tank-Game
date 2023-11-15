@@ -44,6 +44,7 @@ D3DXMATRIX g_mProj;
 #define TANK_VELOCITY_RATE 0.99
 
 #define BLUEBALL_MOVE_DISTANCE 0.03
+#define MIN_BLUEBALL_RADIUS 0.2 // blueball 어디 이상 멀어져야 하는지 (앞으로)
 #define MAX_BLUEBALL_RADIUS 2  // blueball 어디까지 멀어질 수 있는지 (앞으로)
 #define MAX_BLUEBALL_WIDTH 0.3 // blueball 어디까지 멀어질 수 있는지 (옆으로)
 
@@ -60,7 +61,7 @@ bool camera_option = 0;
 // -----------------------------------------------------------------------------
 
 class CSphere {
-//private
+	//private
 protected:
 	float					center_x, center_y, center_z;
 	float                   m_radius;
@@ -124,7 +125,7 @@ public:
 		m_pSphereMesh->DrawSubset(0);
 	}
 
-	
+
 	bool hasIntersected(CSphere& ball)
 	{
 		D3DXVECTOR3 sphereCenter = ball.getCenter();
@@ -149,10 +150,17 @@ public:
 		if (hasIntersected(ball)) {
 			destroy();
 			ball.destroy();
-			m_hit=true;
+			m_hit = true;
 		}
 	}
-	
+
+	void hitBy() {
+		if (center_y <= M_RADIUS) {
+			destroy();
+			m_hit = true;
+		}
+	}
+
 	void Out()
 	{
 		if (center_x >= 4.5 - M_RADIUS || center_x <= -4.5 + M_RADIUS || center_z >= 3 - M_RADIUS || center_z <= -3 + M_RADIUS)
@@ -315,14 +323,14 @@ public:
 		float wallHeight = m_height;
 		float wallDepth = m_depth;
 
-		bool intersectX = (sphereCenter.x <= wallCenter.x + wallWidth / 2 + sphereRadius * 0.8) &&
-			(sphereCenter.x >= wallCenter.x - wallWidth / 2 - sphereRadius * 0.8);
+		bool intersectX = (sphereCenter.x <= wallCenter.x + wallWidth / 2 + M_RADIUS * 0.8) &&
+			(sphereCenter.x >= wallCenter.x - wallWidth / 2 - M_RADIUS * 0.8);
 
-		bool intersectY = (sphereCenter.y <= wallCenter.y + wallHeight / 2 + sphereRadius * 0.8) &&
-			(sphereCenter.y >= wallCenter.y - wallHeight / 2 - sphereRadius * 0.8);
+		bool intersectY = (sphereCenter.y <= wallCenter.y + wallHeight / 2 + M_RADIUS * 0.8) &&
+			(sphereCenter.y >= wallCenter.y - wallHeight / 2 - M_RADIUS * 0.8);
 
-		bool intersectZ = (sphereCenter.z <= wallCenter.z + wallDepth / 2 + sphereRadius * 0.8) &&
-			(sphereCenter.z >= wallCenter.z - wallDepth / 2 - sphereRadius * 0.8);
+		bool intersectZ = (sphereCenter.z <= wallCenter.z + wallDepth / 2 + M_RADIUS * 0.8) &&
+			(sphereCenter.z >= wallCenter.z - wallDepth / 2 - M_RADIUS * 0.8);
 
 		return intersectX && intersectY && intersectZ;
 	}
@@ -585,6 +593,10 @@ public:
 
 };
 
+class OTank : public Tank {
+
+};
+
 // -----------------------------------------------------------------------------
 // CBlueBall class definition
 // -----------------------------------------------------------------------------
@@ -641,13 +653,13 @@ public:
 	double getMaxRadius() { return radius; }
 	void setRadius(double r) { if (r > 0) radius = r; }
 	//void setMaxRadius(double r) { if (r > 0)maxRadius = r; }
-	void linkTank(Tank* const t) { 
+	void linkTank(Tank* const t) {
 		linkedTank = t;
 		tankLastX = linkedTank->getCenter().x;
 		tankLastZ = linkedTank->getCenter().z;
 	}
-	
-	
+
+
 	void ballUpdate(float timeDiff)
 	{
 		if (!created) return;
@@ -669,7 +681,7 @@ public:
 			tY = M_RADIUS;
 
 		// 탱크가 움직이면 blueball도 움직임
-		
+
 		double dX = tankX - tankLastX;
 		double dZ = tankZ - tankLastZ;
 		tX += dX;
@@ -679,11 +691,11 @@ public:
 		if (rate < 0)
 			rate = 0;
 		this->setPower(getVelocity_X() * rate, getVelocity_Y() * rate, getVelocity_Z() * rate);
-		
+
 		tankLastX = tankX;
 		tankLastZ = tankZ;
 	}
-	
+
 };
 
 
@@ -762,16 +774,16 @@ bool Setup()
 	//make wall
 	// create walls and set the position. note that there are four walls
 	if (false == g_legowall[0].create(Device, -1, -1, WORLD_WIDTH, 0.3f, 0.12f, d3d::DARKRED)) return false;
-	g_legowall[0].setPosition(0.0f, BORDER_WIDTH, (WORLD_DEPTH + BORDER_WIDTH)/2);
+	g_legowall[0].setPosition(0.0f, BORDER_WIDTH, (WORLD_DEPTH + BORDER_WIDTH) / 2);
 	if (false == g_legowall[1].create(Device, -1, -1, WORLD_WIDTH, 0.3f, 0.12f, d3d::DARKRED)) return false;
-	g_legowall[1].setPosition(0.0f, BORDER_WIDTH, - (WORLD_DEPTH + BORDER_WIDTH)/2);
+	g_legowall[1].setPosition(0.0f, BORDER_WIDTH, -(WORLD_DEPTH + BORDER_WIDTH) / 2);
 	if (false == g_legowall[2].create(Device, -1, -1, 0.12f, 0.3f, WORLD_DEPTH + 2 * BORDER_WIDTH, d3d::DARKRED)) return false;
-	g_legowall[2].setPosition((WORLD_WIDTH+BORDER_WIDTH)/2, BORDER_WIDTH, 0.0f);
+	g_legowall[2].setPosition((WORLD_WIDTH + BORDER_WIDTH) / 2, BORDER_WIDTH, 0.0f);
 	if (false == g_legowall[3].create(Device, -1, -1, 0.12f, 0.3f, WORLD_DEPTH + 2 * BORDER_WIDTH, d3d::DARKRED)) return false;
-	g_legowall[3].setPosition(-(WORLD_WIDTH + BORDER_WIDTH)/2, BORDER_WIDTH, 0.0f);
+	g_legowall[3].setPosition(-(WORLD_WIDTH + BORDER_WIDTH) / 2, BORDER_WIDTH, 0.0f);
 
 	// 장애물 생성
-	if (false == obstacle1.create(Device, -1, -1, 1.12f, 2.0f, 1, d3d::BLACK)) return false;
+	if (false == obstacle1.create(Device, -1, -1, 1.12f, 2.0f, 1, d3d::WHITE)) return false;
 	obstacle1.setPosition(0.0f, 0.5f, 3.0f);
 
 	// 장애물(벽) 생성
@@ -791,8 +803,8 @@ bool Setup()
 
 	// create blue ball for set direction
 	if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
-	g_target_blueball.setCenter(.0f, (float)M_RADIUS + 3, .0f);
-	 
+	g_target_blueball.setCenter(.0f, (float)M_RADIUS + 1, .0f);
+
 	// light setting 
 	D3DLIGHT9 lit;
 	::ZeroMemory(&lit, sizeof(lit));
@@ -854,7 +866,7 @@ bool Display(float timeDelta)
 		target = D3DXVECTOR3(tank.getHead()[0], tank.getHead()[1], tank.getHead()[2]);
 	}
 	else {
-		pos = D3DXVECTOR3(0.0, 5.0, -8.0);
+		pos = D3DXVECTOR3(8.0, 5.0, 0.0);
 		target = D3DXVECTOR3(0, 1, 0);
 	}
 
@@ -887,14 +899,15 @@ bool Display(float timeDelta)
 		//obstacle1.draw(Device, g_mWorld); // 장애물도 그림
 		//for (CObstacle partition : obstacle_wall) { partition.draw(Device, g_mWorld); } // 장애물(벽) 그림
 
-		
+		missile.hitBy();
+
 		// 미사일과 공 충돌했는지 체크
-		if(!obstacle1.isHit()){
+		if (!obstacle1.isHit()) {
 			obstacle1.hitBy(missile);
 			obstacle1.draw(Device, g_mWorld);
 		}
 		//for (CObstacle partition : obstacle_wall) {
-		for(int i = 0; i < obstacle_wall.size(); i++){
+		for (int i = 0; i < obstacle_wall.size(); i++) {
 			CObstacle partition = obstacle_wall[i];
 			if (!partition.isHit()) {
 				partition.hitBy(missile);
@@ -921,12 +934,12 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	static enum { WORLD_MOVE, LIGHT_MOVE, BLOCK_MOVE } move = WORLD_MOVE;
 
 	switch (msg) {
-	/*
-	'W' 키: VK_W (0x57)
-	'S' 키: VK_S (0x53)
-	'A' 키: VK_A (0x41)
-	'D' 키: VK_D (0x44)
-	*/
+		/*
+		'W' 키: VK_W (0x57)
+		'S' 키: VK_S (0x53)
+		'A' 키: VK_A (0x41)
+		'D' 키: VK_D (0x44)
+		*/
 	case WM_DESTROY:
 	{
 		::PostQuitMessage(0);
@@ -1013,20 +1026,25 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			// W키
 			CBlueBall* moveTarget = &g_target_blueball;
+			Tank* shooter = &tank;
 			double distance = BLUEBALL_MOVE_DISTANCE;
-			D3DXVECTOR3 v = moveTarget->getCenter();
-			//double newZ = v.z + distance;
-			moveTarget->setCenter(v.x, v.y, v.z + distance);
+			D3DXVECTOR3 tankcoord = shooter->getCenter();
+			D3DXVECTOR3 targetcoord = moveTarget->getCenter();
+			double dz = tankcoord.z - targetcoord.z;
+			if(dz < MAX_BLUEBALL_RADIUS) moveTarget->setCenter(targetcoord.x, targetcoord.y, targetcoord.z + distance);
 			break;
 		}
 
-		case 0x41: 
+		case 0x41:
 		{
 			// A키
 			CBlueBall* moveTarget = &g_target_blueball;
+			Tank* shooter = &tank;
 			double distance = BLUEBALL_MOVE_DISTANCE;
-			D3DXVECTOR3 v = moveTarget->getCenter();
-			moveTarget->setCenter(v.x - distance, v.y, v.z);
+			D3DXVECTOR3 tankcoord = shooter->getCenter();
+			D3DXVECTOR3 targetcoord = moveTarget->getCenter();
+			double dx = tankcoord.x - targetcoord.x;
+			if(dx < MAX_BLUEBALL_WIDTH) moveTarget->setCenter(targetcoord.x - distance, targetcoord.y, targetcoord.z);
 			break;
 		}
 
@@ -1034,25 +1052,30 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			// S키
 			CBlueBall* moveTarget = &g_target_blueball;
+			Tank* shooter = &tank;
 			double distance = BLUEBALL_MOVE_DISTANCE;
-			D3DXVECTOR3 v = moveTarget->getCenter();
-			moveTarget->setCenter(v.x, v.y, v.z - distance);
+			D3DXVECTOR3 tankcoord = shooter->getCenter();
+			D3DXVECTOR3 targetcoord = moveTarget->getCenter();
+			double dz = targetcoord.z - tankcoord.z;
+			if(dz > MIN_BLUEBALL_RADIUS) moveTarget->setCenter(targetcoord.x, targetcoord.y, targetcoord.z - distance);
 			break;
 		}
 		case 0x44:
 		{
 			// D키
 			CBlueBall* moveTarget = &g_target_blueball;
+			Tank* shooter = &tank;
 			double distance = BLUEBALL_MOVE_DISTANCE;
-			D3DXVECTOR3 v = moveTarget->getCenter();
-			moveTarget->setCenter(v.x + distance, v.y, v.z);
+			D3DXVECTOR3 tankcoord = shooter->getCenter();
+			D3DXVECTOR3 targetcoord = moveTarget->getCenter();
+			double dx = targetcoord.x - tankcoord.x;
+			if(dx < MAX_BLUEBALL_WIDTH) moveTarget->setCenter(targetcoord.x + distance, targetcoord.y, targetcoord.z);
 			break;
 		}
 		case 0x56:
 		{
 			// v 버튼 누를 시
 			if (camera_option == 0) { camera_option = 1; }
-
 			else { camera_option = 0; }
 			break;
 		}
@@ -1165,7 +1188,7 @@ int WINAPI WinMain(HINSTANCE hinstance,
 	d3d::EnterMsgLoop(Display);
 
 	Cleanup();
-	
+
 	Device->Release();
 
 	return 0;
