@@ -883,6 +883,7 @@ bool Display(float timeDelta)
 		Device->BeginScene();
 		// 탱크 위치 변경
 		tank.tankUpdate(timeDelta);
+
 		// 미사일 위치도 변경 & 벽과 충돌했는지 체크
 		missile.ballUpdate(timeDelta);
 		for (i = 0; i < 4; i++) { g_legowall[i].hitBy(missile); }
