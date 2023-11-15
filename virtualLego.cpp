@@ -387,7 +387,7 @@ private:
 	bool hit;
 
 public:
-	CObstacle() :CWall(), hit(false)
+	CObstacle() : hit(false)
 	{}
 
 	bool isHit()
@@ -911,10 +911,9 @@ bool Display(float timeDelta)
 		}
 		//for (CObstacle partition : obstacle_wall) {
 		for (int i = 0; i < obstacle_wall.size(); i++) {
-			CObstacle partition = obstacle_wall[i];
-			if (!partition.isHit()) {
-				partition.hitBy(missile);
-				partition.draw(Device, g_mWorld);
+			if (!obstacle_wall[i].isHit()) {
+				obstacle_wall[i].hitBy(missile);
+				obstacle_wall[i].draw(Device, g_mWorld);
 			}
 		}
 
