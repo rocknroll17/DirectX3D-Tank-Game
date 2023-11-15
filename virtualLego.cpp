@@ -44,9 +44,10 @@ D3DXMATRIX g_mProj;
 #define TANK_VELOCITY_RATE 0.99
 
 #define BLUEBALL_MOVE_DISTANCE 0.03
-#define MAX_BLUEBALL_RADIUS 2  // blueball 어디까지 멀어질 수 있는지
+#define MAX_BLUEBALL_RADIUS 2  // blueball 어디까지 멀어질 수 있는지 (앞으로)
+#define MAX_BLUEBALL_WIDTH 0.3 // blueball 어디까지 멀어질 수 있는지 (옆으로)
 
-#define MISSILE_POWER 1.3
+#define MISSILE_POWER 1.88
 
 #define WORLD_WIDTH 16
 #define WORLD_DEPTH 24
@@ -192,7 +193,7 @@ public:
 		double rate = 1 - (1 - DECREASE_RATE) * timeDiff * 400;
 		if (rate < 0)
 			rate = 0;
-		this->setPower(getVelocity_X() * rate, getVelocity_Y() - 0.002, getVelocity_Z() * rate);
+		this->setPower(getVelocity_X() * rate, getVelocity_Y() - 12 * timeDiff, getVelocity_Z() * rate);
 
 	}
 
@@ -971,7 +972,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			missile.destroy();
 			missile.create(Device, d3d::BLACK);
 			missile.setCenter(whitepos.x, whitepos.y, whitepos.z);
-			missile.setPower(distance_land * cos(theta) * MISSILE_POWER, distance_sky * sin(theta_sky), distance_land * sin(theta) * MISSILE_POWER);
+			missile.setPower(distance_land * cos(theta) * MISSILE_POWER, distance_sky * sin(theta_sky) * MISSILE_POWER, distance_land * sin(theta) * MISSILE_POWER);
 			break;
 		}
 
