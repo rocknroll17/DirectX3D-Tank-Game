@@ -22,13 +22,13 @@ IDirect3DDevice9* Device = NULL;
 // window size
 const int Width = 1920;
 const int Height = 1080;
+const double TANK_SPEED = 0.45;
 
 // There are four balls
 // initialize the position (coordinate) of each ball (ball0 ~ ball3)
 const float spherePos[4][2] = { {-2.7f,0} , {+2.4f,0} , {3.3f,0} , {-2.7f,-0.9f} };
 // initialize the color of each ball (ball0 ~ ball3)
 const D3DXCOLOR sphereColor[4] = { d3d::RED, d3d::RED, d3d::YELLOW, d3d::WHITE };
-
 
 // -----------------------------------------------------------------------------
 // Transform matrices
@@ -46,8 +46,8 @@ D3DXMATRIX g_mProj;
 #define BLUEBALL_MOVE_DISTANCE 0.03
 #define MAX_BLUEBALL_RADIUS 2  // blueball 어디까지 멀어질 수 있는지
 
-#define WORLD_WIDTH 24
-#define WORLD_DEPTH 16
+#define WORLD_WIDTH 16
+#define WORLD_DEPTH 24
 #define BORDER_WIDTH 0.12f // 가장자리 벽 굵기
 
 double g_camera_pos[3] = { 0.0, 5.0, -8.0 };
@@ -688,7 +688,6 @@ public:
 // -----------------------------------------------------------------------------
 CWall	g_legoPlane;
 CWall	g_legowall[4];
-CSphere	g_sphere[4];
 CBlueBall	g_target_blueball;
 CLight	g_light;
 Tank tank;
@@ -769,27 +768,21 @@ bool Setup()
 	// 장애물 생성
 	if (false == obstacle1.create(Device, -1, -1, 0.12f, 0.6f, 1, d3d::BLACK)) return false;
 	obstacle1.setPosition(0.0f, 0.3f, 0.0f);
-	//obstacle1.rotate(45);
 
 	// 장애물(벽) 생성
 	// 벽 하나는 여러개의 파티션으로 나누어짐
-	D3DXCOLOR wall_color = d3d::WHITE; // 벽 색상
+	D3DXCOLOR wall_color = d3d::BLUE; // 벽 색상
 	float wallPartition_width = 0.12f; // 각 파티션의 가로넓이
 	float wallPartition_height = 0.6f; // 각 파티션의 높이
 	float wallPartition_depth = 1; // 각 파티션의 세로넓이
 	int partitionCount_land = 3; // 가로로 몇 개 놓을지
-	int partitionCount_sky = 1; // 세로로 몇 개 놓을지
+	int partitionCount_sky = 3; // 세로로 몇 개 놓을지
 	float base_x = 0.0f, base_y = wallPartition_height * 0.5, base_z = 0.0f; // 벽 생성 위치
 
 	// 벽 생성 & 배치
 	createWall(wallPartition_width, wallPartition_height, wallPartition_depth, partitionCount_land, partitionCount_sky, base_x, base_y, base_z, wall_color);
 
-	// create four balls and set the position
-	for (i = 0; i < 4; i++) {
-		if (false == g_sphere[i].create(Device, sphereColor[i])) return false;
-		g_sphere[i].setCenter(spherePos[i][0], (float)M_RADIUS, spherePos[i][1]);
-		g_sphere[i].setPower(0, 0);
-	}
+
 
 	// create blue ball for set direction
 	if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
@@ -870,10 +863,12 @@ bool Display(float timeDelta)
 		Device->BeginScene();
 
 		// update the position of each ball. during update, check whether each ball hit by walls.
+		/*
 		for (i = 0; i < 4; i++) {
 			g_sphere[i].ballUpdate(timeDelta);
 			for (j = 0; j < 4; j++) { g_legowall[i].hitBy(g_sphere[j]); }
 		}
+		*/
 		// 탱크 위치 변경
 		tank.tankUpdate(timeDelta);
 		// 미사일 위치도 변경 & 벽과 충돌했는지 체크
@@ -893,8 +888,8 @@ bool Display(float timeDelta)
 		}
 		g_target_blueball.draw(Device, g_mWorld);
 		missile.draw(Device, g_mWorld);  // 미사일도 그림
-		//obstacle1.draw(Device, g_mWorld); // 장애물도 그림
-		//for (CObstacle partition : obstacle_wall) { partition.draw(Device, g_mWorld); } // 장애물(벽) 그림
+		obstacle1.draw(Device, g_mWorld); // 장애물도 그림
+		for (CObstacle partition : obstacle_wall) { partition.draw(Device, g_mWorld); } // 장애물(벽) 그림
 
 		
 		// 미사일과 공 충돌했는지 체크
@@ -902,7 +897,11 @@ bool Display(float timeDelta)
 			obstacle1.hitBy(missile);
 			obstacle1.draw(Device, g_mWorld);
 		}
-
+		for (CObstacle partition : obstacle_wall) {
+			if (partition.isHit()) {
+				partition.hitBy(missile);
+			}
+		}
 		
 
 		// draw plane, walls, and spheres
@@ -910,13 +909,8 @@ bool Display(float timeDelta)
 
 		tank.draw(Device, g_mWorld);
 
-		for (i = 0; i < 4; i++) {
-			g_legowall[i].draw(Device, g_mWorld);
-			g_sphere[i].draw(Device, g_mWorld);
-		}
 		g_target_blueball.draw(Device, g_mWorld);
 		missile.draw(Device, g_mWorld);  // 미사일도 그림
-		obstacle1.draw(Device, g_mWorld); // 장애물도 그림
 		for (CObstacle partition : obstacle_wall) { partition.draw(Device, g_mWorld); } // 장애물(벽) 그림
 
 		g_light.draw(Device);
@@ -1036,7 +1030,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			// 흰 공 발사
 			
 			D3DXVECTOR3 targetpos = g_target_blueball.getCenter();
-			D3DXVECTOR3	whitepos = g_sphere[3].getCenter();
+			D3DXVECTOR3	whitepos = tank.getHead();
 			double theta = acos(sqrt(pow(targetpos.x - whitepos.x, 2)) / sqrt(pow(targetpos.x - whitepos.x, 2) +
 				pow(targetpos.z - whitepos.z, 2)));		// 기본 1 사분면
 			if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x >= 0) { theta = -theta; }	//4 사분면
