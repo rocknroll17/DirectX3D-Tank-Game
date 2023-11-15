@@ -314,14 +314,14 @@ public:
 		float wallHeight = m_height;
 		float wallDepth = m_depth;
 
-		bool intersectX = (sphereCenter.x + sphereRadius >= wallCenter.x - wallWidth / 2) &&
-			(sphereCenter.x - sphereRadius <= wallCenter.x + wallWidth / 2);
+		bool intersectX = (sphereCenter.x <= wallCenter.x + wallWidth / 2 + sphereRadius * 0.8) &&
+			(sphereCenter.x >= wallCenter.x - wallWidth / 2 - sphereRadius * 0.8);
 
-		bool intersectY = (sphereCenter.y + sphereRadius >= wallCenter.y - wallHeight / 2) &&
-			(sphereCenter.y - sphereRadius <= wallCenter.y + wallHeight / 2);
+		bool intersectY = (sphereCenter.y <= wallCenter.y + wallHeight / 2 + sphereRadius * 0.8) &&
+			(sphereCenter.y >= wallCenter.y - wallHeight / 2 - sphereRadius * 0.8);
 
-		bool intersectZ = (sphereCenter.z + sphereRadius >= wallCenter.z - wallDepth / 2) &&
-			(sphereCenter.z - sphereRadius <= wallCenter.z + wallDepth / 2);
+		bool intersectZ = (sphereCenter.z <= wallCenter.z + wallDepth / 2 + sphereRadius * 0.8) &&
+			(sphereCenter.z >= wallCenter.z - wallDepth / 2 - sphereRadius * 0.8);
 
 		return intersectX && intersectY && intersectZ;
 	}
@@ -769,7 +769,7 @@ bool Setup()
 	g_legowall[3].setPosition(-(WORLD_WIDTH + BORDER_WIDTH)/2, BORDER_WIDTH, 0.0f);
 
 	// 厘局拱 积己
-	if (false == obstacle1.create(Device, -1, -1, 0.12f, 1.0f, 1, d3d::BLACK)) return false;
+	if (false == obstacle1.create(Device, -1, -1, 1.12f, 2.0f, 1, d3d::BLACK)) return false;
 	obstacle1.setPosition(0.0f, 0.5f, 3.0f);
 
 	// 厘局拱(寒) 积己
