@@ -855,8 +855,11 @@ void Cleanup(void)
 	}
 	destroyAllLegoBlock();
 	g_light.destroy();
+
 }
 
+float y_camera = 0.0f;
+float x_camera = 0.0f;
 
 // timeDelta represents the time between the current image frame and the last image frame.
 // the distance of moving balls should be "velocity * timeDelta"
@@ -868,8 +871,8 @@ bool Display(float timeDelta)
 	D3DXVECTOR3 target;
 
 	if (camera_option == 0) {
-		pos = D3DXVECTOR3(tank.getHead()[0], tank.getHead()[1] + 2.0f, tank.getHead()[2] - 4.4);
-		target = D3DXVECTOR3(tank.getHead()[0], tank.getHead()[1], tank.getHead()[2]);
+		pos = D3DXVECTOR3(tank.getHead()[0], tank.getHead()[1] + 2.0f, tank.getHead()[2] - 4.4f);
+		target = D3DXVECTOR3(tank.getHead()[0]+ x_camera, tank.getHead()[1]+ y_camera, tank.getHead()[2]);
 	}
 	else {
 		pos = D3DXVECTOR3(20.0, 10.0, 0.0);
@@ -1112,6 +1115,56 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			double distance = BLUEBALL_MOVE_DISTANCE;
 			D3DXVECTOR3 v = moveTarget->getCenter();
 			moveTarget->setCenter(v.x, v.y - distance, v.z);
+			break;
+		}
+		case 0x61:
+		{
+			x_camera = x_camera - 0.05f;
+			y_camera = y_camera - 0.05f;
+			break;
+		}
+		case 0x62:
+		{
+			y_camera = y_camera - 0.05f;
+			break;
+		}
+		case 0x63:
+		{
+			y_camera = y_camera - 0.05f;
+			x_camera = x_camera + 0.05f;
+			break;
+		}
+		case 0x64:
+		{
+			x_camera = x_camera - 0.05f;
+			break;
+		}
+		case 0x65:
+		{
+			x_camera = 0.0f;
+			y_camera = 0.0f;
+			break;
+		}
+		case 0x66:
+		{
+			x_camera = x_camera + 0.05f;
+			break;
+		}
+		case 0x67:
+		{
+			x_camera = x_camera - 0.05f;
+			y_camera = y_camera + 0.05f;
+			break;
+		}
+		case 0x68:
+		{
+			y_camera = y_camera + 0.05f;
+			break;
+		}
+		case 0x69:
+		{
+			x_camera = x_camera + 0.05f;
+			y_camera = y_camera + 0.05f;
 			break;
 		}
 
