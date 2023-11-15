@@ -37,7 +37,7 @@ D3DXMATRIX g_mWorld;
 D3DXMATRIX g_mView;
 D3DXMATRIX g_mProj;
 
-#define M_RADIUS 0.1   // ball radius
+#define M_RADIUS 0.13   // ball radius
 #define PI 3.14159265
 #define M_HEIGHT 0.01
 #define DECREASE_RATE 0.9982
@@ -50,6 +50,7 @@ D3DXMATRIX g_mProj;
 
 #define MISSILE_POWER 0.8
 #define MISSILE_GRAVITY_RATE 0.6
+#define MISSILE_DECREASE_RATE 0.9982
 
 #define WORLD_WIDTH 16
 #define WORLD_DEPTH 24
@@ -201,7 +202,7 @@ public:
 
 		this->setCenter(tX, tY, tZ);
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
-		double rate = 1 - (1 - DECREASE_RATE) * timeDiff * 400;
+		double rate = 1 - (1 - MISSILE_DECREASE_RATE) * timeDiff * 400;
 		if (rate < 0)
 			rate = 0;
 		this->setPower(getVelocity_X() * rate, getVelocity_Y() - MISSILE_GRAVITY_RATE * timeDiff, getVelocity_Z() * rate);
