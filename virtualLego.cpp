@@ -1125,44 +1125,53 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		case 0x61:
 		{
+			x_camera = x_camera - 0.05f;
 			y_camera = y_camera - 0.05f;
-			x_camera = x_camera + 0.05f;
+			break;
 		}
 		case 0x62:
 		{
 			y_camera = y_camera - 0.05f;
+			break;
 		}
 		case 0x63:
 		{
 			y_camera = y_camera - 0.05f;
-			x_camera = x_camera - 0.05f;
+			x_camera = x_camera + 0.05f;
+			break;
 		}
 		case 0x64:
 		{
-			x_camera = x_camera + 0.05f;
+			x_camera = x_camera - 0.05f;
+			break;
 		}
 		case 0x65:
 		{
-			float y_camera = 0.0f;
-			float x_camera = 0.0f;
+			x_camera = 0.0f;
+			y_camera = 0.0f;
+			break;
 		}
 		case 0x66:
 		{
-			x_camera = x_camera - 0.05f;
+			x_camera = x_camera + 0.05f;
+			break;
 		}
 		case 0x67:
 		{
-			x_camera = x_camera + 0.05f;
+			x_camera = x_camera - 0.05f;
 			y_camera = y_camera + 0.05f;
+			break;
 		}
 		case 0x68:
 		{
 			y_camera = y_camera + 0.05f;
+			break;
 		}
 		case 0x69:
 		{
-			x_camera = x_camera - 0.05f;
+			x_camera = x_camera + 0.05f;
 			y_camera = y_camera + 0.05f;
+			break;
 		}
 
 		}
