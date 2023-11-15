@@ -288,6 +288,7 @@ public:
 		m_mtrl.Power = 5.0f;
 
 		m_width = iwidth;
+		m_height = iheight;
 		m_depth = idepth;
 
 		if (FAILED(D3DXCreateBox(pDevice, iwidth, iheight, idepth, &m_pBoundMesh, NULL)))
