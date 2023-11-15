@@ -37,7 +37,7 @@ D3DXMATRIX g_mWorld;
 D3DXMATRIX g_mView;
 D3DXMATRIX g_mProj;
 
-#define M_RADIUS 0.06   // ball radius
+#define M_RADIUS 0.1   // ball radius
 #define PI 3.14159265
 #define M_HEIGHT 0.01
 #define DECREASE_RATE 0.9982
@@ -48,7 +48,8 @@ D3DXMATRIX g_mProj;
 #define MAX_BLUEBALL_RADIUS 2  // blueball 어디까지 멀어질 수 있는지 (앞으로)
 #define MAX_BLUEBALL_WIDTH 0.3 // blueball 어디까지 멀어질 수 있는지 (옆으로)
 
-#define MISSILE_POWER 1.88
+#define MISSILE_POWER 0.8
+#define MISSILE_GRAVITY_RATE 0.6
 
 #define WORLD_WIDTH 16
 #define WORLD_DEPTH 24
@@ -203,7 +204,7 @@ public:
 		double rate = 1 - (1 - DECREASE_RATE) * timeDiff * 400;
 		if (rate < 0)
 			rate = 0;
-		this->setPower(getVelocity_X() * rate, getVelocity_Y() - 12 * timeDiff, getVelocity_Z() * rate);
+		this->setPower(getVelocity_X() * rate, getVelocity_Y() - MISSILE_GRAVITY_RATE * timeDiff, getVelocity_Z() * rate);
 
 	}
 
