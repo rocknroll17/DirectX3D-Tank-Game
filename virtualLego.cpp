@@ -386,6 +386,7 @@ public:
 		if (hasIntersected(missile)) {
 			hit = true;
 			missile.destroy();
+			//this->destroy();
 		}
 	}
 
@@ -723,8 +724,8 @@ bool createWall(float partitionWidth, float partitionHeight, float partitonDepth
 			CObstacle partition;
 			if (false == partition.create(Device, -1, -1, partitionWidth, partitionHeight, partitonDepth, wallColor)) return false;
 			partition.setPosition(nx, ny, nz);
-			// 전역변수에 저장
 			obstacle_wall.push_back(partition);
+			// 전역변수에 저장
 		}
 	}
 	return true;
@@ -780,7 +781,7 @@ bool Setup()
 	float wallPartition_depth = 1; // 각 파티션의 세로넓이
 	int partitionCount_land = 3; // 가로로 몇 개 놓을지
 	int partitionCount_sky = 3; // 세로로 몇 개 놓을지
-	float base_x = 0.0f, base_y = wallPartition_height * 0.5, base_z = 0.0f; // 벽 생성 위치
+	float base_x = 0.0f, base_y = wallPartition_height * 0.5, base_z = -3.0f; // 벽 생성 위치
 
 	// 벽 생성 & 배치
 	createWall(wallPartition_width, wallPartition_height, wallPartition_depth, partitionCount_land, partitionCount_sky, base_x, base_y, base_z, wall_color);
@@ -870,8 +871,7 @@ bool Display(float timeDelta)
 		missile.ballUpdate(timeDelta);
 		for (i = 0; i < 4; i++) { g_legowall[i].hitBy(missile); }
 		// 블루볼 위치 변경
-		g_target_blueball.ballUpdate(timeDelta);
-
+		g_target_blueball.ballUpdate(timeDelta);;
 		// check whether any two balls hit together and update the direction of balls
 
 		// draw plane, walls, and spheres
@@ -892,7 +892,9 @@ bool Display(float timeDelta)
 			obstacle1.hitBy(missile);
 			obstacle1.draw(Device, g_mWorld);
 		}
-		for (CObstacle partition : obstacle_wall) {
+		//for (CObstacle partition : obstacle_wall) {
+		for(int i = 0; i < obstacle_wall.size(); i++){
+			CObstacle partition = obstacle_wall[i];
 			if (!partition.isHit()) {
 				partition.hitBy(missile);
 				partition.draw(Device, g_mWorld);
@@ -959,9 +961,6 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0) { theta = PI + theta; } // 3 사분면
 			double distance_land = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)); // xz만 고려한 거리
 
-
-
-
 			double theta_sky = acos(
 				sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)) /
 				sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.y - whitepos.y, 2) + pow(targetpos.z - whitepos.z, 2))
@@ -1009,40 +1008,6 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			moveTarget->setPower(0, -speed);
 			break;
 		}
-		/*
-		case 0x43:
-		{
-			// c 버튼 누를 시
-			// 흰 공 발사
-			
-			D3DXVECTOR3 targetpos = g_target_blueball.getCenter();
-			D3DXVECTOR3	whitepos = tank.getHead();
-			double theta = acos(sqrt(pow(targetpos.x - whitepos.x, 2)) / sqrt(pow(targetpos.x - whitepos.x, 2) +
-				pow(targetpos.z - whitepos.z, 2)));		// 기본 1 사분면
-			if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x >= 0) { theta = -theta; }	//4 사분면
-			if (targetpos.z - whitepos.z >= 0 && targetpos.x - whitepos.x <= 0) { theta = PI - theta; } //2 사분면
-			if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0) { theta = PI + theta; } // 3 사분면
-			double distance_land = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)); // xz만 고려한 거리
-
-			
-
-
-			double theta_sky = acos(
-				sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)) /
-				sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.y - whitepos.y, 2) + pow(targetpos.z - whitepos.z, 2))
-			);
-			double distance_sky = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.y - whitepos.y, 2) + pow(targetpos.z - whitepos.z, 2));  // y좌표 고려한 거리
-			//double distance = sqrt( sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)) + pow(targetpos.y - whitepos.y, 2)); // y좌표 포함 계산
-
-			double missilePower = 1.8;
-
-			missile.destroy();
-			missile.create(Device, d3d::BLACK);
-			missile.setCenter(whitepos.x, whitepos.y, whitepos.z);
-			missile.setPower(distance_land * cos(theta) * missilePower, distance_sky * sin(theta_sky), distance_land * sin(theta) * missilePower);
-			break;
-		}
-		*/
 		case 0x57:
 		{
 			// W키
