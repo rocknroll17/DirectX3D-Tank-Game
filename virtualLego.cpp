@@ -860,6 +860,8 @@ void Cleanup(void)
 
 float x_camera = 0.0f;
 float y_camera = 0.8f;
+
+float back_camera = 1;
 float camera_prefix = 0.05f;
 
 // timeDelta represents the time between the current image frame and the last image frame.
@@ -872,7 +874,7 @@ bool Display(float timeDelta)
 	D3DXVECTOR3 target;
 
 	if (camera_option == 0) {
-		pos = D3DXVECTOR3(tank.getHead()[0], tank.getHead()[1] + 1.0f, tank.getHead()[2] - 4.4f);
+		pos = D3DXVECTOR3(tank.getHead()[0], tank.getHead()[1] + 1.0f, tank.getHead()[2] - back_camera * 4.4f);
 		target = D3DXVECTOR3(tank.getHead()[0]+ x_camera, tank.getHead()[1]+ y_camera, tank.getHead()[2]);
 	}
 	else {
@@ -1108,6 +1110,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			moveTarget->setCenter(v.x, v.y + distance, v.z);
 			break;
 		}
+		case 0x45:
 		case 0x11:
 		{
 			// CtrlŰ
@@ -1118,6 +1121,13 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			moveTarget->setCenter(v.x, v.y - distance, v.z);
 			break;
 		}
+
+		case 0x43:
+		{
+			back_camera = back_camera * -1;
+			break;
+		}
+
 		case 0x61:
 		{
 			x_camera = x_camera - camera_prefix;
