@@ -16,8 +16,10 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cassert>
+#include <d3dx9.h>
 
 IDirect3DDevice9* Device = NULL;
+ID3DXFont* pFont = NULL;
 
 // window size
 const int Width = 1920;
@@ -809,6 +811,13 @@ bool Setup()
 	D3DXMatrixIdentity(&g_mView);
 	D3DXMatrixIdentity(&g_mProj);
 
+	if (FAILED(D3DXCreateFont(Device, 20, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET,
+		OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial", &pFont)))
+	{
+		::MessageBox(0, "D3DXCreateFont() - FAILED", 0, 0);
+		return false;
+	}
+
 	// create plane and set the position
 	//if (false == g_legoPlane.create(Device, -1, -1, 9, 0.03f, 6, d3d::GREEN)) return false;
 	if (false == g_legoPlane.create(Device, -1, -1, WORLD_WIDTH, 0.03f, WORLD_DEPTH, d3d::GREEN)) return false;
@@ -902,6 +911,11 @@ void Cleanup(void)
 	}
 	destroyAllLegoBlock();
 	g_light.destroy();
+	if (pFont != NULL)
+	{
+		pFont->Release();
+		pFont = NULL;
+	}
 
 }
 
@@ -991,7 +1005,15 @@ bool Display(float timeDelta)
 			}
 		}
 
+
 		g_light.draw(Device);
+
+		RECT rect = { 10, 10, 0, 0 };  // 글자의 위치 (10, 10)에서 시작
+		pFont->DrawText(NULL, "Hello, DirectX!", -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(255, 255, 255));
+
+		Device->EndScene();
+		Device->Present(0, 0, 0, 0);
+		Device->SetTexture(0, NULL);
 
 
 		Device->EndScene();
