@@ -43,7 +43,7 @@ D3DXMATRIX g_mProj;
 #define TANK_VELOCITY_RATE 0.99
 
 #define BLUEBALL_MOVE_DISTANCE 0.03
-#define MAX_BLUEBALL_RADIUS 5  // blueball 어디까지 멀어질 수 있는지
+#define MAX_BLUEBALL_RADIUS 2  // blueball 어디까지 멀어질 수 있는지
 
 #define WORLD_WIDTH 24
 #define WORLD_DEPTH 16
@@ -568,6 +568,22 @@ public:
 		return sqrt(pow(new_x - tx, 2) + pow(new_y - ty, 2) + pow(new_z - tz, 2));
 	}
 
+	double getDistanceFromTank2D() {
+		// 파란공에서 탱크까지의 거리 (땅 기준)
+		double x = getCenter().x,
+			z = getCenter().z;
+		double tx = linkedTank.getCenter().x,
+			tz = linkedTank.getCenter().z;
+		return sqrt(pow(x - tx, 2) + pow(z - tz, 2));
+	}
+
+	double getDistanceFromTank2D(double new_x, double new_z) {
+		// 인자로 받은 좌표에서 탱크까지의 거리 (땅 기준)
+		double tx = linkedTank.getCenter().x,
+			tz = linkedTank.getCenter().z;
+		return sqrt(pow(new_x - tx, 2) + pow(new_z - tz, 2));
+	}
+
 	double getRadius() { return radius; }
 	double getMaxRadius() { return radius; }
 	void setRadius(double r) { if (r > 0) radius = r; }
@@ -588,10 +604,10 @@ public:
 		float tZ = cord.z + TIME_SCALE * timeDiff * m_velocity_z;
 
 		// 탱크와 거리가 radius 이상이면 radius로 조정
-		double distanceFromTank = getDistanceFromTank(tX, tY, tZ);
+		double distanceFromTank = getDistanceFromTank2D(tX, tZ);
 		if (distanceFromTank > radius) {
 			double scale = radius / distanceFromTank;
-			tX *= scale; tY *= scale; tZ *= scale;
+			tX *= scale; tZ *= scale;
 		}
 
 		// 탱크와 거리가 radius 이하이면 radius로 조정 (이건 없어도 될듯)
