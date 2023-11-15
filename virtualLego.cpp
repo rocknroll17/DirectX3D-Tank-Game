@@ -41,6 +41,7 @@ D3DXMATRIX g_mProj;
 #define M_HEIGHT 0.01
 #define DECREASE_RATE 0.9982
 #define TANK_VELOCITY_RATE 0.99
+#define BLUEBALL_MOVE_DISTANCE 0.03
 
 double g_camera_pos[3] = { 0.0, 5.0, -8.0 };
 
@@ -861,7 +862,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 
-		case 	0x43:
+		case 0x43:
 		{
 			// c 버튼 누를 시
 			// 파란 공 쪽으로 미사일 발사
@@ -887,12 +888,54 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			double distance_sky = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.y - whitepos.y, 2) + pow(targetpos.z - whitepos.z, 2));  // y좌표 고려한 거리
 			//double distance = sqrt( sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)) + pow(targetpos.y - whitepos.y, 2)); // y좌표 포함 계산
 
+			double missilePower = 1.5;
+
 			missile.destroy();
 			missile.create(Device, d3d::BLACK);
 			missile.setCenter(whitepos.x, whitepos.y, whitepos.z);
-			missile.setPower(distance_land * cos(theta), distance_sky * sin(theta_sky), distance_land * sin(theta));
+			missile.setPower(distance_land * cos(theta) * missilePower, distance_sky * sin(theta_sky), distance_land * sin(theta) * missilePower);
 			break;
 		}
+
+		case 0x57:
+		{
+			// W키
+			CSphere* moveTarget = &g_target_blueball;
+			double distance = BLUEBALL_MOVE_DISTANCE;
+			D3DXVECTOR3 v = moveTarget->getCenter();
+			moveTarget->setCenter(v.x, v.y, v.z + distance);
+			break;
+		}
+
+		case 0x41: 
+		{
+			// A키
+			CSphere* moveTarget = &g_target_blueball;
+			double distance = BLUEBALL_MOVE_DISTANCE;
+			D3DXVECTOR3 v = moveTarget->getCenter();
+			moveTarget->setCenter(v.x - distance, v.y, v.z);
+			break;
+		}
+
+		case 0x53:
+		{
+			// S키
+			CSphere* moveTarget = &g_target_blueball;
+			double distance = BLUEBALL_MOVE_DISTANCE;
+			D3DXVECTOR3 v = moveTarget->getCenter();
+			moveTarget->setCenter(v.x, v.y, v.z - distance);
+			break;
+		}
+		case 0x44:
+		{
+			// D키
+			CSphere* moveTarget = &g_target_blueball;
+			double distance = BLUEBALL_MOVE_DISTANCE;
+			D3DXVECTOR3 v = moveTarget->getCenter();
+			moveTarget->setCenter(v.x + distance, v.y, v.z);
+			break;
+		}
+
 		}
 		break;
 	}
