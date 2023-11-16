@@ -59,6 +59,10 @@ D3DXMATRIX g_mProj;
 
 double g_camera_pos[3] = { 0.0, 5.0, -8.0 };
 bool camera_option = 0;
+
+bool GAME_START = false;
+float MOVEMENT = 0.0f;
+
 // -----------------------------------------------------------------------------
 // CSphere class definition
 // -----------------------------------------------------------------------------
@@ -1037,17 +1041,32 @@ bool Display(float timeDelta)
 	int j = 0;
 	D3DXVECTOR3 pos;
 	D3DXVECTOR3 target;
+	D3DXVECTOR3 up;
 
-	if (camera_option == 0) {
-		pos = D3DXVECTOR3(tank.getHead()[0], tank.getHead()[1] + 1.0f, tank.getHead()[2] - back_camera * 4.4f);
-		target = D3DXVECTOR3(tank.getHead()[0] + x_camera, tank.getHead()[1] + y_camera, tank.getHead()[2]);
+
+	if (GAME_START == false) {
+		pos = D3DXVECTOR3(20.0f, 12.0f, -WORLD_DEPTH / 2 + MOVEMENT);
+		target = D3DXVECTOR3(0.0f, 0.0f, -WORLD_DEPTH / 2 + MOVEMENT);
+
+		MOVEMENT = MOVEMENT + 0.001;
+		if (MOVEMENT > WORLD_DEPTH) {
+			GAME_START = true;
+		}
+		D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
+		Device->SetTransform(D3DTS_VIEW, &g_mView);
 	}
 	else {
-		pos = D3DXVECTOR3(20.0, 10.0, 0.0);
-		target = D3DXVECTOR3(0, 1, 0);
+		if (camera_option == 0) {
+			pos = D3DXVECTOR3(tank.getHead()[0], tank.getHead()[1] + 1.0f, tank.getHead()[2] - back_camera * 4.4f);
+			target = D3DXVECTOR3(tank.getHead()[0] + x_camera, tank.getHead()[1] + y_camera, tank.getHead()[2]);
+		}
+		else {
+			pos = D3DXVECTOR3(20.0, 10.0, 0.0);
+			target = D3DXVECTOR3(0, 1, 0);
+		}
 	}
 
-	D3DXVECTOR3 up(0.0f, 2.0f, 0.0f);
+	up = D3DXVECTOR3(0.0f, 2.0f, 0.0f);
 	D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
 	Device->SetTransform(D3DTS_VIEW, &g_mView);
 
