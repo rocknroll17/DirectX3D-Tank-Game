@@ -55,7 +55,7 @@ D3DXMATRIX g_mProj;
 #define WORLD_DEPTH 36
 #define BORDER_WIDTH 0.12f // 가장자리 벽 굵기
 
-#define NUM_OBSTACLE 50	// 장애물 개수
+#define NUM_OBSTACLE 1	// 장애물 개수
 
 double g_camera_pos[3] = { 0.0, 5.0, -8.0 };
 bool camera_option = 0;
@@ -595,7 +595,7 @@ public:
 		return tank_part[1].getCenter();
 	}
 
-	void tankUpdate(float timeDiff, vector<CObstacle>& obstacles, Tank& otank, CWall* walls)
+	void tankUpdate(float timeDiff, vector<CObstacle>& obstacles, Tank& otank, vector<vector<CWall> > walls)
 	{
 		if (!created) return;
 		const float TIME_SCALE = 3.3;
@@ -617,7 +617,7 @@ public:
 		else if (tZ >= ((WORLD_DEPTH / 2) - tank_part[0].getDepth() / 2))
 			tZ = (WORLD_DEPTH / 2) - tank_part[0].getDepth() / 2;
 		
-		// tank가 장애물, 탱크랑 충돌하면 정지
+		// tank가 장애물, 탱크, 벽에 충돌하면 정지
 		this->setPosition(tX, cord.y, tZ);
 		for (int i = 0; i < obstacles.size(); i++) {
 			if (obstacles[i].get_created()) {
@@ -634,15 +634,15 @@ public:
 				tZ = cord.z;
 			}
 		}
-		/*
-		for (int i = 0; i < 4; i++) {
-			if (tank_part[0].hasIntersected(walls[i])) {
-				tX = cord.x;
-				tZ = cord.z;
-				break;
+		for (int i = 0; i < walls.size(); i++) {
+			for (int j = 0; j < walls[i].size(); j++) {
+				if (tank_part[0].hasIntersected(walls[i][j])) {
+					tX = cord.x;
+					tZ = cord.z;
+					break;
+				}
 			}
 		}
-		*/
 		this->setPosition(tX, cord.y, tZ);
 
 
@@ -770,7 +770,12 @@ public:
 // Global variables
 // -----------------------------------------------------------------------------
 CWall	g_legoPlane;
-CWall	g_legowall[4];
+vector<CWall> lwall1;
+vector<CWall> swall1;
+vector<CWall> lwall2;
+vector<CWall> swall2;
+vector<vector<CWall> > g_legoWall;
+
 CBlueBall	g_target_blueball;
 CLight	g_light;
 Tank tank(0);
@@ -813,7 +818,7 @@ bool createWall(float partitionWidth, float partitionHeight, float partitonDepth
 	return true;
 }
 
-bool createObstacle()
+bool createObstacle() // create obstacle
 {
 	// 장애물 랜덤 생성
 	for (int i = 0; i < NUM_OBSTACLE; i++) {
@@ -844,6 +849,88 @@ bool createObstacle()
 	return true;
 }
 
+bool createMap() // create plane + wall
+{
+	CWall wall;
+
+	if (false == g_legoPlane.create(Device, -1, -1, WORLD_WIDTH, 0.03f, WORLD_DEPTH, d3d::GREEN)) return false;
+	g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
+
+	if (false == wall.create(Device, -1, -1, 11.0f, 2.0f, 1.0f, d3d::GRAY)) return false;
+	wall.setPosition(-6.0f, 1.0f, -18.0f);
+	lwall1.push_back(wall);
+	if (false == wall.create(Device, -1, -1, 11.0f, 2.0f, 1.0f, d3d::GRAY)) return false;
+	wall.setPosition(6.0f, 1.0f, -18.0f);
+	lwall1.push_back(wall);
+	if (false == wall.create(Device, -1, -1, 11.0f, 2.0f, 1.0f, d3d::GRAY)) return false;
+	wall.setPosition(6.0f, 1.0f, 18.0f);
+	lwall1.push_back(wall);
+	if (false == wall.create(Device, -1, -1, 11.0f, 2.0f, 1.0f, d3d::GRAY)) return false;
+	wall.setPosition(-6.0f, 1.0f, 18.0f);
+	lwall1.push_back(wall);
+
+	g_legoWall.push_back(lwall1);
+
+	if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
+	wall.setPosition(-12.0f, 1.5f, -18.0f);
+	swall1.push_back(wall);
+	if (false == wall.create(Device, -1, -1, 1.0f, 2.5f, 1.5f, d3d::GRAY)) return false;
+	wall.setPosition(0, 1.25f, -18.0f);
+	swall1.push_back(wall);
+	if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
+	wall.setPosition(12.0f, 1.5f, -18.0f);
+	swall1.push_back(wall);
+	if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
+	wall.setPosition(-12.0f, 1.5f, 18.0f);
+	swall1.push_back(wall);
+	if (false == wall.create(Device, -1, -1, 1.0f, 2.5f, 1.5f, d3d::GRAY)) return false;
+	wall.setPosition(0, 1.25f, 18.0f);
+	swall1.push_back(wall);
+	if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
+	wall.setPosition(12.0f, 1.5f, 18.0f);
+	swall1.push_back(wall);
+
+	g_legoWall.push_back(swall1);
+
+	if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, 11.0f, d3d::GRAY)) return false;
+	wall.setPosition(-12.0f, 1.0f, 12.0f);
+	lwall2.push_back(wall);
+	if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, 11.0f, d3d::GRAY)) return false;
+	wall.setPosition(-12.0f, 1.0f, 0);
+	lwall2.push_back(wall);
+	if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, 11.0f, d3d::GRAY)) return false;
+	wall.setPosition(-12.0f, 1.0f, -12.0f);
+	lwall2.push_back(wall);
+	if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, 11.0f, d3d::GRAY)) return false;
+	wall.setPosition(12.0f, 1.0f, 12.0f);
+	lwall2.push_back(wall);
+	if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, 11.0f, d3d::GRAY)) return false;
+	wall.setPosition(12.0f, 1.0f, 0);
+	lwall2.push_back(wall);
+	if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, 11.0f, d3d::GRAY)) return false;
+	wall.setPosition(12.0f, 1.0f, -12.0f);
+	lwall2.push_back(wall);
+
+	g_legoWall.push_back(lwall2);
+
+	if (false == wall.create(Device, -1, -1, 1.5f, 2.5f, 1.0f, d3d::GRAY)) return false;
+	wall.setPosition(-12.0f, 1.25f, 6.0f);
+	swall2.push_back(wall);
+	if (false == wall.create(Device, -1, -1, 1.5f, 2.5f, 1.0f, d3d::GRAY)) return false;
+	wall.setPosition(-12.0f, 1.25f, -6.0f);
+	swall2.push_back(wall);
+	if (false == wall.create(Device, -1, -1, 1.5f, 2.5f, 1.0f, d3d::GRAY)) return false;
+	wall.setPosition(12.0f, 1.25f, 6.0f);
+	swall2.push_back(wall);
+	if (false == wall.create(Device, -1, -1, 1.5f, 2.5f, 1.0f, d3d::GRAY)) return false;
+	wall.setPosition(12.0f, 1.25f, -6.0f);
+	swall2.push_back(wall);
+
+	g_legoWall.push_back(swall2);
+
+	return true;
+}
+
 void destroyAllLegoBlock(void)
 {
 }
@@ -857,11 +944,6 @@ bool Setup()
 	D3DXMatrixIdentity(&g_mView);
 	D3DXMatrixIdentity(&g_mProj);
 
-	// create plane and set the position
-	//if (false == g_legoPlane.create(Device, -1, -1, 9, 0.03f, 6, d3d::GREEN)) return false;
-	if (false == g_legoPlane.create(Device, -1, -1, WORLD_WIDTH, 0.03f, WORLD_DEPTH, d3d::GREEN)) return false;
-	g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
-
 	if (false == tank.create(Device, -1, -1, d3d::BROWN)) return false;
 	tank.setPosition(-1, 0.2f, -1);
 
@@ -871,20 +953,8 @@ bool Setup()
 	// tank랑 blue ball 연결
 	g_target_blueball.linkTank(&tank);
 
-	//make wall
-	// create walls and set the position. note that there are four walls
-	if (false == g_legowall[0].create(Device, -1, -1, WORLD_WIDTH, 0.3f, 0.12f, d3d::DARKRED)) return false;
-	g_legowall[0].setPosition(0.0f, BORDER_WIDTH, (WORLD_DEPTH + BORDER_WIDTH) / 2);
-	if (false == g_legowall[1].create(Device, -1, -1, WORLD_WIDTH, 0.3f, 0.12f, d3d::DARKRED)) return false;
-	g_legowall[1].setPosition(0.0f, BORDER_WIDTH, -(WORLD_DEPTH + BORDER_WIDTH) / 2);
-	if (false == g_legowall[2].create(Device, -1, -1, 0.12f, 0.3f, WORLD_DEPTH + 2 * BORDER_WIDTH, d3d::DARKRED)) return false;
-	g_legowall[2].setPosition((WORLD_WIDTH + BORDER_WIDTH) / 2, BORDER_WIDTH, 0.0f);
-	if (false == g_legowall[3].create(Device, -1, -1, 0.12f, 0.3f, WORLD_DEPTH + 2 * BORDER_WIDTH, d3d::DARKRED)) return false;
-	g_legowall[3].setPosition(-(WORLD_WIDTH + BORDER_WIDTH) / 2, BORDER_WIDTH, 0.0f);
-
-	if (false == obstacle1.create(Device, -1, -1, 1.12f, 2.0f, 1, d3d::WHITE)) return false;
-	obstacle1.setPosition(0.0f, 0.5f, 3.0f);
-
+	// 벽, 바닥 생성
+	createMap();
 	// 장애물 생성
 	createObstacle();
 
@@ -944,8 +1014,9 @@ bool Setup()
 void Cleanup(void)
 {
 	g_legoPlane.destroy();
-	for (int i = 0; i < 4; i++) {
-		g_legowall[i].destroy();
+	for (int i = 0; i < g_legoWall.size(); i++) {
+		for (int j = 0; j < g_legoWall[i].size(); j++)
+			g_legoWall[i][j].destroy();
 	}
 	destroyAllLegoBlock();
 	g_light.destroy();
@@ -999,23 +1070,29 @@ bool Display(float timeDelta)
 		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
 		Device->BeginScene();
 		// 탱크 위치 변경
-		tank.tankUpdate(timeDelta, obstacles, otank, g_legowall);
+		tank.tankUpdate(timeDelta, obstacles, otank, g_legoWall);
 		// 미사일 위치도 변경 & 벽과 충돌했는지 체크
 		missile.ballUpdate(timeDelta);
-		for (i = 0; i < 4; i++) { g_legowall[i].hitBy(missile); }
+		for (i = 0; i < g_legoWall.size(); i++) {
+			for (j = 0; j < g_legoWall[i].size(); j++)
+				g_legoWall[i][j].hitBy(missile);
+		}
+		
 		// 블루볼 위치 변경
 		g_target_blueball.ballUpdate(timeDelta);;
 		// check whether any two balls hit together and update the direction of balls
 
 		// draw plane, walls, and spheres
-		g_legoPlane.draw(Device, g_mWorld);
 		tank.draw(Device, g_mWorld);
-
-		for (i = 0; i < 4; i++) {
-			g_legowall[i].draw(Device, g_mWorld);
-		}
 		g_target_blueball.draw(Device, g_mWorld);
 		missile.draw(Device, g_mWorld);  // 미사일도 그림
+
+		g_legoPlane.draw(Device, g_mWorld);
+		for (int i = 0; i < g_legoWall.size(); i++)
+		{
+			for (int j = 0; j < g_legoWall[i].size(); j++)
+				g_legoWall[i][j].draw(Device, g_mWorld);
+		}
 
 		if (missile.get_created() == true) {
 			missile.hitBy();
@@ -1027,11 +1104,12 @@ bool Display(float timeDelta)
 				exit(1);		// 탱크 터지면 메시지 띄우고 바로 끝내야 할 듯, 안 끝내면 otank 이미 사라져서 오류뜸
 			}
 			else if (otank.get_created()) {
-				otank.tankUpdate(timeDelta, obstacles, tank, g_legowall);
+				otank.tankUpdate(timeDelta, obstacles, tank, g_legoWall);
 				otank.draw(Device, g_mWorld);
 			}
 		}
 		
+		/*
 		for (int i = 0; i < obstacles.size(); i++) {
 			if (obstacles[i].get_created()) {
 				if (obstacles[i].hasIntersected(missile)) {
@@ -1042,15 +1120,7 @@ bool Display(float timeDelta)
 				}
 			}
 		}
-
-		if (obstacle1.get_created()) {
-			if (obstacle1.hasIntersected(missile)) {
-				obstacle1.hitBy(missile);
-			}
-			else if (obstacle1.get_created()) {
-				obstacle1.draw(Device, g_mWorld);
-			}
-		}
+		*/
 		
 		for (int i = 0; i < obstacle_wall.size(); i++) {
 			if (obstacle_wall[i].get_created()) {
