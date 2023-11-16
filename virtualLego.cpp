@@ -811,7 +811,7 @@ bool Setup()
 	D3DXMatrixIdentity(&g_mView);
 	D3DXMatrixIdentity(&g_mProj);
 
-	if (FAILED(D3DXCreateFont(Device, 20, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET,
+	if (FAILED(D3DXCreateFont(Device, 40, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET,
 		OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial", &pFont)))
 	{
 		::MessageBox(0, "D3DXCreateFont() - FAILED", 0, 0);
@@ -1009,7 +1009,7 @@ bool Display(float timeDelta)
 		g_light.draw(Device);
 
 		RECT rect = { 10, 10, 0, 0 };  // 글자의 위치 (10, 10)에서 시작
-		pFont->DrawText(NULL, "Hello, DirectX!", -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(255, 255, 255));
+		pFont->DrawText(NULL, "Tank Game", -1, &rect, DT_NOCLIP, d3d::BLACK);
 
 		Device->EndScene();
 		Device->Present(0, 0, 0, 0);
