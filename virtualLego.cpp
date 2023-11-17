@@ -18,6 +18,12 @@
 #include <cassert>
 #include <random>
 #include <string>
+#include <dsound.h>
+#include <windows.h>
+
+#pragma comment(lib, "dsound.lib")
+#pragma comment(lib, "dxguid.lib")
+
 
 using namespace std;
 
@@ -818,6 +824,11 @@ CSphere missile;   // c 누르면 나가는 미사일
 
 ID3DXFont* pFont = NULL; // 글자 출력을 위한 객체
 
+LPDIRECTSOUND8 g_pDSound = NULL; // 브금을 위한 객체
+LPDIRECTSOUNDBUFFER pDSBuffer = NULL; // 브금을 위한 객체
+
+HWND windowHandling = 0;
+
 // -----------------------------------------------------------------------------
 // Functions
 // -----------------------------------------------------------------------------
@@ -990,6 +1001,116 @@ void destroyAllLegoBlock(void)
 {
 }
 
+HRESULT DSBLoadSoundBuffer(LPDIRECTSOUNDBUFFER8 pDSBuffer, const char* filename)
+{
+	// WAV 파일 로딩
+	HMMIO hFile = mmioOpenA(const_cast<char*>(filename), NULL, MMIO_ALLOCBUF | MMIO_READ);
+	if (!hFile)
+		return DSERR_GENERIC;
+
+	MMCKINFO ckRiff, ck;
+	memset(&ckRiff, 0, sizeof(ckRiff));
+	memset(&ck, 0, sizeof(ck));
+
+	ckRiff.fccType = mmioFOURCC('W', 'A', 'V', 'E');
+	if (mmioDescend(hFile, &ckRiff, NULL, MMIO_FINDRIFF) != MMSYSERR_NOERROR)
+	{
+		mmioClose(hFile, 0);
+		return DSERR_GENERIC;
+	}
+
+	ck.fccType = mmioFOURCC('f', 'm', 't', ' ');
+	if (mmioDescend(hFile, &ck, &ckRiff, 0) != MMSYSERR_NOERROR)
+	{
+		mmioClose(hFile, 0);
+		return DSERR_GENERIC;
+	}
+
+	WAVEFORMATEX wfx;
+	if (mmioRead(hFile, reinterpret_cast<HPSTR>(&wfx), sizeof(wfx)) != sizeof(wfx))
+	{
+		mmioClose(hFile, 0);
+		return DSERR_GENERIC;
+	}
+
+	mmioAscend(hFile, &ck, 0);
+
+	ck.ckid = mmioFOURCC('d', 'a', 't', 'a');
+	if (mmioDescend(hFile, &ck, &ckRiff, MMIO_FINDCHUNK) != MMSYSERR_NOERROR)
+	{
+		mmioClose(hFile, 0);
+		return DSERR_GENERIC;
+	}
+
+	BYTE* pData = new BYTE[ck.cksize];
+	if (!pData)
+	{
+		mmioClose(hFile, 0);
+		return DSERR_OUTOFMEMORY;
+	}
+
+	if (mmioRead(hFile, reinterpret_cast<HPSTR>(pData), ck.cksize) != ck.cksize)
+	{
+		delete[] pData;
+		mmioClose(hFile, 0);
+		return DSERR_GENERIC;
+	}
+
+	mmioClose(hFile, 0);
+
+	// DirectSound 버퍼 설정
+	LPVOID pAudio1, pAudio2;
+	DWORD dwAudio1Size, dwAudio2Size;
+
+	if (FAILED(pDSBuffer->Lock(0, ck.cksize, &pAudio1, &dwAudio1Size, &pAudio2, &dwAudio2Size, 0)))
+	{
+		delete[] pData;
+		return DSERR_GENERIC;
+	}
+
+	// 데이터 복사
+	memcpy(pAudio1, pData, dwAudio1Size);
+	if (pAudio2 != NULL)
+		memcpy(pAudio2, pData + dwAudio1Size, dwAudio2Size);
+
+	// 잠금 해제
+	pDSBuffer->Unlock(pAudio1, dwAudio1Size, pAudio2, dwAudio2Size);
+
+	// 메모리 해제
+	delete[] pData;
+
+	return DS_OK;
+}
+
+LPDIRECTSOUNDBUFFER LoadSoundBuffer(const char* filename)
+{
+	HRESULT hr;
+	LPDIRECTSOUNDBUFFER pDSBuffer = NULL;
+	IDirectSoundBuffer* pDSBuffer8 = NULL;
+	IDirectSoundBuffer8* pDSBuffer8_2 = NULL;
+
+	// WAV 파일 로딩
+	hr = g_pDSound->CreateSoundBuffer(&DSBUFFERDESC(), &pDSBuffer8, NULL);
+	if (FAILED(hr))
+		return NULL;
+
+	hr = pDSBuffer8->QueryInterface(IID_IDirectSoundBuffer8, (LPVOID*)&pDSBuffer8_2);
+	if (FAILED(hr))
+	{
+		pDSBuffer8->Release();
+		return NULL;
+	}
+
+	hr = DSBLoadSoundBuffer(pDSBuffer8_2, filename);
+	if (FAILED(hr))
+	{
+		pDSBuffer8_2->Release();
+		return NULL;
+	}
+
+	return pDSBuffer8_2;
+}
+
 // initialization
 bool Setup()
 {
@@ -1002,6 +1123,27 @@ bool Setup()
 		::MessageBox(0, "D3DXCreateFont() - FAILED", 0, 0);
 		return false;
 	}
+	// ------------------------------
+
+	// 브금출력 ---------------------
+	// Create DirectSound object
+	if (FAILED(DirectSoundCreate8(NULL, &g_pDSound, NULL))) {
+		return false;
+	}
+
+	// Set cooperative level
+	if (FAILED(g_pDSound->SetCooperativeLevel(windowHandling, DSSCL_PRIORITY))) {
+		return false;
+	}
+
+	pDSBuffer = LoadSoundBuffer("example.wav");
+	if (pDSBuffer == NULL)
+	{
+		return false;
+	}
+
+	pDSBuffer->Play(0, 0, 0);
+
 	// ------------------------------
 
 	D3DXMatrixIdentity(&g_mWorld);
@@ -1095,7 +1237,19 @@ void Cleanup(void)
 		pFont->Release();
 		pFont = NULL;
 	}
-	//--------------------------------------
+	// -------------------------------------
+
+	// 브금출력 ----------------------------
+	if (pDSBuffer) {
+		pDSBuffer->Release();
+		pDSBuffer = NULL;
+	}
+
+	if (g_pDSound) {
+		g_pDSound->Release();
+		g_pDSound = NULL;
+	}
+	// -------------------------------------
 
 }
 
@@ -1181,14 +1335,25 @@ bool Display(float timeDelta)
 		char* time = new char[str.length() + 1];
 		str.copy(time, str.length());
 		time[str.length()] = '\0';
-		// 글자출력-------------------------------------------------------------------------------------
+		// 글자출력 ------------------------------------------------------------------------------------
 		RECT rect = { 10, 10, 0, 0 };  // 글자의 위치 (10, 10)에서 시작
 		pFont->DrawText(NULL, time, -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(255, 255, 255));
 
 		Device->EndScene();
 		Device->Present(0, 0, 0, 0);
 		Device->SetTexture(0, NULL);
-		//----------------------------------------------------------------------------------------------
+		// ---------------------------------------------------------------------------------------------
+
+		// 브금출력 ------------------------------------------------------------------------------------
+		if (pDSBuffer != NULL)
+		{
+			pDSBuffer->Play(0, 0, DSBPLAY_LOOPING);
+		}
+
+		Device->EndScene();
+		Device->Present(0, 0, 0, 0);
+		Device->SetTexture(0, NULL);
+		// ---------------------------------------------------------------------------------------------
 
 		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
 		Device->BeginScene();
@@ -1300,6 +1465,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	static int old_x = 0;
 	static int old_y = 0;
 	static enum { WORLD_MOVE, LIGHT_MOVE, BLOCK_MOVE } move = WORLD_MOVE;
+	windowHandling = hwnd;
 
 	switch (msg) {
 		/*
@@ -1771,5 +1937,6 @@ int WINAPI WinMain(HINSTANCE hinstance,
 
 	return 0;
 }
+
 
 
