@@ -1144,18 +1144,6 @@ bool Display(float timeDelta)
 			}
 		}
 
-		/*
-		for (int i = 0; i < obstacles.size(); i++) {
-			if (obstacles[i].get_created()) {
-				if (obstacles[i].hasIntersected(missile)) {
-					obstacles[i].hitBy(missile);
-				}
-				else if (obstacles[i].get_created()) {
-					obstacles[i].draw(Device, g_mWorld);
-				}
-			}
-		}
-		*/
 		// ·£´ý Àå¾Ö¹° ÆÄ±« Ã¼Å© & ÆÄ±« ¾ÈµÇ¸é ±×¸²
 		for (int i = 0; i < obstacles.size(); i++) {
 			if (obstacles[i].get_created()) {
