@@ -1189,6 +1189,12 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			break;
 		case VK_RETURN:
 			// 엔터 누름
+			// 게임 시작 전일 경우, 게임 시작하고 끝
+			if (!GAME_START) {
+				GAME_START = true;
+				break;
+			}
+			// 물체 렌더링 상태 보여줌
 			if (NULL != Device) {
 				wire = !wire;
 				Device->SetRenderState(D3DRS_FILLMODE,
@@ -1198,6 +1204,11 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case VK_SPACE:
 		{
 			// 스페이스바 누름
+			// 게임 시작 전일 경우, 게임 시작하고 끝
+			if (!GAME_START) {
+				GAME_START = true;
+				break;
+			}
 			// 파란 공 쪽으로 미사일 발사
 			if (!missile.getCreated()) {
 				D3DXVECTOR3 targetpos = g_target_blueball.getCenter();
