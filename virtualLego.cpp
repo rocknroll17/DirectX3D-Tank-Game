@@ -50,7 +50,7 @@ D3DXMATRIX g_mProj;
 #define MAX_BLUEBALL_RADIUS 2  // blueball 어디까지 멀어질 수 있는지
 
 #define MISSILE_POWER 1.88
-#define MISSILE_EXPOLSION_RADIUS M_RADIUS+0.5
+#define MISSILE_EXPOLSION_RADIUS M_RADIUS+0.25 // 미사일 폭발 반경
 
 #define WORLD_WIDTH 24
 #define WORLD_DEPTH 36
@@ -1019,7 +1019,7 @@ bool Setup()
 	createWall(wallPartition_width, wallPartition_height, wallPartition_depth, partitionCount_land, partitionCount_sky, base_x, base_y, base_z, wall_color);
 
 	// 블럭 생성 (테스트)
-	createBlock(0.4f, 0.4f, 0.4f, 5, 5, 5, 2, 0, 2, d3d::BROWN);
+	createBlock(0.2f, 0.2f, 0.2f, 10, 10, 10, 2, 0, 2, d3d::BROWN);
 
 	// create blue ball for set direction
 	if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
