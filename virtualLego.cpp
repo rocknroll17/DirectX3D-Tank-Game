@@ -806,6 +806,7 @@ vector<vector<CWall> > g_legoWall;
 
 CBlueBall	g_target_blueball;
 CLight	g_light;
+CLight	g_light2;
 Tank tank(0);
 Tank otank(1);
 bool winner;
@@ -920,85 +921,41 @@ bool createMap() // create plane + wall
 
 	if (false == g_legoPlane.create(Device, -1, -1, WORLD_WIDTH, 0.03f, WORLD_DEPTH, d3d::GREEN)) return false;
 	g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
-	/**/
-	if (false == wall.create(Device, -1, -1, WORLD_WIDTH - 1, 2.0f, 1.0f, d3d::GRAY)) return false;
-	wall.setPosition(0.0f, 1.0f, -WORLD_DEPTH / 2);
-	lwall1.push_back(wall);
 
-	if (false == wall.create(Device, -1, -1, WORLD_WIDTH - 1, 2.0f, 1.0f, d3d::GRAY)) return false;
-	wall.setPosition(0.0f, 1.0f, WORLD_DEPTH / 2);
-	lwall1.push_back(wall);
+	for (int i = -1; i <= 1; i += 2) {
+		//¾ÕµÚ ±âµÕ
+		if (false == wall.create(Device, -1, -1, WORLD_WIDTH - 1, 2.0f, 1.0f, d3d::GRAY)) return false;
+		wall.setPosition(0.0f, 1.0f, i * WORLD_DEPTH / 2);
+		lwall1.push_back(wall);
+		//¾ÕµÚ º®
+		if (false == wall.create(Device, -1, -1, 1.0f, 2.5f, 1.5f, d3d::GRAY)) return false;
+		wall.setPosition(0, 1.25f, i * WORLD_DEPTH / 2);
+		swall1.push_back(wall);
+		//ÁÂÃø º®
+		if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, WORLD_DEPTH - 1, d3d::GRAY)) return false;
+		wall.setPosition(i * WORLD_WIDTH / 2, 1.0f, 0.0f);
+		lwall2.push_back(wall);
+	}
+	
+
+
+	for (int i = -1; i <= 1; i += 2) {
+		for (int j = -1; j <= 1; j += 2) {
+			//Áß°£ ±âµÕ
+			if (false == wall.create(Device, -1, -1, 1.5f, 2.5f, 1.0f, d3d::GRAY)) return false;
+			wall.setPosition(i * WORLD_WIDTH / 2, 1.25f, j * WORLD_WIDTH/4);
+			swall2.push_back(wall);
+			//²ÀÁþÁ¡ ±âµÕ
+			if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
+			wall.setPosition(i * WORLD_WIDTH / 2, 1.5f, j * WORLD_DEPTH / 2);
+			swall2.push_back(wall);
+		}
+	}
+
+
 
 	g_legoWall.push_back(lwall1);
-	//µÚ ±âµÕ
-	if (false == wall.create(Device, -1, -1, 1.0f, 2.5f, 1.5f, d3d::GRAY)) return false;
-	wall.setPosition(0, 1.25f, -18.0f);
-	swall1.push_back(wall);
-	//¾Õ ±âµÕ
-	if (false == wall.create(Device, -1, -1, 1.0f, 2.5f, 1.5f, d3d::GRAY)) return false;
-	wall.setPosition(0, 1.25f, 18.0f);
-	swall1.push_back(wall);
-
-
-
-
-
-	//ÁÂÃø ±âµÕ
-	if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, WORLD_DEPTH - 1, d3d::GRAY)) return false;
-	wall.setPosition(-WORLD_WIDTH / 2, 1.0f, 0.0f);
-	lwall2.push_back(wall);
-	//¿ìÃø ±âµÕ
-	if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, WORLD_DEPTH - 1, d3d::GRAY)) return false;
-	wall.setPosition(WORLD_WIDTH / 2, 1.0f, 0.0f);
-	lwall2.push_back(wall);
-
 	g_legoWall.push_back(lwall2);
-
-
-	for (int i = -1; i <= 1; i += 2) {
-		for (int j = -1; j <= 1; j += 2) {
-			if (false == wall.create(Device, -1, -1, 1.5f, 2.5f, 1.0f, d3d::GRAY)) return false;
-			wall.setPosition(i * WORLD_WIDTH / 2, 1.25f, j * 6.0f);
-			swall2.push_back(wall);
-		}
-	}
-
-	for (int i = -1; i <= 1; i += 2) {
-		for (int j = -1; j <= 1; j += 2) {
-			if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
-			wall.setPosition(i * WORLD_WIDTH / 2, 1.5f, j * 18.0f);
-			swall2.push_back(wall);
-		}
-	}
-	/*
-	//ÁÂ 1¹ø
-	if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
-	wall.setPosition(-12.0f, 1.5f, -18.0f);
-	swall2.push_back(wall);
-
-	//ÁÂ4
-	if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
-	wall.setPosition(-12.0f, 1.5f, 18.0f);
-	swall2.push_back(wall);
-
-	//¿ì1
-	if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
-	wall.setPosition(12.0f, 1.5f, -18.0f);
-	swall1.push_back(wall);
-
-
-
-
-
-	//¿ì4
-	if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
-	wall.setPosition(12.0f, 1.5f, 18.0f);
-	swall1.push_back(wall);
-	*/
-
-
-
-
 	g_legoWall.push_back(swall1);
 	g_legoWall.push_back(swall2);
 
@@ -1084,12 +1041,15 @@ bool Setup()
 	lit.Diffuse = d3d::WHITE * 1.8f;  // ¿ø·¡ 1¹è¿´À½
 	lit.Specular = d3d::WHITE * 1.5f;  //¿ø·¡ 0.9¹è¿´À½
 	lit.Ambient = d3d::WHITE * 0.9f;//¿ø·¡ 0.9¹è¿´À½
-	lit.Position = D3DXVECTOR3(0.0f, 4.0f, 5.0f);
 	lit.Range = 100.0f;
 	lit.Attenuation0 = 0.0f;//»ó¼ö °¨¼è
 	lit.Attenuation1 = 0.3f;//¼±Çü°¨¼è ¿ø·¡ 0.9f¿´À½.
 	lit.Attenuation2 = 0.0f;//Á¦°ö°¨¼è
+	lit.Position = D3DXVECTOR3(0.0f, 15.0f, WORLD_DEPTH / 4 + 4);
 	if (false == g_light.create(Device, lit))
+		return false;
+	lit.Position = D3DXVECTOR3(0.0f, 15.0f, -WORLD_DEPTH / 4 - 4);
+	if (false == g_light2.create(Device, lit))
 		return false;
 
 	// Position and aim the camera.
@@ -1110,6 +1070,7 @@ bool Setup()
 	Device->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
 
 	g_light.setLight(Device, g_mWorld);
+	g_light2.setLight(Device, g_mWorld);
 	return true;
 }
 
@@ -1367,7 +1328,7 @@ bool Display(float timeDelta)
 			}
 		}
 
-		g_light.draw(Device);
+		//g_light.draw(Device);
 
 		Device->EndScene();
 		Device->Present(0, 0, 0, 0);
