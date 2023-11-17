@@ -307,10 +307,10 @@ public:
 	}
 	void destroy(void)
 	{
+		created = false;
 		if (m_pBoundMesh != NULL) {
 			m_pBoundMesh->Release();
 			m_pBoundMesh = NULL;
-			created = false;
 		}
 	}
 	void draw(IDirect3DDevice9* pDevice, const D3DXMATRIX& mWorld)
@@ -408,9 +408,7 @@ public:
 		D3DXMatrixRotationY(&m_mLocal, angle);
 	}
 
-	bool get_created() {
-		return created;
-	}
+	bool get_created() { return created; }
 
 	float getWidth(void) const { return m_width; };
 	float getDepth(void) const { return m_depth; };
@@ -805,7 +803,7 @@ Tank otank(1);
 
 CObstacle obstacle; // 장애물 (테스트용)
 CObstacle obstacle1;
-vector<CObstacle> obstacles;	// 장애물 모음
+vector<CObstacle> obstacles;	// 랜덤 장애물 모음
 vector<CObstacle> obstacle_wall; // 장애물 (벽)
 
 LPD3DXFONT fonts; // test -> 화면에 숫자표시 이걸로 하는듯
@@ -1124,9 +1122,6 @@ bool Display(float timeDelta)
 		g_target_blueball.draw(Device, g_mWorld);
 		missile.draw(Device, g_mWorld);  // 미사일도 그림
 
-		// 랜덤 생성 장애물 그림
-		for (int i = 0; i < obstacles.size(); i++) { obstacles[i].draw(Device, g_mWorld); }
-
 		g_legoPlane.draw(Device, g_mWorld);
 		for (int i = 0; i < g_legoWall.size(); i++)
 		{
@@ -1161,19 +1156,19 @@ bool Display(float timeDelta)
 			}
 		}
 		*/
-		// 랜덤 장애물들 파괴 체크
+		// 랜덤 장애물 파괴 체크 & 파괴 안되면 그림
 		for (int i = 0; i < obstacles.size(); i++) {
 			if (obstacles[i].get_created()) {
 				if (obstacles[i].hasIntersected(missile)) {
 					obstacles[i].hitBy(missile);
 				}
-			}
-			else if (obstacles[i].get_created()) {
-				obstacles[i].draw(Device, g_mWorld);
+				else {
+					obstacles[i].draw(Device, g_mWorld);
+				}
 			}
 		}
 
-		// 장애물(벽) 파괴 체크
+		// 장애물(벽) 파괴 체크 & 파괴 안되면 그림
 		for (int i = 0; i < obstacle_wall.size(); i++) {
 			if (obstacle_wall[i].get_created()) {
 				if (obstacle_wall[i].hasIntersected(missile)) {
