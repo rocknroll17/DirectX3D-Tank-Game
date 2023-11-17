@@ -25,7 +25,7 @@ IDirect3DDevice9* Device = NULL;
 // window size
 const int Width = 1920;
 const int Height = 1080;
-const double TANK_SPEED = 0.45;
+const double TANK_SPEED = 0.2;
 
 // There are four balls
 // initialize the position (coordinate) of each ball (ball0 ~ ball3)
