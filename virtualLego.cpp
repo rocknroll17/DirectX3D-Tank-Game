@@ -1099,12 +1099,17 @@ bool Display(float timeDelta)
 	D3DXVECTOR3 target;
 	D3DXVECTOR3 up;
 
+	static double startTime = (double)timeGetTime();
+	double currTime = (double)timeGetTime();
+	double timediff = currTime - startTime;
+
 
 	if (GAME_START == false) {
 		pos = D3DXVECTOR3(20.0f, 12.0f, -WORLD_DEPTH / 2 + MOVEMENT);
 		target = D3DXVECTOR3(0.0f, 0.0f, -WORLD_DEPTH / 2 + MOVEMENT);
 
-		MOVEMENT = MOVEMENT + 0.001;
+		MOVEMENT = MOVEMENT + 0.01;
+		startTime = currTime;
 		if (MOVEMENT > WORLD_DEPTH) {
 			GAME_START = true;
 		}
@@ -1132,12 +1137,8 @@ bool Display(float timeDelta)
 	D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
 	Device->SetTransform(D3DTS_VIEW, &g_mView);
 
-	static double startTime = (double)timeGetTime();
-
 	if (Device)
 	{
-		double currTime = (double)timeGetTime();
-		double timediff = currTime - startTime;
 
 		if (timediff > 10000) {
 			Tank tempTank = tank;
