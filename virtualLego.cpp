@@ -1125,7 +1125,7 @@ bool Display(float timeDelta)
 		missile.draw(Device, g_mWorld);  // 미사일도 그림
 
 		// 랜덤 생성 장애물 그림
-		for (int i = 0; i < obstacles.size(); i++) { obstacles[i].draw(Device, g_mWorld); }
+		//for (int i = 0; i < obstacles.size(); i++) { obstacles[i].draw(Device, g_mWorld); }
 
 		g_legoPlane.draw(Device, g_mWorld);
 		for (int i = 0; i < g_legoWall.size(); i++)
@@ -1149,19 +1149,23 @@ bool Display(float timeDelta)
 			}
 		}
 
-		/*
+		
 		for (int i = 0; i < obstacles.size(); i++) {
 			if (obstacles[i].get_created()) {
 				if (obstacles[i].hasIntersected(missile)) {
 					obstacles[i].hitBy(missile);
+ 					if (obstacles[i].get_created()) {
+						obstacles[i].draw(Device, g_mWorld);
+					}
 				}
 				else if (obstacles[i].get_created()) {
 					obstacles[i].draw(Device, g_mWorld);
 				}
 			}
 		}
-		*/
+		
 		// 랜덤 장애물들 파괴 체크
+		/*
 		for (int i = 0; i < obstacles.size(); i++) {
 			if (obstacles[i].get_created()) {
 				if (obstacles[i].hasIntersected(missile)) {
@@ -1171,7 +1175,7 @@ bool Display(float timeDelta)
 			else if (obstacles[i].get_created()) {
 				obstacles[i].draw(Device, g_mWorld);
 			}
-		}
+		}*/
 
 		// 장애물(벽) 파괴 체크
 		for (int i = 0; i < obstacle_wall.size(); i++) {
