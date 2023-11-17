@@ -913,6 +913,11 @@ float camera_prefix = 0.05f;
 
 bool isOriginTank = TRUE;
 
+float lastBlueballCenterx = 0.0f;
+float lastBlueballCentery = (float)M_RADIUS + 1;
+float lastBlueballCenterz = -3.0f;
+
+
 // timeDelta represents the time between the current image frame and the last image frame.
 // the distance of moving balls should be "velocity * timeDelta"
 bool Display(float timeDelta)
@@ -930,7 +935,6 @@ bool Display(float timeDelta)
 			pos = D3DXVECTOR3(tank.getHead()[0], tank.getHead()[1] + 2.0f, tank.getHead()[2] + back_camera * 4.4f);
 		}
 
-		//pos = D3DXVECTOR3(tank.getHead()[0], tank.getHead()[1] + 1.0f, tank.getHead()[2] - back_camera * 4.4f);
 		target = D3DXVECTOR3(tank.getHead()[0]+ x_camera, tank.getHead()[1]+ y_camera, tank.getHead()[2]);
 	}
 	else {
@@ -949,11 +953,22 @@ bool Display(float timeDelta)
 		double currTime = (double)timeGetTime();
 		double timediff = currTime - startTime;
 
-		if (timediff > 5000) {
+		if (timediff > 10000) {
 			Tank tempTank = tank;
 			tank = otank;
 			otank = tempTank;
+			g_target_blueball.linkTank(&tank);
+
 			startTime = currTime;
+			float tempFloatx, tempFloaty, tempFloatz;
+
+			tempFloatx = lastBlueballCenterx;
+			lastBlueballCenterx = g_target_blueball.getCenter().x;
+			tempFloaty = lastBlueballCentery;
+			lastBlueballCentery = g_target_blueball.getCenter().y;
+			tempFloatz = lastBlueballCenterz;
+			lastBlueballCenterz = g_target_blueball.getCenter().z;
+			g_target_blueball.setCenter(tempFloatx, tempFloaty, tempFloatz);
 
 			if (isOriginTank) {
 				isOriginTank = FALSE;
@@ -967,6 +982,7 @@ bool Display(float timeDelta)
 		Device->BeginScene();
 		// 탱크 위치 변경
 		tank.tankUpdate(timeDelta);
+		otank.tankUpdate(timeDelta);
 		// 미사일 위치도 변경 & 벽과 충돌했는지 체크
 		missile.ballUpdate(timeDelta);
 		for (i = 0; i < 4; i++) { g_legowall[i].hitBy(missile); }
