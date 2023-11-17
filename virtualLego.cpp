@@ -1041,7 +1041,7 @@ bool Setup()
 	// create blue ball for set direction
 	if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
 	//g_target_blueball.setCenter(.0f, (float)M_RADIUS + 3, .0f);
-	g_target_blueball.setCenter(tank.getCenter().x, (float)M_RADIUS + 1, tank.getCenter().z + 3.0f);
+	g_target_blueball.setCenter(tank.getCenter().x - 0.01f, (float)M_RADIUS + 1, tank.getCenter().z + 3.0f);
 
 	// light setting 
 	D3DLIGHT9 lit;
@@ -1167,11 +1167,12 @@ bool Display(float timeDelta)
 			startTime = currTime;
 
 			if (isOriginTank) {
-				g_target_blueball.setCenter(tank.getCenter().x, (float)M_RADIUS + 1, tank.getCenter().z - 3.0f);
+				g_target_blueball.setCenter(tank.getCenter().x - 0.01f, (float)M_RADIUS + 1, tank.getCenter().z - 3.0f);
+				// 0.01f 빼는 이유는 사분면 구분에서 0이 포함되는 경우가 중첩되어 x의 차이가 0인 경우 오류가 발생하기 때문.
 				isOriginTank = FALSE;
 			}
 			else {
-				g_target_blueball.setCenter(tank.getCenter().x, (float)M_RADIUS + 1, tank.getCenter().z + 3.0f);
+				g_target_blueball.setCenter(tank.getCenter().x - 0.01f, (float)M_RADIUS + 1, tank.getCenter().z + 3.0f);
 				isOriginTank = TRUE;
 			}
 		}
@@ -1224,6 +1225,7 @@ bool Display(float timeDelta)
 			if (otank.hasIntersected(missile)) {
 				otank.hitBy(missile);
 				exit(1);		// 탱크 터지면 메시지 띄우고 바로 끝내야 할 듯, 안 끝내면 otank 이미 사라져서 오류뜸
+				// 여기에다가 게임 승리 파트로 이동하는 코드 집어넣자. 맵 전부 없애고 단상 만들어서 윙윙 돌아가게
 			}
 			else if (otank.get_created()) {
 				otank.tankUpdate(timeDelta, obstacles, tank, g_legoWall);
