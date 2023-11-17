@@ -55,7 +55,7 @@ D3DXMATRIX g_mProj;
 #define WORLD_DEPTH 36
 #define BORDER_WIDTH 0.12f // 가장자리 벽 굵기
 
-#define NUM_OBSTACLE 1	// 장애물 개수
+#define NUM_OBSTACLE 10	// 장애물 개수
 
 bool GAME_START = false;
 float MOVEMENT = 0.0f;
@@ -341,6 +341,25 @@ public:
 
 		bool intersectZ = (sphereCenter.z <= wallCenter.z + wallDepth / 2 + M_RADIUS * 0.8) &&
 			(sphereCenter.z >= wallCenter.z - wallDepth / 2 - M_RADIUS * 0.8);
+
+		return intersectX && intersectY && intersectZ;
+	}
+
+	bool hasIntersected(double objX, double objY, double objZ, double radius) {
+		// (objX, objY, objZ)에 있는 반지름 = radius인 공과 충돌했는가?
+		D3DXVECTOR3 wallCenter = getCenter();
+		float wallWidth = m_width;
+		float wallHeight = m_height;
+		float wallDepth = m_depth;
+
+		bool intersectX = (objX <= wallCenter.x + wallWidth / 2 + radius * 0.8) &&
+			(objX >= wallCenter.x - wallWidth / 2 - radius * 0.8);
+
+		bool intersectY = (objY <= wallCenter.y + wallHeight / 2 + radius * 0.8) &&
+			(objY >= wallCenter.y - wallHeight / 2 - radius * 0.8);
+
+		bool intersectZ = (objZ <= wallCenter.z + wallDepth / 2 + radius * 0.8) &&
+			(objZ >= wallCenter.z - wallDepth / 2 - radius * 0.8);
 
 		return intersectX && intersectY && intersectZ;
 	}
@@ -1105,6 +1124,9 @@ bool Display(float timeDelta)
 		g_target_blueball.draw(Device, g_mWorld);
 		missile.draw(Device, g_mWorld);  // 미사일도 그림
 
+		// 랜덤 생성 장애물 그림
+		for (int i = 0; i < obstacles.size(); i++) { obstacles[i].draw(Device, g_mWorld); }
+
 		g_legoPlane.draw(Device, g_mWorld);
 		for (int i = 0; i < g_legoWall.size(); i++)
 		{
@@ -1139,7 +1161,19 @@ bool Display(float timeDelta)
 			}
 		}
 		*/
+		// 랜덤 장애물들 파괴 체크
+		for (int i = 0; i < obstacles.size(); i++) {
+			if (obstacles[i].get_created()) {
+				if (obstacles[i].hasIntersected(missile)) {
+					obstacles[i].hitBy(missile);
+				}
+			}
+			else if (obstacles[i].get_created()) {
+				obstacles[i].draw(Device, g_mWorld);
+			}
+		}
 
+		// 장애물(벽) 파괴 체크
 		for (int i = 0; i < obstacle_wall.size(); i++) {
 			if (obstacle_wall[i].get_created()) {
 				if (obstacle_wall[i].hasIntersected(missile)) {
