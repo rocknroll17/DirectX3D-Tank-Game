@@ -1039,7 +1039,8 @@ bool Setup()
 
 	// create blue ball for set direction
 	if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
-	g_target_blueball.setCenter(.0f, (float)M_RADIUS + 3, .0f);
+	//g_target_blueball.setCenter(.0f, (float)M_RADIUS + 3, .0f);
+	g_target_blueball.setCenter(tank.getCenter().x, (float)M_RADIUS + 1, tank.getCenter().z + 3.0f);
 
 	// light setting 
 	D3DLIGHT9 lit;
@@ -1105,10 +1106,6 @@ float camera_prefix = 0.05f;
 
 bool isOriginTank = TRUE;
 
-float lastBlueballCenterx = 0.0f;
-float lastBlueballCentery = (float)M_RADIUS + 1;
-float lastBlueballCenterz = -3.0f;
-
 // timeDelta represents the time between the current image frame and the last image frame.
 // the distance of moving balls should be "velocity * timeDelta"
 bool Display(float timeDelta)
@@ -1160,32 +1157,25 @@ bool Display(float timeDelta)
 	if (Device)
 	{
 
-		if (timediff > 10000) {
+		if (timediff > 20000) {
 			Tank tempTank = tank;
 			tank = otank;
 			otank = tempTank;
 			g_target_blueball.linkTank(&tank);
 
 			startTime = currTime;
-			float tempFloatx, tempFloaty, tempFloatz;
-
-			tempFloatx = lastBlueballCenterx;
-			lastBlueballCenterx = g_target_blueball.getCenter().x;
-			tempFloaty = lastBlueballCentery;
-			lastBlueballCentery = g_target_blueball.getCenter().y;
-			tempFloatz = lastBlueballCenterz;
-			lastBlueballCenterz = g_target_blueball.getCenter().z;
-			g_target_blueball.setCenter(tempFloatx, tempFloaty, tempFloatz);
 
 			if (isOriginTank) {
+				g_target_blueball.setCenter(tank.getCenter().x, (float)M_RADIUS + 1, tank.getCenter().z - 3.0f);
 				isOriginTank = FALSE;
 			}
 			else {
+				g_target_blueball.setCenter(tank.getCenter().x, (float)M_RADIUS + 1, tank.getCenter().z + 3.0f);
 				isOriginTank = TRUE;
 			}
 		}
 
-		string str = to_string(10 - (int)(timediff / 1000));
+		string str = to_string(20 - (int)(timediff / 1000));
 		char* time = new char[str.length() + 1];
 		str.copy(time, str.length());
 		time[str.length()] = '\0';
