@@ -1482,7 +1482,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			// A, D키 뗌	
 			Tank* moveTarget = &tank;  // 움직일 대상
 			moveTarget->setPower(0, moveTarget->getVelocity_Z());
-			break;
+ 			break;
 		}
 		case 0x57:
 		case 0x53:
@@ -1520,6 +1520,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			// 키보드 우측 버튼
 		}
 		}
+		break;
 	}
 	case WM_MOUSEMOVE:
 		//이거 카메라의 회전 기점이 광원으로 설정된거 같음
