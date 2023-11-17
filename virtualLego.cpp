@@ -824,8 +824,8 @@ CSphere missile;   // c 누르면 나가는 미사일
 
 ID3DXFont* pFont = NULL; // 글자 출력을 위한 객체
 
-LPDIRECTSOUND8 g_pDSound = NULL; // 브금을 위한 객체
-LPDIRECTSOUNDBUFFER pDSBuffer = NULL; // 브금을 위한 객체
+LPDIRECTSOUND8 g_pDSound = NULL; // 브금 객체1
+LPDIRECTSOUNDBUFFER pDSBuffer = NULL; // 브금 객체2
 
 HWND windowHandling = 0;
 
