@@ -50,6 +50,7 @@ D3DXMATRIX g_mProj;
 #define MAX_BLUEBALL_RADIUS 2  // blueball 어디까지 멀어질 수 있는지
 
 #define MISSILE_POWER 1.88
+#define MISSILE_EXPOLSION_RADIUS 5
 
 #define WORLD_WIDTH 24
 #define WORLD_DEPTH 36
@@ -1149,6 +1150,18 @@ bool Display(float timeDelta)
 			if (obstacles[i].get_created()) {
 				if (obstacles[i].hasIntersected(missile)) {
 					obstacles[i].hitBy(missile);
+					// 만약 장애물 파괴시, 폭발한다 (= 주변 장애물도 다시 그림)
+					
+					for(int j = 0; j<obstacles.size(); j++){ 
+						if (obstacles[j].hasIntersected(missile.getCenter().x, missile.getCenter().y, missile.getCenter().z, MISSILE_EXPOLSION_RADIUS)) {
+							obstacles[j].hitBy(missile);
+						}
+					}
+					for(int j = 0; j < obstacle_wall.size(); j++){ 
+						if (obstacle_wall[j].hasIntersected(missile.getCenter().x, missile.getCenter().y, missile.getCenter().z, MISSILE_EXPOLSION_RADIUS)) {
+							obstacle_wall[j].hitBy(missile);
+						}
+					}
 				}
 				else {
 					obstacles[i].draw(Device, g_mWorld);
