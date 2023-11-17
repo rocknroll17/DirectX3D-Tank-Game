@@ -79,7 +79,7 @@ namespace d3d
 	const D3DXCOLOR	   DARKRED( D3DCOLOR_XRGB(215,	 0,	  0) );
 	const D3DXCOLOR	     BROWN( D3DCOLOR_XRGB(111,  79,  40) );
 	const D3DXCOLOR	      GRAY( D3DCOLOR_XRGB(125, 125, 125) );
-
+	const D3DXCOLOR	      GOLD( D3DCOLOR_XRGB(255, 215,   0) );
 	//
 	// Lights
 	//

@@ -48,7 +48,7 @@ D3DXMATRIX g_mProj;
 #define TANK_VELOCITY_RATE 0.99
 
 #define BLUEBALL_MOVE_DISTANCE 0.07
-#define MAX_BLUEBALL_RADIUS 2  // blueball 어디까지 멀어질 수 있는지
+#define MAX_BLUEBALL_RADIUS 6  // blueball 어디까지 멀어질 수 있는지
 #define MIN_BLUEBALL_RADIUS 0.2 // blueball 어디 이상 멀어져야 하는지 (앞으로)
 #define MAX_BLUEBALL_WIDTH 0.3 // blueball 어디까지 멀어질 수 있는지 (옆으로)
 
@@ -61,10 +61,12 @@ D3DXMATRIX g_mProj;
 #define WORLD_DEPTH 36
 #define BORDER_WIDTH 0.12f // 가장자리 벽 굵기
 
-#define NUM_OBSTACLE 10	// 장애물 개수
+#define NUM_OBSTACLE 20	// 장애물 개수
 
 bool GAME_START = false;
+bool GAME_FINISH = false;
 float MOVEMENT = 0.0f;
+float Tank_spawn_point[3] = { 0, 0.2f, -WORLD_DEPTH / 2 + 5 };
 
 double g_camera_pos[3] = { 0.0, 5.0, -8.0 };
 bool camera_option = 0;
@@ -806,17 +808,19 @@ CBlueBall	g_target_blueball;
 CLight	g_light;
 Tank tank(0);
 Tank otank(1);
+bool winner;
+CWall podium;
 
 CObstacle obstacle; // 장애물 (테스트용)
 CObstacle obstacle1;
 vector<CObstacle> obstacles;	// 랜덤 장애물 모음
 vector<CObstacle> obstacle_wall; // 장애물 (벽)
 
-LPD3DXFONT fonts; // test -> 화면에 숫자표시 이걸로 하는듯
-
 CSphere missile;   // c 누르면 나가는 미사일
 
 ID3DXFont* pFont = NULL; // 글자 출력을 위한 객체
+ID3DXFont* ENDfont = NULL;
+ID3DXFont* PLAYERfont = NULL;
 
 // -----------------------------------------------------------------------------
 // Functions
@@ -894,6 +898,12 @@ bool createObstacle() // create obstacle
 		float x = disX(gen);
 		float y = height / 2;
 		float z = disZ(gen);
+		while ((sqrt(pow(x - Tank_spawn_point[0], 2) + pow(z - Tank_spawn_point[2], 2)) < 1) || (sqrt(pow(x - Tank_spawn_point[0], 2) + pow(z + Tank_spawn_point[2], 2)) < 1)) {
+			float x = disX(gen);
+			float y = height / 2;
+			float z = disZ(gen);
+		}
+
 
 		CObstacle obs;
 		if (false == obs.create(Device, x, z, width, height, depth, d3d::WHITE)) return false;
@@ -910,77 +920,86 @@ bool createMap() // create plane + wall
 
 	if (false == g_legoPlane.create(Device, -1, -1, WORLD_WIDTH, 0.03f, WORLD_DEPTH, d3d::GREEN)) return false;
 	g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
+	/**/
+	if (false == wall.create(Device, -1, -1, WORLD_WIDTH - 1, 2.0f, 1.0f, d3d::GRAY)) return false;
+	wall.setPosition(0.0f, 1.0f, -WORLD_DEPTH / 2);
+	lwall1.push_back(wall);
 
-	if (false == wall.create(Device, -1, -1, 11.0f, 2.0f, 1.0f, d3d::GRAY)) return false;
-	wall.setPosition(-6.0f, 1.0f, -18.0f);
-	lwall1.push_back(wall);
-	if (false == wall.create(Device, -1, -1, 11.0f, 2.0f, 1.0f, d3d::GRAY)) return false;
-	wall.setPosition(6.0f, 1.0f, -18.0f);
-	lwall1.push_back(wall);
-	if (false == wall.create(Device, -1, -1, 11.0f, 2.0f, 1.0f, d3d::GRAY)) return false;
-	wall.setPosition(6.0f, 1.0f, 18.0f);
-	lwall1.push_back(wall);
-	if (false == wall.create(Device, -1, -1, 11.0f, 2.0f, 1.0f, d3d::GRAY)) return false;
-	wall.setPosition(-6.0f, 1.0f, 18.0f);
+	if (false == wall.create(Device, -1, -1, WORLD_WIDTH - 1, 2.0f, 1.0f, d3d::GRAY)) return false;
+	wall.setPosition(0.0f, 1.0f, WORLD_DEPTH / 2);
 	lwall1.push_back(wall);
 
 	g_legoWall.push_back(lwall1);
-
-	if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
-	wall.setPosition(-12.0f, 1.5f, -18.0f);
-	swall1.push_back(wall);
+	//뒤 기둥
 	if (false == wall.create(Device, -1, -1, 1.0f, 2.5f, 1.5f, d3d::GRAY)) return false;
 	wall.setPosition(0, 1.25f, -18.0f);
 	swall1.push_back(wall);
-	if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
-	wall.setPosition(12.0f, 1.5f, -18.0f);
-	swall1.push_back(wall);
-	if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
-	wall.setPosition(-12.0f, 1.5f, 18.0f);
-	swall1.push_back(wall);
+	//앞 기둥
 	if (false == wall.create(Device, -1, -1, 1.0f, 2.5f, 1.5f, d3d::GRAY)) return false;
 	wall.setPosition(0, 1.25f, 18.0f);
 	swall1.push_back(wall);
-	if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
-	wall.setPosition(12.0f, 1.5f, 18.0f);
-	swall1.push_back(wall);
 
-	g_legoWall.push_back(swall1);
 
-	if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, 11.0f, d3d::GRAY)) return false;
-	wall.setPosition(-12.0f, 1.0f, 12.0f);
+
+
+
+	//좌측 기둥
+	if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, WORLD_DEPTH - 1, d3d::GRAY)) return false;
+	wall.setPosition(-WORLD_WIDTH / 2, 1.0f, 0.0f);
 	lwall2.push_back(wall);
-	if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, 11.0f, d3d::GRAY)) return false;
-	wall.setPosition(-12.0f, 1.0f, 0);
-	lwall2.push_back(wall);
-	if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, 11.0f, d3d::GRAY)) return false;
-	wall.setPosition(-12.0f, 1.0f, -12.0f);
-	lwall2.push_back(wall);
-	if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, 11.0f, d3d::GRAY)) return false;
-	wall.setPosition(12.0f, 1.0f, 12.0f);
-	lwall2.push_back(wall);
-	if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, 11.0f, d3d::GRAY)) return false;
-	wall.setPosition(12.0f, 1.0f, 0);
-	lwall2.push_back(wall);
-	if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, 11.0f, d3d::GRAY)) return false;
-	wall.setPosition(12.0f, 1.0f, -12.0f);
+	//우측 기둥
+	if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, WORLD_DEPTH - 1, d3d::GRAY)) return false;
+	wall.setPosition(WORLD_WIDTH / 2, 1.0f, 0.0f);
 	lwall2.push_back(wall);
 
 	g_legoWall.push_back(lwall2);
 
-	if (false == wall.create(Device, -1, -1, 1.5f, 2.5f, 1.0f, d3d::GRAY)) return false;
-	wall.setPosition(-12.0f, 1.25f, 6.0f);
-	swall2.push_back(wall);
-	if (false == wall.create(Device, -1, -1, 1.5f, 2.5f, 1.0f, d3d::GRAY)) return false;
-	wall.setPosition(-12.0f, 1.25f, -6.0f);
-	swall2.push_back(wall);
-	if (false == wall.create(Device, -1, -1, 1.5f, 2.5f, 1.0f, d3d::GRAY)) return false;
-	wall.setPosition(12.0f, 1.25f, 6.0f);
-	swall2.push_back(wall);
-	if (false == wall.create(Device, -1, -1, 1.5f, 2.5f, 1.0f, d3d::GRAY)) return false;
-	wall.setPosition(12.0f, 1.25f, -6.0f);
+
+	for (int i = -1; i <= 1; i += 2) {
+		for (int j = -1; j <= 1; j += 2) {
+			if (false == wall.create(Device, -1, -1, 1.5f, 2.5f, 1.0f, d3d::GRAY)) return false;
+			wall.setPosition(i * WORLD_WIDTH / 2, 1.25f, j * 6.0f);
+			swall2.push_back(wall);
+		}
+	}
+
+	for (int i = -1; i <= 1; i += 2) {
+		for (int j = -1; j <= 1; j += 2) {
+			if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
+			wall.setPosition(i * WORLD_WIDTH / 2, 1.5f, j * 18.0f);
+			swall2.push_back(wall);
+		}
+	}
+	/*
+	//좌 1번
+	if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
+	wall.setPosition(-12.0f, 1.5f, -18.0f);
 	swall2.push_back(wall);
 
+	//좌4
+	if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
+	wall.setPosition(-12.0f, 1.5f, 18.0f);
+	swall2.push_back(wall);
+
+	//우1
+	if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
+	wall.setPosition(12.0f, 1.5f, -18.0f);
+	swall1.push_back(wall);
+
+
+
+
+
+	//우4
+	if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
+	wall.setPosition(12.0f, 1.5f, 18.0f);
+	swall1.push_back(wall);
+	*/
+
+
+
+
+	g_legoWall.push_back(swall1);
 	g_legoWall.push_back(swall2);
 
 	return true;
@@ -997,7 +1016,19 @@ bool Setup()
 
 	// 글자출력 ---------------------
 	if (FAILED(D3DXCreateFont(Device, 20, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET,
-		OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial", &pFont)))
+		OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Tahoma", &pFont)))
+	{
+		::MessageBox(0, "D3DXCreateFont() - FAILED", 0, 0);
+		return false;
+	}
+	if (FAILED(D3DXCreateFont(Device, 150, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET,
+		OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Tahoma", &ENDfont)))
+	{
+		::MessageBox(0, "D3DXCreateFont() - FAILED", 0, 0);
+		return false;
+	}
+	if (FAILED(D3DXCreateFont(Device, 50, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET,
+		OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Tahoma", &PLAYERfont)))
 	{
 		::MessageBox(0, "D3DXCreateFont() - FAILED", 0, 0);
 		return false;
@@ -1009,10 +1040,10 @@ bool Setup()
 	D3DXMatrixIdentity(&g_mProj);
 
 	if (false == tank.create(Device, -1, -1, d3d::BROWN)) return false;
-	tank.setPosition(-1, 0.2f, -1);
+	tank.setPosition(0, 0.2f, -WORLD_DEPTH / 2 + 5);
 
-	if (false == otank.create(Device, -1, -1, d3d::BROWN)) return false;
-	otank.setPosition(-1, 0.2f, 1);
+	if (false == otank.create(Device, -1, -1, d3d::RED)) return false;
+	otank.setPosition(0, 0.2f, WORLD_DEPTH / 2 - 5);
 
 	// tank랑 blue ball 연결
 	g_target_blueball.linkTank(&tank);
@@ -1041,7 +1072,10 @@ bool Setup()
 	// create blue ball for set direction
 	if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
 	//g_target_blueball.setCenter(.0f, (float)M_RADIUS + 3, .0f);
-	g_target_blueball.setCenter(tank.getCenter().x - 0.01f, (float)M_RADIUS + 1, tank.getCenter().z + 3.0f);
+	g_target_blueball.setCenter(tank.getCenter().x - 0.01f, (float)M_RADIUS + 3, tank.getCenter().z + 5.0f);
+
+	if (false == podium.create(Device, -1, -1, 2.0f, 1.2f, 2.0f, d3d::GOLD)) return false;
+	podium.setPosition(0.0f, 0.6f, 0.0f);
 
 	// light setting 
 	D3DLIGHT9 lit;
@@ -1134,6 +1168,41 @@ bool Display(float timeDelta)
 		D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
 		Device->SetTransform(D3DTS_VIEW, &g_mView);
 	}
+	else if (GAME_FINISH) {
+		tank.setPosition(0.0f, podium.getCenter()[1] + podium.getHeight() / 2 + 0.1875, 0.0f);
+		pos = D3DXVECTOR3(0.0f, tank.getHead()[1] + 0.5f, -5 + 10 * isOriginTank);
+		target = D3DXVECTOR3(0.0f, tank.getHead()[1], 0.0f);
+		up = D3DXVECTOR3(0.0f, 2.0f, 0.0f);
+		D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
+		Device->SetTransform(D3DTS_VIEW, &g_mView);
+		if (Device)
+		{
+			Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
+			Device->BeginScene();
+			RECT rect = { Width / 2 - 200, Height / 7, 0, 0 };
+			ENDfont->DrawText(NULL, "Winner", -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+			rect = { Width / 2 - 90, Height / 7 + 150, 0, 0 };
+			if (isOriginTank) {
+				PLAYERfont->DrawText(NULL, "PLAYER1", -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+			}
+			else {
+				PLAYERfont->DrawText(NULL, "PLAYER2", -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+			}
+			g_legoPlane.draw(Device, g_mWorld);
+			for (int i = 0; i < g_legoWall.size(); i++)
+			{
+				for (int j = 0; j < g_legoWall[i].size(); j++)
+					g_legoWall[i][j].draw(Device, g_mWorld);
+			}
+			podium.draw(Device, g_mWorld);
+			tank.draw(Device, g_mWorld);
+			Device->EndScene();
+			Device->Present(0, 0, 0, 0);
+			Device->SetTexture(0, NULL);
+		}
+		return true;
+
+	}
 	else {
 		if (camera_option == 0) {
 			if (isOriginTank) {
@@ -1159,6 +1228,7 @@ bool Display(float timeDelta)
 	{
 
 		if (timediff > 20000) {
+			tank.setPower(0, 0);
 			Tank tempTank = tank;
 			tank = otank;
 			otank = tempTank;
@@ -1176,6 +1246,8 @@ bool Display(float timeDelta)
 				isOriginTank = TRUE;
 			}
 		}
+		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
+		Device->BeginScene();
 
 		string str = to_string(20 - (int)(timediff / 1000));
 		char* time = new char[str.length() + 1];
@@ -1184,14 +1256,14 @@ bool Display(float timeDelta)
 		// 글자출력-------------------------------------------------------------------------------------
 		RECT rect = { 10, 10, 0, 0 };  // 글자의 위치 (10, 10)에서 시작
 		pFont->DrawText(NULL, time, -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(255, 255, 255));
-
+		/*
 		Device->EndScene();
 		Device->Present(0, 0, 0, 0);
 		Device->SetTexture(0, NULL);
+		*/
 		//----------------------------------------------------------------------------------------------
 
-		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
-		Device->BeginScene();
+
 		// 탱크 위치 변경
 		tank.tankUpdate(timeDelta, obstacles, otank, g_legoWall);
 		// 미사일 위치도 변경 & 벽과 충돌했는지 체크
@@ -1220,12 +1292,23 @@ bool Display(float timeDelta)
 		if (missile.get_created() == true) {
 			missile.hitBy();
 		}
+		if (otank.get_created()) {
+			if (otank.hasIntersected(missile)) {
+				otank.hitBy(missile);
+				GAME_FINISH = true;
+				winner = true;
+			}
+			else if (otank.get_created()) {
+				otank.tankUpdate(timeDelta, obstacles, tank, g_legoWall);
+				otank.draw(Device, g_mWorld);
+			}
+		}
 
 		if (otank.get_created()) {
 			if (otank.hasIntersected(missile)) {
 				otank.hitBy(missile);
-				exit(1);		// 탱크 터지면 메시지 띄우고 바로 끝내야 할 듯, 안 끝내면 otank 이미 사라져서 오류뜸
-				// 여기에다가 게임 승리 파트로 이동하는 코드 집어넣자. 맵 전부 없애고 단상 만들어서 윙윙 돌아가게
+				GAME_FINISH = true;
+				winner = true;
 			}
 			else if (otank.get_created()) {
 				otank.tankUpdate(timeDelta, obstacles, tank, g_legoWall);
