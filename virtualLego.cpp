@@ -667,9 +667,7 @@ public:
 
 
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
-		double rate = 1 - (1 - TANK_VELOCITY_RATE) * timeDiff * 400;
-		if (rate < 0)
-			rate = 0;
+		double rate = 1;
 		this->setPower(getVelocity_X() * rate, getVelocity_Z() * rate);//중력 설정 다시 손 봐야함
 	}
 
@@ -1356,7 +1354,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			// 탱크 움직임
 			Tank* moveTarget = &tank;  // 움직일 대상
 			double speed = TANK_SPEED;
-			moveTarget->setPower(0, speed * 5);
+			moveTarget->setPower(moveTarget->getVelocity_X(), speed * 5);
 			break;
 		}
 
@@ -1365,7 +1363,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			// A키
 			Tank* moveTarget = &tank;  // 움직일 대상
 			double speed = TANK_SPEED;
-			moveTarget->setPower(-speed * 5, 0);
+			moveTarget->setPower(-speed * 5, moveTarget->getVelocity_Z());
 			break;
 		}
 
@@ -1374,7 +1372,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			// S키
 			Tank* moveTarget = &tank;;  // 움직일 대상
 			double speed = TANK_SPEED;
-			moveTarget->setPower(0, -speed * 5);
+			moveTarget->setPower(moveTarget->getVelocity_X(), -speed * 5);
 			break;
 		}
 		case 0x44:
@@ -1382,7 +1380,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			// D키
 			Tank* moveTarget = &tank;  // 움직일 대상
 			double speed = TANK_SPEED;
-			moveTarget->setPower(speed * 5, 0);
+			moveTarget->setPower(speed * 5, moveTarget->getVelocity_Z());
 			break;
 		}
 		case 0x56:
@@ -1475,7 +1473,54 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	}
-
+	case WM_KEYUP:
+	{
+		switch (wParam) {
+		case 0x44:
+		case 0x41:
+		{
+			// A, D키 뗌	
+			Tank* moveTarget = &tank;  // 움직일 대상
+			moveTarget->setPower(0, moveTarget->getVelocity_Z());
+			break;
+		}
+		case 0x57:
+		case 0x53:
+		{
+			// W, S키 뗌
+			Tank* moveTarget = &tank;  // 움직일 대상
+			moveTarget->setPower(moveTarget->getVelocity_X(), 0);
+			break;
+		}
+		case 0x10:
+		case 0x51:
+		{
+			// Shift, Q키
+		}
+		case 0x45:
+		case 0x11:
+		{
+			// Ctrl키, E?키
+			// blueball 내림
+		}
+		case VK_UP:
+		{
+			// 키보드 위측 버튼
+		}
+		case VK_LEFT:
+		{
+			// 키보드 좌측 버튼
+		}
+		case VK_DOWN:
+		{
+			// 키보드 아래측 버튼
+		}
+		case VK_RIGHT:
+		{
+			// 키보드 우측 버튼
+		}
+		}
+	}
 	case WM_MOUSEMOVE:
 		//이거 카메라의 회전 기점이 광원으로 설정된거 같음
 	{
