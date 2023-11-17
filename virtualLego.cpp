@@ -17,6 +17,7 @@
 #include <cstdio>
 #include <cassert>
 #include <random>
+#include <string>
 
 using namespace std;
 
@@ -814,6 +815,8 @@ LPD3DXFONT fonts; // test -> 화면에 숫자표시 이걸로 하는듯
 
 CSphere missile;   // c 누르면 나가는 미사일
 
+ID3DXFont* pFont = NULL; // 글자 출력을 위한 객체
+
 // -----------------------------------------------------------------------------
 // Functions
 // -----------------------------------------------------------------------------
@@ -991,6 +994,15 @@ bool Setup()
 {
 	int i;
 
+	// 글자출력 ---------------------
+	if (FAILED(D3DXCreateFont(Device, 20, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET,
+		OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial", &pFont)))
+	{
+		::MessageBox(0, "D3DXCreateFont() - FAILED", 0, 0);
+		return false;
+	}
+	// ------------------------------
+
 	D3DXMatrixIdentity(&g_mWorld);
 	D3DXMatrixIdentity(&g_mView);
 	D3DXMatrixIdentity(&g_mProj);
@@ -1074,6 +1086,14 @@ void Cleanup(void)
 	}
 	destroyAllLegoBlock();
 	g_light.destroy();
+
+	// 글자출력 ----------------------------
+	if (pFont != NULL)
+	{
+		pFont->Release();
+		pFont = NULL;
+	}
+	//--------------------------------------
 
 }
 
@@ -1165,6 +1185,18 @@ bool Display(float timeDelta)
 			}
 		}
 
+		string str = to_string(10 - (int)(timediff / 1000));
+		char* time = new char[str.length() + 1];
+		str.copy(time, str.length());
+		time[str.length()] = '\0';
+		// 글자출력-------------------------------------------------------------------------------------
+		RECT rect = { 10, 10, 0, 0 };  // 글자의 위치 (10, 10)에서 시작
+		pFont->DrawText(NULL, time, -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(255, 255, 255));
+
+		Device->EndScene();
+		Device->Present(0, 0, 0, 0);
+		Device->SetTexture(0, NULL);
+		//----------------------------------------------------------------------------------------------
 
 		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
 		Device->BeginScene();
