@@ -1163,7 +1163,13 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			D3DXVECTOR3 tankcoord = shooter->getCenter();
 			D3DXVECTOR3 targetcoord = moveTarget->getCenter();
 			double dz = targetcoord.z - tankcoord.z;
-			if(dz < MAX_BLUEBALL_RADIUS) moveTarget->setCenter(targetcoord.x, targetcoord.y, targetcoord.z + distance);
+			if (isOriginTank) {
+				if (dz < MAX_BLUEBALL_RADIUS) moveTarget->setCenter(targetcoord.x, targetcoord.y, targetcoord.z + distance);
+			}
+			else {
+				dz *= -1;
+				if (dz < MAX_BLUEBALL_RADIUS) moveTarget->setCenter(targetcoord.x, targetcoord.y, targetcoord.z - distance);
+			}
 			break;
 		}
 
@@ -1176,7 +1182,13 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			D3DXVECTOR3 tankcoord = shooter->getCenter();
 			D3DXVECTOR3 targetcoord = moveTarget->getCenter();
 			double dx = tankcoord.x - targetcoord.x;
-			if(dx < MAX_BLUEBALL_WIDTH) moveTarget->setCenter(targetcoord.x - distance, targetcoord.y, targetcoord.z);
+			if (isOriginTank) {
+				if (dx < MAX_BLUEBALL_WIDTH) moveTarget->setCenter(targetcoord.x - distance, targetcoord.y, targetcoord.z);
+			}
+			else {
+				dx *= -1;
+				if (dx < MAX_BLUEBALL_WIDTH) moveTarget->setCenter(targetcoord.x + distance, targetcoord.y, targetcoord.z);
+			}
 			break;
 		}
 
@@ -1189,7 +1201,13 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			D3DXVECTOR3 tankcoord = shooter->getCenter();
 			D3DXVECTOR3 targetcoord = moveTarget->getCenter();
 			double dz = targetcoord.z - tankcoord.z;
-			if(dz > MIN_BLUEBALL_RADIUS) moveTarget->setCenter(targetcoord.x, targetcoord.y, targetcoord.z - distance);
+			if (isOriginTank) {
+				if (dz > MIN_BLUEBALL_RADIUS) moveTarget->setCenter(targetcoord.x, targetcoord.y, targetcoord.z - distance);
+			}
+			else {
+				dz *= -1;
+				if (dz > MIN_BLUEBALL_RADIUS) moveTarget->setCenter(targetcoord.x, targetcoord.y, targetcoord.z + distance);
+			}
 			break;
 		}
 		case 0x44:
@@ -1201,7 +1219,14 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			D3DXVECTOR3 tankcoord = shooter->getCenter();
 			D3DXVECTOR3 targetcoord = moveTarget->getCenter();
 			double dx = targetcoord.x - tankcoord.x;
-			if(dx < MAX_BLUEBALL_WIDTH) moveTarget->setCenter(targetcoord.x + distance, targetcoord.y, targetcoord.z);
+
+			if (isOriginTank) {
+				if (dx < MAX_BLUEBALL_WIDTH) moveTarget->setCenter(targetcoord.x + distance, targetcoord.y, targetcoord.z);
+			}
+			else {
+				dx *= -1;
+				if (dx < MAX_BLUEBALL_WIDTH) moveTarget->setCenter(targetcoord.x - distance, targetcoord.y, targetcoord.z);
+			}
 			break;
 		}
 		case 0x56:
