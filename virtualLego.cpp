@@ -1314,50 +1314,6 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case VK_LEFT:
 		{
 			// 키보드 좌측 버튼
-			Tank* moveTarget = &tank;  // 움직일 대상
-			double speed = TANK_SPEED;
-			moveTarget->setPower(-speed * 5, 0);
-			break;
-		}
-
-		case VK_RIGHT:
-		{
-			// 키보드 우측 버튼
-			Tank* moveTarget = &tank;  // 움직일 대상
-			double speed = TANK_SPEED;
-			moveTarget->setPower(speed * 5, 0);
-			break;
-		}
-		case VK_UP:
-		{
-			// 키보드 위측 버튼
-			Tank* moveTarget = &tank;  // 움직일 대상
-			double speed = TANK_SPEED;
-			moveTarget->setPower(0, speed * 5);
-			break;
-		}
-		case VK_DOWN:
-		{
-			// 키보드 아래측 버튼
-			Tank* moveTarget = &tank;;  // 움직일 대상
-			double speed = TANK_SPEED;
-			moveTarget->setPower(0, -speed * 5);
-			break;
-		}
-		case 0x57:
-		{
-			// W키
-			CBlueBall* moveTarget = &g_target_blueball;
-			double distance = BLUEBALL_MOVE_DISTANCE;
-			D3DXVECTOR3 v = moveTarget->getCenter();
-			//double newZ = v.z + distance;
-			moveTarget->setCenter(v.x, v.y, v.z + distance);
-			break;
-		}
-
-		case 0x41:
-		{
-			// A키
 			CBlueBall* moveTarget = &g_target_blueball;
 			double distance = BLUEBALL_MOVE_DISTANCE;
 			D3DXVECTOR3 v = moveTarget->getCenter();
@@ -1365,22 +1321,68 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 
-		case 0x53:
+		case VK_RIGHT:
 		{
-			// S키
+			// 키보드 우측 버튼
+			CBlueBall* moveTarget = &g_target_blueball;
+			double distance = BLUEBALL_MOVE_DISTANCE;
+			D3DXVECTOR3 v = moveTarget->getCenter();
+			moveTarget->setCenter(v.x + distance, v.y, v.z);
+			break;
+		}
+		case VK_UP:
+		{
+			// 키보드 위측 버튼
+			CBlueBall* moveTarget = &g_target_blueball;
+			double distance = BLUEBALL_MOVE_DISTANCE;
+			D3DXVECTOR3 v = moveTarget->getCenter();
+			//double newZ = v.z + distance;
+			moveTarget->setCenter(v.x, v.y, v.z + distance);
+			break;
+			
+		}
+		case VK_DOWN:
+		{
+			// 키보드 아래측 버튼
 			CBlueBall* moveTarget = &g_target_blueball;
 			double distance = BLUEBALL_MOVE_DISTANCE;
 			D3DXVECTOR3 v = moveTarget->getCenter();
 			moveTarget->setCenter(v.x, v.y, v.z - distance);
 			break;
 		}
+		case 0x57:
+		{
+			// W키
+			// 탱크 움직임
+			Tank* moveTarget = &tank;  // 움직일 대상
+			double speed = TANK_SPEED;
+			moveTarget->setPower(0, speed * 5);
+			break;
+		}
+
+		case 0x41:
+		{
+			// A키
+			Tank* moveTarget = &tank;  // 움직일 대상
+			double speed = TANK_SPEED;
+			moveTarget->setPower(-speed * 5, 0);
+			break;
+		}
+
+		case 0x53:
+		{
+			// S키
+			Tank* moveTarget = &tank;;  // 움직일 대상
+			double speed = TANK_SPEED;
+			moveTarget->setPower(0, -speed * 5);
+			break;
+		}
 		case 0x44:
 		{
 			// D키
-			CBlueBall* moveTarget = &g_target_blueball;
-			double distance = BLUEBALL_MOVE_DISTANCE;
-			D3DXVECTOR3 v = moveTarget->getCenter();
-			moveTarget->setCenter(v.x + distance, v.y, v.z);
+			Tank* moveTarget = &tank;  // 움직일 대상
+			double speed = TANK_SPEED;
+			moveTarget->setPower(speed * 5, 0);
 			break;
 		}
 		case 0x56:
