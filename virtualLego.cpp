@@ -50,7 +50,7 @@ D3DXMATRIX g_mProj;
 #define MAX_BLUEBALL_RADIUS 2  // blueball 어디까지 멀어질 수 있는지
 
 #define MISSILE_POWER 1.88
-#define MISSILE_EXPOLSION_RADIUS 5
+#define MISSILE_EXPOLSION_RADIUS M_RADIUS+0.5
 
 #define WORLD_WIDTH 24
 #define WORLD_DEPTH 36
@@ -434,10 +434,9 @@ protected:
 class CObstacle : public CWall {
 public:
 	void hitBy(CSphere& missile) {
-		if (hasIntersected(missile)) {
-			missile.destroy();
-			destroy();
-		}
+		missile.destroy();
+		destroy();
+		
 	}
 };
 
@@ -815,6 +814,33 @@ CSphere missile;   // c 누르면 나가는 미사일
 // Functions
 // -----------------------------------------------------------------------------
 
+bool createBlock(float partitionWidth, float partitionHeight, float partitionDepth,
+	int partitionCount_x, int partitionCount_y, int partitionCount_z,
+	float x, float y, float z,
+	D3DXCOLOR wallColor = d3d::WHITE) {
+	// (partitionCount_land * partitionCount_sky) 크기의 벽을 생성함.
+	// 각 partition의 크기는 (partitionWidth, partitionHeight, partitionDepth)
+	for (int i = 0; i < partitionCount_x; i++) {
+		for (int j = 0; j < partitionCount_y; j++) {
+			for (int k = 0; k < partitionCount_z; k++) {
+				// 좌표 결정
+				float nx, ny, nz;
+				nx = x + partitionWidth * i;
+				ny = y + partitionHeight * j;
+				nz = z + partitionDepth * k;
+				// 장애물 생성 & 배치
+				CObstacle partition;
+				if (false == partition.create(Device, -1, -1, partitionWidth, partitionHeight, partitionDepth, wallColor)) return false;
+				partition.setPosition(nx, ny, nz);
+				obstacle_wall.push_back(partition);
+				// 전역변수에 저장
+			}
+		}
+	}
+	return true;
+}
+
+
 bool createWall(float partitionWidth, float partitionHeight, float partitonDepth,
 	int partitionCount_land, int partitionCount_sky,
 	float x, float y, float z,
@@ -992,6 +1018,9 @@ bool Setup()
 	// 벽 생성 & 배치
 	createWall(wallPartition_width, wallPartition_height, wallPartition_depth, partitionCount_land, partitionCount_sky, base_x, base_y, base_z, wall_color);
 
+	// 블럭 생성 (테스트)
+	createBlock(0.4f, 0.4f, 0.4f, 5, 5, 5, 2, 0, 2, d3d::BROWN);
+
 	// create blue ball for set direction
 	if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
 	g_target_blueball.setCenter(.0f, (float)M_RADIUS + 3, .0f);
@@ -1151,14 +1180,17 @@ bool Display(float timeDelta)
 				if (obstacles[i].hasIntersected(missile)) {
 					obstacles[i].hitBy(missile);
 					// 만약 장애물 파괴시, 폭발한다 (= 주변 장애물도 다시 그림)
-					
+					// 스파게티 코드지만 마감 얼마 안남았으니까 이대로 갑시다
+					double mx = missile.getCenter().x;
+					double my = missile.getCenter().y;
+					double mz = missile.getCenter().z;
 					for(int j = 0; j<obstacles.size(); j++){ 
-						if (obstacles[j].hasIntersected(missile.getCenter().x, missile.getCenter().y, missile.getCenter().z, MISSILE_EXPOLSION_RADIUS)) {
+						if (obstacles[j].hasIntersected(mx, my, mz, MISSILE_EXPOLSION_RADIUS)) {
 							obstacles[j].hitBy(missile);
 						}
 					}
 					for(int j = 0; j < obstacle_wall.size(); j++){ 
-						if (obstacle_wall[j].hasIntersected(missile.getCenter().x, missile.getCenter().y, missile.getCenter().z, MISSILE_EXPOLSION_RADIUS)) {
+						if (obstacle_wall[j].hasIntersected(mx, my, mz, MISSILE_EXPOLSION_RADIUS)) {
 							obstacle_wall[j].hitBy(missile);
 						}
 					}
@@ -1174,6 +1206,18 @@ bool Display(float timeDelta)
 			if (obstacle_wall[i].get_created()) {
 				if (obstacle_wall[i].hasIntersected(missile)) {
 					obstacle_wall[i].hitBy(missile);
+					// 만약 장애물 파괴시, 폭발한다 (= 주변 장애물도 다시 그림)
+					// 스파게티 코드지만 마감 얼마 안남았으니까 이대로 갑시다
+					for (int j = 0; j < obstacles.size(); j++) {
+						if (obstacles[j].hasIntersected(missile.getCenter().x, missile.getCenter().y, missile.getCenter().z, MISSILE_EXPOLSION_RADIUS)) {
+							obstacles[j].hitBy(missile);
+						}
+					}
+					for (int j = 0; j < obstacle_wall.size(); j++) {
+						if (obstacle_wall[j].hasIntersected(missile.getCenter().x, missile.getCenter().y, missile.getCenter().z, MISSILE_EXPOLSION_RADIUS)) {
+							obstacle_wall[j].hitBy(missile);
+						}
+					}
 				}
 				else if (obstacle_wall[i].get_created()) {
 					obstacle_wall[i].draw(Device, g_mWorld);
