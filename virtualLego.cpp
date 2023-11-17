@@ -48,8 +48,12 @@ D3DXMATRIX g_mProj;
 
 #define BLUEBALL_MOVE_DISTANCE 0.07
 #define MAX_BLUEBALL_RADIUS 2  // blueball 어디까지 멀어질 수 있는지
+#define MIN_BLUEBALL_RADIUS 0.2 // blueball 어디 이상 멀어져야 하는지 (앞으로)
+#define MAX_BLUEBALL_WIDTH 0.3 // blueball 어디까지 멀어질 수 있는지 (옆으로)
 
 #define MISSILE_POWER 1.88
+#define MISSILE_GRAVITY_RATE 0.6
+#define MISSILE_DECREASE_RATE 0.9982
 #define MISSILE_EXPOLSION_RADIUS M_RADIUS+0.25 // 미사일 폭발 반경
 
 #define WORLD_WIDTH 24
@@ -436,7 +440,7 @@ public:
 	void hitBy(CSphere& missile) {
 		missile.destroy();
 		destroy();
-		
+
 	}
 };
 
@@ -667,7 +671,8 @@ public:
 
 
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
-		double rate = 1 - (1 - TANK_VELOCITY_RATE) * timeDiff * 400;
+		double rate = 1;
+		//double rate = 1 - (1 - TANK_VELOCITY_RATE) * timeDiff * 400;
 		if (rate < 0)
 			rate = 0;
 		this->setPower(getVelocity_X() * rate, getVelocity_Z() * rate);//중력 설정 다시 손 봐야함
@@ -1079,6 +1084,12 @@ float y_camera = 0.8f;
 float back_camera = 1;
 float camera_prefix = 0.05f;
 
+bool isOriginTank = TRUE;
+
+float lastBlueballCenterx = 0.0f;
+float lastBlueballCentery = (float)M_RADIUS + 1;
+float lastBlueballCenterz = -3.0f;
+
 // timeDelta represents the time between the current image frame and the last image frame.
 // the distance of moving balls should be "velocity * timeDelta"
 bool Display(float timeDelta)
@@ -1089,12 +1100,17 @@ bool Display(float timeDelta)
 	D3DXVECTOR3 target;
 	D3DXVECTOR3 up;
 
+	static double startTime = (double)timeGetTime();
+	double currTime = (double)timeGetTime();
+	double timediff = currTime - startTime;
+
 
 	if (GAME_START == false) {
 		pos = D3DXVECTOR3(20.0f, 12.0f, -WORLD_DEPTH / 2 + MOVEMENT);
 		target = D3DXVECTOR3(0.0f, 0.0f, -WORLD_DEPTH / 2 + MOVEMENT);
 
-		MOVEMENT = MOVEMENT + 0.001;
+		MOVEMENT = MOVEMENT + 0.01;
+		startTime = currTime;
 		if (MOVEMENT > WORLD_DEPTH) {
 			GAME_START = true;
 		}
@@ -1103,7 +1119,13 @@ bool Display(float timeDelta)
 	}
 	else {
 		if (camera_option == 0) {
-			pos = D3DXVECTOR3(tank.getHead()[0], tank.getHead()[1] + 1.0f, tank.getHead()[2] - back_camera * 4.4f);
+			if (isOriginTank) {
+				pos = D3DXVECTOR3(tank.getHead()[0], tank.getHead()[1] + 2.0f, tank.getHead()[2] - back_camera * 4.4f);
+			}
+			else {
+				pos = D3DXVECTOR3(tank.getHead()[0], tank.getHead()[1] + 2.0f, tank.getHead()[2] + back_camera * 4.4f);
+			}
+
 			target = D3DXVECTOR3(tank.getHead()[0] + x_camera, tank.getHead()[1] + y_camera, tank.getHead()[2]);
 		}
 		else {
@@ -1116,21 +1138,34 @@ bool Display(float timeDelta)
 	D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
 	Device->SetTransform(D3DTS_VIEW, &g_mView);
 
-	static double startTime = (double)timeGetTime();
-
 	if (Device)
 	{
-		/*
-		double currTime = (double)timeGetTime();
-		double timediff = currTime - startTime;
-		if (timediff > 5000.0) {
+
+		if (timediff > 10000) {
 			Tank tempTank = tank;
 			tank = otank;
 			otank = tempTank;
+			g_target_blueball.linkTank(&tank);
 
 			startTime = currTime;
+			float tempFloatx, tempFloaty, tempFloatz;
+
+			tempFloatx = lastBlueballCenterx;
+			lastBlueballCenterx = g_target_blueball.getCenter().x;
+			tempFloaty = lastBlueballCentery;
+			lastBlueballCentery = g_target_blueball.getCenter().y;
+			tempFloatz = lastBlueballCenterz;
+			lastBlueballCenterz = g_target_blueball.getCenter().z;
+			g_target_blueball.setCenter(tempFloatx, tempFloaty, tempFloatz);
+
+			if (isOriginTank) {
+				isOriginTank = FALSE;
+			}
+			else {
+				isOriginTank = TRUE;
+			}
 		}
-		*/
+
 
 		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
 		Device->BeginScene();
@@ -1184,12 +1219,12 @@ bool Display(float timeDelta)
 					double mx = missile.getCenter().x;
 					double my = missile.getCenter().y;
 					double mz = missile.getCenter().z;
-					for(int j = 0; j<obstacles.size(); j++){ 
+					for (int j = 0; j < obstacles.size(); j++) {
 						if (obstacles[j].hasIntersected(mx, my, mz, MISSILE_EXPOLSION_RADIUS)) {
 							obstacles[j].hitBy(missile);
 						}
 					}
-					for(int j = 0; j < obstacle_wall.size(); j++){ 
+					for (int j = 0; j < obstacle_wall.size(); j++) {
 						if (obstacle_wall[j].hasIntersected(mx, my, mz, MISSILE_EXPOLSION_RADIUS)) {
 							obstacle_wall[j].hitBy(missile);
 						}
@@ -1314,36 +1349,81 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case VK_LEFT:
 		{
 			// 키보드 좌측 버튼
-			Tank* moveTarget = &tank;  // 움직일 대상
-			double speed = TANK_SPEED;
-			moveTarget->setPower(-speed * 5, 0);
+			CBlueBall* moveTarget = &g_target_blueball;
+			Tank* shooter = &tank;
+			double distance = BLUEBALL_MOVE_DISTANCE;
+			D3DXVECTOR3 tankcoord = shooter->getCenter();
+			D3DXVECTOR3 targetcoord = moveTarget->getCenter();
+			double dx = tankcoord.x - targetcoord.x;
+
+			if (isOriginTank) {
+				if (dx < MAX_BLUEBALL_WIDTH) moveTarget->setCenter(targetcoord.x - distance, targetcoord.y, targetcoord.z);
+			}
+			else {
+				dx *= -1;
+				if (dx < MAX_BLUEBALL_WIDTH) moveTarget->setCenter(targetcoord.x + distance, targetcoord.y, targetcoord.z);
+			}
 			break;
 		}
 
 		case VK_RIGHT:
 		{
 			// 키보드 우측 버튼
-			Tank* moveTarget = &tank;  // 움직일 대상
-			double speed = TANK_SPEED;
-			moveTarget->setPower(speed * 5, 0);
+			CBlueBall* moveTarget = &g_target_blueball;
+			Tank* shooter = &tank;
+			double distance = BLUEBALL_MOVE_DISTANCE;
+			D3DXVECTOR3 tankcoord = shooter->getCenter();
+			D3DXVECTOR3 targetcoord = moveTarget->getCenter();
+			double dx = targetcoord.x - tankcoord.x;
+
+			if (isOriginTank) {
+				if (dx < MAX_BLUEBALL_WIDTH) moveTarget->setCenter(targetcoord.x + distance, targetcoord.y, targetcoord.z);
+			}
+			else {
+				dx *= -1;
+				if (dx < MAX_BLUEBALL_WIDTH) moveTarget->setCenter(targetcoord.x - distance, targetcoord.y, targetcoord.z);
+			}
 			break;
 		}
+
 		case VK_UP:
 		{
 			// 키보드 위측 버튼
-			Tank* moveTarget = &tank;  // 움직일 대상
-			double speed = TANK_SPEED;
-			moveTarget->setPower(0, speed * 5);
+			CBlueBall* moveTarget = &g_target_blueball;
+			Tank* shooter = &tank;
+			double distance = BLUEBALL_MOVE_DISTANCE;
+			D3DXVECTOR3 tankcoord = shooter->getCenter();
+			D3DXVECTOR3 targetcoord = moveTarget->getCenter();
+			double dz = targetcoord.z - tankcoord.z;
+			if (isOriginTank) {
+				if (dz < MAX_BLUEBALL_RADIUS) moveTarget->setCenter(targetcoord.x, targetcoord.y, targetcoord.z + distance);
+			}
+			else {
+				dz *= -1;
+				if (dz < MAX_BLUEBALL_RADIUS) moveTarget->setCenter(targetcoord.x, targetcoord.y, targetcoord.z - distance);
+			}
 			break;
 		}
+
 		case VK_DOWN:
 		{
 			// 키보드 아래측 버튼
-			Tank* moveTarget = &tank;;  // 움직일 대상
-			double speed = TANK_SPEED;
-			moveTarget->setPower(0, -speed * 5);
+			CBlueBall* moveTarget = &g_target_blueball;
+			Tank* shooter = &tank;
+			double distance = BLUEBALL_MOVE_DISTANCE;
+			D3DXVECTOR3 tankcoord = shooter->getCenter();
+			D3DXVECTOR3 targetcoord = moveTarget->getCenter();
+			double dz = targetcoord.z - tankcoord.z;
+			if (isOriginTank) {
+				if (dz > MIN_BLUEBALL_RADIUS) moveTarget->setCenter(targetcoord.x, targetcoord.y, targetcoord.z - distance);
+			}
+			else {
+				dz *= -1;
+				if (dz > MIN_BLUEBALL_RADIUS) moveTarget->setCenter(targetcoord.x, targetcoord.y, targetcoord.z + distance);
+			}
 			break;
 		}
+		/* 수곤이버전
 		case 0x57:
 		{
 			// W키
@@ -1381,6 +1461,62 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			double distance = BLUEBALL_MOVE_DISTANCE;
 			D3DXVECTOR3 v = moveTarget->getCenter();
 			moveTarget->setCenter(v.x + distance, v.y, v.z);
+			break;
+		}
+		*/
+		// 재환이 + 나 버전
+		case 0x57:
+		{
+			// W
+			Tank* moveTarget = &tank;  // 움직일 대상
+			double speed = TANK_SPEED;
+			if (isOriginTank) {
+				moveTarget->setPower(moveTarget->getVelocity_X(), speed * 5);
+			}
+			else {
+				moveTarget->setPower(moveTarget->getVelocity_X(), -speed * 5);
+			}
+			break;
+		}
+
+		case 0x41:
+		{
+			// A
+			Tank* moveTarget = &tank;  // 움직일 대상
+			double speed = TANK_SPEED;
+			if (isOriginTank) {
+				moveTarget->setPower(-speed * 5, moveTarget->getVelocity_Z());
+			}
+			else {
+				moveTarget->setPower(speed * 5, moveTarget->getVelocity_Z());
+			}
+			break;
+		}
+
+		case 0x53:
+		{
+			// S
+			Tank* moveTarget = &tank;;  // 움직일 대상
+			double speed = TANK_SPEED;
+			if (isOriginTank) {
+				moveTarget->setPower(moveTarget->getVelocity_X(), -speed * 5);
+			}
+			else {
+				moveTarget->setPower(moveTarget->getVelocity_X(), speed * 5);
+			}
+			break;
+		}
+		case 0x44:
+		{
+			// D
+			Tank* moveTarget = &tank;;  // 움직일 대상
+			double speed = TANK_SPEED;
+			if (isOriginTank) {
+				moveTarget->setPower(speed * 5, moveTarget->getVelocity_Z());
+			}
+			else {
+				moveTarget->setPower(-speed * 5, moveTarget->getVelocity_Z());
+			}
 			break;
 		}
 		case 0x56:
@@ -1470,6 +1606,55 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 
+		}
+		break;
+	}
+	case WM_KEYUP:
+	{
+		switch (wParam) {
+		case 0x44:
+		case 0x41:
+		{
+			// A, D키 뗌	
+			Tank* moveTarget = &tank;  // 움직일 대상
+			moveTarget->setPower(0, moveTarget->getVelocity_Z());
+			break;
+		}
+		case 0x57:
+		case 0x53:
+		{
+			// W, S키 뗌
+			Tank* moveTarget = &tank;  // 움직일 대상
+			moveTarget->setPower(moveTarget->getVelocity_X(), 0);
+			break;
+		}
+		case 0x10:
+		case 0x51:
+		{
+			// Shift, Q키
+		}
+		case 0x45:
+		case 0x11:
+		{
+			// Ctrl키, E?키
+			// blueball 내림
+		}
+		case VK_UP:
+		{
+			// 키보드 위측 버튼
+		}
+		case VK_LEFT:
+		{
+			// 키보드 좌측 버튼
+		}
+		case VK_DOWN:
+		{
+			// 키보드 아래측 버튼
+		}
+		case VK_RIGHT:
+		{
+			// 키보드 우측 버튼
+		}
 		}
 		break;
 	}
