@@ -47,15 +47,14 @@ D3DXMATRIX g_mProj;
 #define DECREASE_RATE 0.9982
 #define TANK_VELOCITY_RATE 0.99
 
-#define BLUEBALL_MOVE_DISTANCE 0.07 // 지워도 됨
-#define BLUEBALL_VELOCITY 0.3 // blueball 조작 속도
-#define MAX_BLUEBALL_RADIUS 10  // blueball 어디까지 멀어질 수 있는지
+#define BLUEBALL_VELOCITY 0.8 // blueball 조작 속도
+#define MAX_BLUEBALL_RADIUS 15  // blueball 어디까지 멀어질 수 있는지
 #define MIN_BLUEBALL_RADIUS 0.4 // blueball 어디 이상 멀어져야 하는지 (앞으로)
 #define MAX_BLUEBALL_WIDTH 1 // blueball 어디까지 멀어질 수 있는지 (옆으로)
 
-#define MISSILE_POWER 1.88
-#define MISSILE_GRAVITY_RATE 0.6
-#define MISSILE_DECREASE_RATE 0.9982
+#define MISSILE_POWER 1.25
+#define MISSILE_GRAVITY_RATE 3.5
+#define MISSILE_DECREASE_RATE 0.9975  // 미사일 마찰력
 #define MISSILE_EXPOLSION_RADIUS M_RADIUS+0.25 // 미사일 폭발 반경
 
 #define WORLD_WIDTH 24
@@ -191,19 +190,6 @@ public:
 		float tY = cord.y + TIME_SCALE * timeDiff * m_velocity_y;
 		float tZ = cord.z + TIME_SCALE * timeDiff * m_velocity_z;
 
-
-		//correction of position of ball
-		// Please uncomment this part because this correction of ball position is necessary when a ball collides with a wall
-		/*
-		if (tX >= ((WORLD_WIDTH / 2) - M_RADIUS))
-			tX = (WORLD_WIDTH / 2) - M_RADIUS;
-		else if (tX <= (-(WORLD_WIDTH / 2) + M_RADIUS))
-			tX = -(WORLD_WIDTH / 2) + M_RADIUS;
-		else if (tZ <= (-(WORLD_DEPTH / 2) + M_RADIUS))
-			tZ = -(WORLD_DEPTH / 2) + M_RADIUS;
-		else if (tZ >= ((WORLD_DEPTH / 2) - M_RADIUS))
-			tZ = (WORLD_DEPTH / 2) - M_RADIUS;
-		*/
 		if (tY < 0 + M_RADIUS)
 			tY = M_RADIUS;
 		// y가 0 이하로 떨어지지 않도록 (임시)
@@ -212,10 +198,11 @@ public:
 		Out();	// 미사일이 밖으로 나가면 바닥에 닿을 때 터짐
 
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
-		double rate = 1 - (1 - DECREASE_RATE) * timeDiff * 400;
-		if (rate < 0)
+
+		double rate = 1 - (1 - MISSILE_DECREASE_RATE) * timeDiff * 400;
+		if(rate < 0)
 			rate = 0;
-		this->setPower(getVelocity_X() * rate, getVelocity_Y() - 12 * timeDiff, getVelocity_Z() * rate);
+		this->setPower(getVelocity_X() * rate, getVelocity_Y() - MISSILE_GRAVITY_RATE * timeDiff, getVelocity_Z() * rate);
 
 	}
 
@@ -791,7 +778,7 @@ public:
 		
 		// 파란공이 범위 벗어나면, 해당 방향 속도 0으로 만든다
 		double diffFromTankX = fabs(tankX - tX);
-		double diffFromTankZ = fabs(tankZ - tY);
+		double diffFromTankZ = fabs(tankZ - tZ);
 		if (diffFromTankX > MAX_BLUEBALL_WIDTH) {
 			// X값이 벗어난 경우
 			this->setPower(0, getVelocity_Y() * rate, getVelocity_Z() * rate);
@@ -1401,7 +1388,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		case VK_SPACE:
-		{
+		{	// 스페이스바 누름
 			// 파란 공 쪽으로 미사일 발사
 			if (!missile.getCreated() && GAME_START) {
 				D3DXVECTOR3 targetpos = g_target_blueball.getCenter();
@@ -1428,7 +1415,6 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				missile.setPower(distance_land * cos(theta) * MISSILE_POWER, distance_sky * sin(theta_sky), distance_land * sin(theta) * MISSILE_POWER);
 				break;
 			}
-			// 스페이스바 누름
 			// 게임 시작 전일 경우, 게임 시작하고 끝
 			if (!GAME_START) {
 				GAME_START = true;
@@ -1488,7 +1474,8 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					velocity *= -1;
 					dz *= -1;
 				}
-				if (dz < MAX_BLUEBALL_RADIUS) moveTarget->setPower(moveTarget->getVelocity_X(), moveTarget->getVelocity_Y(), velocity);
+				if (dz < MAX_BLUEBALL_RADIUS) 
+					moveTarget->setPower(moveTarget->getVelocity_X(), moveTarget->getVelocity_Y(), velocity);
 			}
 			break;
 		}
