@@ -1185,6 +1185,7 @@ bool Display(float timeDelta)
 
 	if (missile.getCreated()) {
 		isFire = TRUE;
+		tank.setPower(0, 0);
 	}
 
 	if (isFire && !missile.getCreated() && !testB) { /////////////
