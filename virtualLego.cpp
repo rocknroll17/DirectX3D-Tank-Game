@@ -1158,6 +1158,17 @@ float camera_prefix = 0.05f;
 
 bool isOriginTank = TRUE;
 
+bool isFire = FALSE;
+
+int turnTime = 20000;
+
+bool testB = FALSE;
+
+double startTime = (double)timeGetTime();
+double currTime = (double)timeGetTime();
+double timediff = currTime - startTime;
+	
+
 // timeDelta represents the time between the current image frame and the last image frame.
 // the distance of moving balls should be "velocity * timeDelta"
 bool Display(float timeDelta)
@@ -1168,10 +1179,22 @@ bool Display(float timeDelta)
 	D3DXVECTOR3 target;
 	D3DXVECTOR3 up;
 
-	static double startTime = (double)timeGetTime();
-	double currTime = (double)timeGetTime();
-	double timediff = currTime - startTime;
+	if (!missile.getCreated()) {
+		currTime = (double)timeGetTime();
+		timediff = currTime - startTime;
+	}
 
+	if (missile.getCreated()) {
+		isFire = TRUE;
+		tank.setPower(0, 0);
+	}
+
+	if (isFire && !missile.getCreated() && !testB) { /////////////
+		startTime = currTime;
+		timediff = 0;
+		turnTime = 3000;
+		testB = TRUE;
+	}
 
 	if (GAME_START == false) {
 		pos = D3DXVECTOR3(20.0f, 12.0f, -WORLD_DEPTH / 2 + MOVEMENT);
@@ -1254,7 +1277,7 @@ bool Display(float timeDelta)
 	if (Device)
 	{
 
-		if (timediff > 20000) {
+		if (timediff > turnTime) {
 			tank.setPower(0, 0);
 			Tank tempTank = tank;
 			tank = otank;
@@ -1265,6 +1288,9 @@ bool Display(float timeDelta)
 			otank.setDistance();
 			x_camera = 0.0f;
 			y_camera = 0.5f;
+			isFire = FALSE;
+			testB = FALSE;
+			turnTime = 20000;
 
 			startTime = currTime;
 
@@ -1281,7 +1307,7 @@ bool Display(float timeDelta)
 		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
 		Device->BeginScene();
 
-		string str = to_string(20 - (int)(timediff / 1000));
+		string str = to_string((turnTime / 1000) - (int)(timediff / 1000));
 		char* time = new char[str.length() + 1];
 		str.copy(time, str.length());
 		time[str.length()] = '\0';
@@ -1454,7 +1480,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case VK_SPACE:
 		{	// 스페이스바 누름
 			// 파란 공 쪽으로 미사일 발사
-			if (!missile.getCreated() && GAME_START) {
+			if (!isFire && GAME_START) {
 				D3DXVECTOR3 targetpos = g_target_blueball.getCenter();
 				D3DXVECTOR3	whitepos = tank.getHead();
 				double theta = acos(
@@ -1488,7 +1514,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		case VK_LEFT:
 		{
-			if (GAME_START) {
+			if (!isFire && GAME_START) {
 				// 키보드 좌측 버튼
 				CBlueBall* moveTarget = &g_target_blueball;
 				Tank* shooter = &tank;
@@ -1507,7 +1533,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		case VK_RIGHT:
 		{
-			if (GAME_START) {
+			if (!isFire && GAME_START) {
 				// 키보드 우측 버튼
 				CBlueBall* moveTarget = &g_target_blueball;
 				Tank* shooter = &tank;
@@ -1526,7 +1552,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		case VK_UP:
 		{
-			if (GAME_START) {
+			if (!isFire && GAME_START) {
 				// 키보드 위측 버튼
 				CBlueBall* moveTarget = &g_target_blueball;
 				Tank* shooter = &tank;
@@ -1546,7 +1572,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		case VK_DOWN:
 		{
-			if (GAME_START) {
+			if (!isFire && GAME_START) {
 				// 키보드 아래측 버튼
 				CBlueBall* moveTarget = &g_target_blueball;
 				Tank* shooter = &tank;
@@ -1566,7 +1592,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		// 재환이 + 나 버전
 		case 0x57:
 		{
-			if (GAME_START && tank.getDistance() > 0) {
+			if (!isFire && GAME_START && tank.getDistance() > 0) {
 				// W
 				Tank* moveTarget = &tank;  // 움직일 대상
 				double speed = TANK_SPEED;
@@ -1582,7 +1608,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		case 0x41:
 		{
-			if (GAME_START && tank.getDistance() > 0) {
+			if (!isFire && GAME_START && tank.getDistance() > 0) {
 				// A
 				Tank* moveTarget = &tank;  // 움직일 대상
 				double speed = TANK_SPEED;
@@ -1598,7 +1624,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		case 0x53:
 		{
-			if (GAME_START && tank.getDistance() > 0) {
+			if (!isFire && GAME_START && tank.getDistance() > 0) {
 				// S
 				Tank* moveTarget = &tank;  // 움직일 대상
 				double speed = TANK_SPEED;
@@ -1614,7 +1640,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		case 0x44:
 		{
-			if (GAME_START && tank.getDistance() > 0) {
+			if (!isFire && GAME_START && tank.getDistance() > 0) {
 				// D
 				Tank* moveTarget = &tank;;  // 움직일 대상
 				double speed = TANK_SPEED;
@@ -1640,7 +1666,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case 0x10:
 		case 0x51:
 		{
-			if (GAME_START) {
+			if (!isFire && GAME_START) {
 				// Shift, Q키
 				// blueball 올림
 				CBlueBall* moveTarget = &g_target_blueball;
@@ -1652,7 +1678,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case 0x45:
 		case 0x11:
 		{
-			if (GAME_START) {
+			if (!isFire && GAME_START) {
 				// Ctrl키, E키
 				// blueball 내림
 				CBlueBall* moveTarget = &g_target_blueball;
