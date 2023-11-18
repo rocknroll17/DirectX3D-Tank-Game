@@ -1243,6 +1243,10 @@ bool Display(float timeDelta)
 		return true;
 
 	}
+	else if (isFire == true) {
+		pos = D3DXVECTOR3(missile.getCenter()[0], missile.getCenter()[1] + 0.9f, missile.getCenter()[2] + 1.5f - 3.0f * isOriginTank);
+		target = D3DXVECTOR3(missile.getCenter()[0], missile.getCenter()[1], missile.getCenter()[2]);
+	}
 	else {
 		if (camera_option == 0) {
 			if (isOriginTank) {
