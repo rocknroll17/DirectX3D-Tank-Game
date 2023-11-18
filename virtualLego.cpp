@@ -49,9 +49,9 @@ D3DXMATRIX g_mProj;
 
 #define BLUEBALL_MOVE_DISTANCE 0.07 // 지워도 됨
 #define BLUEBALL_VELOCITY 0.3 // blueball 조작 속도
-#define MAX_BLUEBALL_RADIUS 6  // blueball 어디까지 멀어질 수 있는지
+#define MAX_BLUEBALL_RADIUS 10  // blueball 어디까지 멀어질 수 있는지
 #define MIN_BLUEBALL_RADIUS 0.4 // blueball 어디 이상 멀어져야 하는지 (앞으로)
-#define MAX_BLUEBALL_WIDTH 0.5 // blueball 어디까지 멀어질 수 있는지 (옆으로)
+#define MAX_BLUEBALL_WIDTH 1 // blueball 어디까지 멀어질 수 있는지 (옆으로)
 
 #define MISSILE_POWER 1.88
 #define MISSILE_GRAVITY_RATE 0.6
@@ -788,7 +788,7 @@ public:
 		// 속도 설정
 		double rate = 1;
 		this->setPower(getVelocity_X() * rate, getVelocity_Y() * rate, getVelocity_Z() * rate);
-		/*
+		
 		// 파란공이 범위 벗어나면, 해당 방향 속도 0으로 만든다
 		double diffFromTankX = fabs(tankX - tX);
 		double diffFromTankZ = fabs(tankZ - tY);
@@ -797,19 +797,19 @@ public:
 			this->setPower(0, getVelocity_Y() * rate, getVelocity_Z() * rate);
 
 			// 현재 위치에서 아주 조금 옆으로 움직여줌
-			double epsilon = 1;
+			double epsilon = 0.00001;
 			if (tX > tankX) epsilon *= -1;
 			this->setCenter(tX + epsilon, tY, tZ);
 		}
 		if (diffFromTankZ > MAX_BLUEBALL_RADIUS || diffFromTankZ < MIN_BLUEBALL_RADIUS) {
 			// Z값이 벗어난 경우
-			//this->setPower(getVelocity_X() * rate, getVelocity_Y() * rate, 0);
+			this->setPower(getVelocity_X() * rate, getVelocity_Y() * rate, 0);
 			// 현재 위치에서 아주 조금 앞뒤로 움직여줌
-			//double epsilon = 0.1;
-			//if (tZ > tankZ) epsilon *= -1;
-			//this->setCenter(tX, tY, tZ + epsilon);
+			double epsilon = 0.00001;
+			if (tZ > tankZ) epsilon *= -1;
+			this->setCenter(tX, tY, tZ + epsilon);
 		}
-		*/
+		
 		tankLastX = tankX;
 		tankLastZ = tankZ;
 	}
