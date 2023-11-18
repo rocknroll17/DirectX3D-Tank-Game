@@ -364,15 +364,18 @@ public:
 		D3DXVECTOR3 Center = getCenter();
 		float width = m_width;
 		float depth = m_depth;
+		float height = m_height;
 
 		D3DXVECTOR3 wallCenter = wall.getCenter();
 		float wallWidth = wall.getWidth();
 		float wallDepth = wall.getDepth();
+		float wallHeight = wall.getHeight();
 
 		bool intersectX = (wallCenter.x - wallWidth / 2 <= Center.x + width / 2) && (wallCenter.x + wallWidth / 2 >= Center.x - width / 2);
+		bool intersectY = (wallCenter.y - wallHeight / 2 <= Center.y + height / 2) && (wallCenter.y + wallHeight / 2 >= Center.y - height / 2);
 		bool intersectZ = (wallCenter.z - wallDepth / 2 <= Center.z + depth / 2) && (wallCenter.z + wallDepth / 2 >= Center.z - depth / 2);
 
-		return intersectX && intersectZ;
+		return intersectX && intersectY && intersectZ;
 	}
 
 	void hitBy(CSphere& ball)	// 벽이랑 공이랑 충돌하면 공은 사라짐
@@ -585,7 +588,7 @@ public:
 
 	bool hasIntersected(CObstacle& obstacle)
 	{
-		return tank_part[0].hasIntersected(obstacle);
+		return tank_part[0].hasIntersected(obstacle) || tank_part[1].hasIntersected(obstacle) || tank_part[2].hasIntersected(obstacle);
 	}
 
 	void hitBy(CSphere& missile)
@@ -639,7 +642,7 @@ public:
 		this->setPosition(tX, cord.y, tZ);
 		for (int i = 0; i < obstacles.size(); i++) {
 			if (obstacles[i].get_created()) {
-				if (tank_part[0].hasIntersected(obstacles[i])) {
+				if (hasIntersected(obstacles[i])) {
 					tX = cord.x;
 					tZ = cord.z;
 					break;
@@ -842,9 +845,6 @@ Tank otank(1);
 bool winner;
 CWall podium;
 
-CObstacle obstacle; // 장애물 (테스트용)
-CObstacle obstacle1;
-vector<CObstacle> obstacles;	// 랜덤 장애물 모음
 vector<CObstacle> obstacle_wall; // 장애물 (벽)
 
 CSphere missile;   // c 누르면 나가는 미사일
@@ -1300,7 +1300,7 @@ bool Display(float timeDelta)
 
 
 		// 탱크 위치 변경
-		tank.tankUpdate(timeDelta, obstacles, otank, g_legoWall);
+		tank.tankUpdate(timeDelta, obstacle_wall, otank, g_legoWall);
 		// 미사일 위치도 변경 & 벽과 충돌했는지 체크
 		missile.ballUpdate(timeDelta);
 		for (i = 0; i < g_legoWall.size(); i++) {
@@ -1334,7 +1334,7 @@ bool Display(float timeDelta)
 				winner = true;
 			}
 			else if (otank.get_created()) {
-				otank.tankUpdate(timeDelta, obstacles, tank, g_legoWall);
+				otank.tankUpdate(timeDelta, obstacle_wall, tank, g_legoWall);
 				otank.draw(Device, g_mWorld);
 			}
 		}
@@ -1346,7 +1346,7 @@ bool Display(float timeDelta)
 				winner = true;
 			}
 			else if (otank.get_created()) {
-				otank.tankUpdate(timeDelta, obstacles, tank, g_legoWall);
+				otank.tankUpdate(timeDelta, obstacle_wall, tank, g_legoWall);
 				otank.draw(Device, g_mWorld);
 			}
 		}
