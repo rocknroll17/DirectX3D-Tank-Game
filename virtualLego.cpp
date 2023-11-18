@@ -1288,7 +1288,7 @@ bool Display(float timeDelta)
 		// 글자출력-------------------------------------------------------------------------------------
 		RECT rect = { 10, 10, 0, 0 };  // 글자의 위치 (10, 10)에서 시작
 		TIMEfont->DrawText(NULL, time, -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
-		rect = { Width-300, 10, 0, 0 };
+		rect = { Width/2, 10, 0, 0 };
 		DISTANCEfont->DrawText(NULL, ("Distance: " + to_string(int(tank.getDistance()))).c_str(), -1, & rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
 		/*
 		Device->EndScene();
