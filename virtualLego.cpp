@@ -1,8 +1,8 @@
-////////////////////////////////////////////////////////////////////////////////
+ï»¿////////////////////////////////////////////////////////////////////////////////
 //
 // File: virtualLego.cpp
 //
-// Original Author: ¹ÚÃ¢Çö Chang-hyeon Park, 
+// Original Author: ë°•ì°½í˜„ Chang-hyeon Park, 
 // Modified by Bong-Soo Sohn and Dong-Jun Kim
 // 
 // Originally programmed for Virtual LEGO. 
@@ -41,22 +41,22 @@ D3DXMATRIX g_mProj;
 #define DECREASE_RATE 0.9982
 #define TANK_VELOCITY_RATE 0.99
 
-#define BLUEBALL_VELOCITY 0.8 // blueball Á¶ÀÛ ¼Óµµ
-#define MAX_BLUEBALL_RADIUS 15  // blueball ¾îµğ±îÁö ¸Ö¾îÁú ¼ö ÀÖ´ÂÁö
-#define MIN_BLUEBALL_RADIUS 0.4 // blueball ¾îµğ ÀÌ»ó ¸Ö¾îÁ®¾ß ÇÏ´ÂÁö (¾ÕÀ¸·Î)
-#define MAX_BLUEBALL_WIDTH 1 // blueball ¾îµğ±îÁö ¸Ö¾îÁú ¼ö ÀÖ´ÂÁö (¿·À¸·Î)
+#define BLUEBALL_VELOCITY 0.8 // blueball ì¡°ì‘ ì†ë„
+#define MAX_BLUEBALL_RADIUS 15  // blueball ì–´ë””ê¹Œì§€ ë©€ì–´ì§ˆ ìˆ˜ ìˆëŠ”ì§€
+#define MIN_BLUEBALL_RADIUS 0.4 // blueball ì–´ë”” ì´ìƒ ë©€ì–´ì ¸ì•¼ í•˜ëŠ”ì§€ (ì•ìœ¼ë¡œ)
+#define MAX_BLUEBALL_WIDTH 1 // blueball ì–´ë””ê¹Œì§€ ë©€ì–´ì§ˆ ìˆ˜ ìˆëŠ”ì§€ (ì˜†ìœ¼ë¡œ)
 
 #define MISSILE_POWER 1.25
 #define MISSILE_GRAVITY_RATE 3.5
-#define MISSILE_DECREASE_RATE 0.9975  // ¹Ì»çÀÏ ¸¶Âû·Â
-#define MISSILE_EXPOLSION_RADIUS M_RADIUS+0.25 // ¹Ì»çÀÏ Æø¹ß ¹İ°æ
+#define MISSILE_DECREASE_RATE 0.9975  // ë¯¸ì‚¬ì¼ ë§ˆì°°ë ¥
+#define MISSILE_EXPOLSION_RADIUS M_RADIUS+0.25 // ë¯¸ì‚¬ì¼ í­ë°œ ë°˜ê²½
 
 #define WORLD_WIDTH 24
 #define WORLD_DEPTH 72
-#define BORDER_WIDTH 0.12f // °¡ÀåÀÚ¸® º® ±½±â
+#define BORDER_WIDTH 0.12f // ê°€ì¥ìë¦¬ ë²½ êµµê¸°
 
-#define NUM_OBSTACLE 20	// Àå¾Ö¹° °³¼ö
-#define TANK_DISTANCE 25
+#define NUM_OBSTACLE 20	// ì¥ì• ë¬¼ ê°œìˆ˜
+#define TANK_DISTANCE 35
 
 bool GAME_START = false;
 bool GAME_FINISH = false;
@@ -64,7 +64,7 @@ float MOVEMENT = 0.0f;
 float Tank_spawn_point[3] = { 0, 0.2f, -WORLD_DEPTH / 2 + 5 };
 
 //double g_camera_pos[3] = { 0.0, 5.0, -8.0 };
-bool camera_option = 0;
+int camera_option = 0;
 // -----------------------------------------------------------------------------
 // CSphere class definition
 // -----------------------------------------------------------------------------
@@ -77,7 +77,7 @@ protected:
 	float					m_velocity_x;
 	float					m_velocity_y;
 	float					m_velocity_z;
-	bool					created;  // ¿ùµå¿¡ Á¸ÀçÇÏ´ÂÁö
+	bool					created;  // ì›”ë“œì— ì¡´ì¬í•˜ëŠ”ì§€
 
 public:
 	CSphere(void)
@@ -151,7 +151,7 @@ public:
 		return intersectX && intersectY && intersectZ;
 	}
 
-	void hitBy(CSphere& ball)	// °ø³¢¸® Ãæµ¹ÇÏ¸é °øÀÌ ÀüºÎ »ç¶óÁü
+	void hitBy(CSphere& ball)	// ê³µë¼ë¦¬ ì¶©ëŒí•˜ë©´ ê³µì´ ì „ë¶€ ì‚¬ë¼ì§
 	{
 		if (hasIntersected(ball)) {
 			destroy();
@@ -187,10 +187,10 @@ public:
 
 		if (tY < 0 + M_RADIUS)
 			tY = M_RADIUS;
-		// y°¡ 0 ÀÌÇÏ·Î ¶³¾îÁöÁö ¾Êµµ·Ï (ÀÓ½Ã)
+		// yê°€ 0 ì´í•˜ë¡œ ë–¨ì–´ì§€ì§€ ì•Šë„ë¡ (ì„ì‹œ)
 
 		this->setCenter(tX, tY, tZ);
-		Out();	// ¹Ì»çÀÏÀÌ ¹ÛÀ¸·Î ³ª°¡¸é ¹Ù´Ú¿¡ ´êÀ» ¶§ ÅÍÁü
+		Out();	// ë¯¸ì‚¬ì¼ì´ ë°–ìœ¼ë¡œ ë‚˜ê°€ë©´ ë°”ë‹¥ì— ë‹¿ì„ ë•Œ í„°ì§
 
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
 
@@ -337,7 +337,7 @@ public:
 	}
 
 	bool hasIntersected(double objX, double objY, double objZ, double radius) {
-		// (objX, objY, objZ)¿¡ ÀÖ´Â ¹İÁö¸§ = radiusÀÎ °ø°ú Ãæµ¹Çß´Â°¡?
+		// (objX, objY, objZ)ì— ìˆëŠ” ë°˜ì§€ë¦„ = radiusì¸ ê³µê³¼ ì¶©ëŒí–ˆëŠ”ê°€?
 		D3DXVECTOR3 wallCenter = getCenter();
 		float wallWidth = m_width;
 		float wallHeight = m_height;
@@ -371,7 +371,7 @@ public:
 		return intersectX && intersectZ;
 	}
 
-	void hitBy(CSphere& ball)	// º®ÀÌ¶û °øÀÌ¶û Ãæµ¹ÇÏ¸é °øÀº »ç¶óÁü
+	void hitBy(CSphere& ball)	// ë²½ì´ë‘ ê³µì´ë‘ ì¶©ëŒí•˜ë©´ ê³µì€ ì‚¬ë¼ì§
 	{
 		if (hasIntersected(ball))
 			ball.destroy();
@@ -598,7 +598,7 @@ public:
 
 	bool hasIntersected(CObstacle& obstacle)
 	{
-		return tank_part[0].hasIntersected(obstacle);
+		return tank_part[0].hasIntersected(obstacle) || tank_part[1].hasIntersected(obstacle) || tank_part[2].hasIntersected(obstacle);
 	}
 
 	void hitBy(CSphere& missile)
@@ -639,7 +639,7 @@ public:
 		float tX = cord.x + TIME_SCALE * timeDiff * m_velocity_x;
 		float tZ = cord.z + TIME_SCALE * timeDiff * m_velocity_z;
 
-		// tank°¡ ¸ÊÀ» ¹ş¾î³ªÁö ¾Ê°Ô
+		// tankê°€ ë§µì„ ë²—ì–´ë‚˜ì§€ ì•Šê²Œ
 		if (tX >= ((WORLD_WIDTH / 2) - tank_part[0].getWidth() / 2))
 			tX = (WORLD_WIDTH / 2) - tank_part[0].getWidth() / 2;
 
@@ -652,7 +652,7 @@ public:
 		else if (tZ >= ((WORLD_DEPTH / 2) - tank_part[0].getDepth() / 2))
 			tZ = (WORLD_DEPTH / 2) - tank_part[0].getDepth() / 2;
 
-		// tank°¡ Àå¾Ö¹°, ÅÊÅ©, º®¿¡ Ãæµ¹ÇÏ¸é Á¤Áö
+		// tankê°€ ì¥ì• ë¬¼, íƒ±í¬, ë²½ì— ì¶©ëŒí•˜ë©´ ì •ì§€
 		this->setPosition(tX, cord.y, tZ);
 		for (int i = 0; i < obstacles.size(); i++) {
 			if (obstacles[i].get_created()) {
@@ -693,7 +693,7 @@ public:
 		double rate = 1;
 		if (rate < 0)
 			rate = 0;
-		this->setPower(getVelocity_X() * rate, getVelocity_Z() * rate);//Áß·Â ¼³Á¤ ´Ù½Ã ¼Õ ºÁ¾ßÇÔ
+		this->setPower(getVelocity_X() * rate, getVelocity_Z() * rate);//ì¤‘ë ¥ ì„¤ì • ë‹¤ì‹œ ì† ë´ì•¼í•¨
 	}
 
 	double getVelocity_X() { return this->m_velocity_x; }
@@ -725,15 +725,15 @@ public:
 class CBlueBall : public CSphere
 {
 private:
-	double radius; // ÃÖ´ë ¹İÁö¸§
-	Tank* linkedTank; // ¿¬°áµÈ ÅÊÅ©
-	double tankLastX, tankLastZ; // ÅÊÅ©ÀÇ ÀÌÀü ÁÂÇ¥
+	double radius; // ìµœëŒ€ ë°˜ì§€ë¦„
+	Tank* linkedTank; // ì—°ê²°ëœ íƒ±í¬
+	double tankLastX, tankLastZ; // íƒ±í¬ì˜ ì´ì „ ì¢Œí‘œ
 public:
 	CBlueBall(void) {
 		radius = MAX_BLUEBALL_RADIUS;
 	}
 	double getDistanceFromTank() {
-		// ÆÄ¶õ°ø¿¡¼­ ÅÊÅ©±îÁöÀÇ °Å¸®
+		// íŒŒë€ê³µì—ì„œ íƒ±í¬ê¹Œì§€ì˜ ê±°ë¦¬
 		double x = getCenter().x,
 			y = getCenter().y,
 			z = getCenter().z;
@@ -748,7 +748,7 @@ public:
 	}
 
 	double getDistanceFromTank(double new_x, double new_y, double new_z) {
-		// ÀÎÀÚ·Î ¹ŞÀº ÁÂÇ¥¿¡¼­ ÅÊÅ©±îÁöÀÇ °Å¸®
+		// ì¸ìë¡œ ë°›ì€ ì¢Œí‘œì—ì„œ íƒ±í¬ê¹Œì§€ì˜ ê±°ë¦¬
 		double tx = linkedTank->getCenter().x,
 			ty = 0,
 			tz = linkedTank->getCenter().z;
@@ -756,7 +756,7 @@ public:
 	}
 
 	double getDistanceFromTank2D() {
-		// ÆÄ¶õ°ø¿¡¼­ ÅÊÅ©±îÁöÀÇ °Å¸® (¶¥ ±âÁØ)
+		// íŒŒë€ê³µì—ì„œ íƒ±í¬ê¹Œì§€ì˜ ê±°ë¦¬ (ë•… ê¸°ì¤€)
 		double x = getCenter().x,
 			z = getCenter().z;
 		double tx = linkedTank->getCenter().x,
@@ -765,7 +765,7 @@ public:
 	}
 
 	double getDistanceFromTank2D(double new_x, double new_z) {
-		// ÀÎÀÚ·Î ¹ŞÀº ÁÂÇ¥¿¡¼­ ÅÊÅ©±îÁöÀÇ °Å¸® (¶¥ ±âÁØ)
+		// ì¸ìë¡œ ë°›ì€ ì¢Œí‘œì—ì„œ íƒ±í¬ê¹Œì§€ì˜ ê±°ë¦¬ (ë•… ê¸°ì¤€)
 		double tx = linkedTank->getCenter().x,
 			tz = linkedTank->getCenter().z;
 		return sqrt(pow(new_x - tx, 2) + pow(new_z - tz, 2));
@@ -798,38 +798,38 @@ public:
 		float tY = cord.y + TIME_SCALE * timeDiff * m_velocity_y;
 		float tZ = cord.z + TIME_SCALE * timeDiff * m_velocity_z;
 
-		// y°¡ 0 ÀÌÇÏ·Î ¶³¾îÁöÁö ¾Êµµ·Ï (ÀÓ½Ã)
+		// yê°€ 0 ì´í•˜ë¡œ ë–¨ì–´ì§€ì§€ ì•Šë„ë¡ (ì„ì‹œ)
 		if (tY < 0 + M_RADIUS)
 			tY = M_RADIUS;
 
-		// À§Ä¡ ¼³Á¤
-		// ÅÊÅ©°¡ ¿òÁ÷ÀÌ¸é blueballµµ ¿òÁ÷ÀÓ
+		// ìœ„ì¹˜ ì„¤ì •
+		// íƒ±í¬ê°€ ì›€ì§ì´ë©´ blueballë„ ì›€ì§ì„
 		double tankdX = tankX - tankLastX;
 		double tankdZ = tankZ - tankLastZ;
 		tX += tankdX;
 		tZ += tankdZ;
 		this->setCenter(tX, tY, tZ);
 
-		// ¼Óµµ ¼³Á¤
+		// ì†ë„ ì„¤ì •
 		double rate = 1;
 		this->setPower(getVelocity_X() * rate, getVelocity_Y() * rate, getVelocity_Z() * rate);
 		
-		// ÆÄ¶õ°øÀÌ ¹üÀ§ ¹ş¾î³ª¸é, ÇØ´ç ¹æÇâ ¼Óµµ 0À¸·Î ¸¸µç´Ù
+		// íŒŒë€ê³µì´ ë²”ìœ„ ë²—ì–´ë‚˜ë©´, í•´ë‹¹ ë°©í–¥ ì†ë„ 0ìœ¼ë¡œ ë§Œë“ ë‹¤
 		double diffFromTankX = fabs(tankX - tX);
 		double diffFromTankZ = fabs(tankZ - tZ);
 		if (diffFromTankX > MAX_BLUEBALL_WIDTH) {
-			// X°ªÀÌ ¹ş¾î³­ °æ¿ì
+			// Xê°’ì´ ë²—ì–´ë‚œ ê²½ìš°
 			this->setPower(0, getVelocity_Y() * rate, getVelocity_Z() * rate);
 
-			// ÇöÀç À§Ä¡¿¡¼­ ¾ÆÁÖ Á¶±İ ¿·À¸·Î ¿òÁ÷¿©ÁÜ
+			// í˜„ì¬ ìœ„ì¹˜ì—ì„œ ì•„ì£¼ ì¡°ê¸ˆ ì˜†ìœ¼ë¡œ ì›€ì§ì—¬ì¤Œ
 			double epsilon = 0.00001;
 			if (tX > tankX) epsilon *= -1;
 			this->setCenter(tX + epsilon, tY, tZ);
 		}
 		if (diffFromTankZ > MAX_BLUEBALL_RADIUS || diffFromTankZ < MIN_BLUEBALL_RADIUS) {
-			// Z°ªÀÌ ¹ş¾î³­ °æ¿ì
+			// Zê°’ì´ ë²—ì–´ë‚œ ê²½ìš°
 			this->setPower(getVelocity_X() * rate, getVelocity_Y() * rate, 0);
-			// ÇöÀç À§Ä¡¿¡¼­ ¾ÆÁÖ Á¶±İ ¾ÕµÚ·Î ¿òÁ÷¿©ÁÜ
+			// í˜„ì¬ ìœ„ì¹˜ì—ì„œ ì•„ì£¼ ì¡°ê¸ˆ ì•ë’¤ë¡œ ì›€ì§ì—¬ì¤Œ
 			double epsilon = 0.00001;
 			if (tZ > tankZ) epsilon *= -1;
 			this->setCenter(tX, tY, tZ + epsilon);
@@ -859,14 +859,14 @@ Tank otank(1);
 bool winner;
 CWall podium;
 
-CObstacle obstacle; // Àå¾Ö¹° (Å×½ºÆ®¿ë)
+CObstacle obstacle; // ì¥ì• ë¬¼ (í…ŒìŠ¤íŠ¸ìš©)
 CObstacle obstacle1;
-vector<CObstacle> obstacles;	// ·£´ı Àå¾Ö¹° ¸ğÀ½
-vector<CObstacle> obstacle_wall; // Àå¾Ö¹° (º®)
+vector<CObstacle> obstacles;	// ëœë¤ ì¥ì• ë¬¼ ëª¨ìŒ
+vector<CObstacle> obstacle_wall; // ì¥ì• ë¬¼ (ë²½)
 
-CSphere missile;   // c ´©¸£¸é ³ª°¡´Â ¹Ì»çÀÏ
+CSphere missile;   // c ëˆ„ë¥´ë©´ ë‚˜ê°€ëŠ” ë¯¸ì‚¬ì¼
 
-ID3DXFont* TIMEfont = NULL; // ±ÛÀÚ Ãâ·ÂÀ» À§ÇÑ °´Ã¼
+ID3DXFont* TIMEfont = NULL; // ê¸€ì ì¶œë ¥ì„ ìœ„í•œ ê°ì²´
 ID3DXFont* ENDfont = NULL;
 ID3DXFont* PLAYERfont = NULL;
 ID3DXFont* DISTANCEfont = NULL;
@@ -879,22 +879,22 @@ bool createBlock(float partitionWidth, float partitionHeight, float partitionDep
 	int partitionCount_x, int partitionCount_y, int partitionCount_z,
 	float x, float y, float z,
 	D3DXCOLOR wallColor = d3d::WHITE) {
-	// (partitionCount_land * partitionCount_sky) Å©±âÀÇ º®À» »ı¼ºÇÔ.
-	// °¢ partitionÀÇ Å©±â´Â (partitionWidth, partitionHeight, partitionDepth)
+	// (partitionCount_land * partitionCount_sky) í¬ê¸°ì˜ ë²½ì„ ìƒì„±í•¨.
+	// ê° partitionì˜ í¬ê¸°ëŠ” (partitionWidth, partitionHeight, partitionDepth)
 	for (int i = 0; i < partitionCount_x; i++) {
 		for (int j = 0; j < partitionCount_y; j++) {
 			for (int k = 0; k < partitionCount_z; k++) {
-				// ÁÂÇ¥ °áÁ¤
+				// ì¢Œí‘œ ê²°ì •
 				float nx, ny, nz;
 				nx = x + partitionWidth * i;
 				ny = y + partitionHeight * j;
 				nz = z + partitionDepth * k;
-				// Àå¾Ö¹° »ı¼º & ¹èÄ¡
+				// ì¥ì• ë¬¼ ìƒì„± & ë°°ì¹˜
 				CObstacle partition;
 				if (false == partition.create(Device, -1, -1, partitionWidth, partitionHeight, partitionDepth, wallColor)) return false;
 				partition.setPosition(nx, ny, nz);
 				obstacle_wall.push_back(partition);
-				// Àü¿ªº¯¼ö¿¡ ÀúÀå
+				// ì „ì—­ë³€ìˆ˜ì— ì €ì¥
 			}
 		}
 	}
@@ -906,21 +906,21 @@ bool createWall(float partitionWidth, float partitionHeight, float partitonDepth
 	int partitionCount_land, int partitionCount_sky,
 	float x, float y, float z,
 	D3DXCOLOR wallColor = d3d::WHITE) {
-	// (partitionCount_land * partitionCount_sky) Å©±âÀÇ º®À» »ı¼ºÇÔ.
-	// °¢ partitionÀÇ Å©±â´Â (partitionWidth, partitionHeight, partitionDepth)
+	// (partitionCount_land * partitionCount_sky) í¬ê¸°ì˜ ë²½ì„ ìƒì„±í•¨.
+	// ê° partitionì˜ í¬ê¸°ëŠ” (partitionWidth, partitionHeight, partitionDepth)
 	for (int i = 0; i < partitionCount_land; i++) {
 		for (int j = 0; j < partitionCount_sky; j++) {
-			// ÁÂÇ¥ °áÁ¤
+			// ì¢Œí‘œ ê²°ì •
 			float nx, ny, nz;
 			nx = x;
 			ny = y + partitionHeight * j;
 			nz = z + partitonDepth * i;
-			// Àå¾Ö¹° »ı¼º & ¹èÄ¡
+			// ì¥ì• ë¬¼ ìƒì„± & ë°°ì¹˜
 			CObstacle partition;
 			if (false == partition.create(Device, -1, -1, partitionWidth, partitionHeight, partitonDepth, wallColor)) return false;
 			partition.setPosition(nx, ny, nz);
 			obstacle_wall.push_back(partition);
-			// Àü¿ªº¯¼ö¿¡ ÀúÀå
+			// ì „ì—­ë³€ìˆ˜ì— ì €ì¥
 		}
 	}
 	return true;
@@ -928,7 +928,7 @@ bool createWall(float partitionWidth, float partitionHeight, float partitonDepth
 
 bool createObstacle() // create obstacle
 {
-	// Àå¾Ö¹° ·£´ı »ı¼º
+	// ì¥ì• ë¬¼ ëœë¤ ìƒì„±
 	for (int i = 0; i < NUM_OBSTACLE; i++) {
 		random_device rd;
 		mt19937 gen(rd());
@@ -941,8 +941,8 @@ bool createObstacle() // create obstacle
 		float depth = disD(gen);
 		float height = disH(gen);
 
-		uniform_real_distribution<float> disX(-(WORLD_WIDTH / 2) + width / 2, (WORLD_WIDTH / 2) - width);	// x ¹üÀ§
-		uniform_real_distribution<float> disZ(-(WORLD_WIDTH / 2) + depth / 2, (WORLD_WIDTH / 2) - depth);	// z ¹üÀ§
+		uniform_real_distribution<float> disX(-(WORLD_WIDTH / 2) + width / 2, (WORLD_WIDTH / 2) - width);	// x ë²”ìœ„
+		uniform_real_distribution<float> disZ(-(WORLD_WIDTH / 2) + depth / 2, (WORLD_WIDTH / 2) - depth);	// z ë²”ìœ„
 
 		float x = disX(gen);
 		float y = height / 2;
@@ -971,15 +971,15 @@ bool createMap() // create plane + wall
 	g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
 
 	for (int i = -1; i <= 1; i += 2) {
-		//¾ÕµÚ ±âµÕ
+		//ì•ë’¤ ê¸°ë‘¥
 		if (false == wall.create(Device, -1, -1, WORLD_WIDTH - 1, 2.0f, 1.0f, d3d::GRAY)) return false;
 		wall.setPosition(0.0f, 1.0f, i * WORLD_DEPTH / 2);
 		lwall1.push_back(wall);
-		//¾ÕµÚ º®
+		//ì•ë’¤ ë²½
 		if (false == wall.create(Device, -1, -1, 1.0f, 2.5f, 1.5f, d3d::GRAY)) return false;
 		wall.setPosition(0, 1.25f, i * WORLD_DEPTH / 2);
 		swall1.push_back(wall);
-		//ÁÂÃø º®
+		//ì¢Œì¸¡ ë²½
 		if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, WORLD_DEPTH - 1, d3d::GRAY)) return false;
 		wall.setPosition(i * WORLD_WIDTH / 2, 1.0f, 0.0f);
 		lwall2.push_back(wall);
@@ -989,11 +989,11 @@ bool createMap() // create plane + wall
 
 	for (int i = -1; i <= 1; i += 2) {
 		for (int j = -1; j <= 1; j += 2) {
-			//Áß°£ ±âµÕ
+			//ì¤‘ê°„ ê¸°ë‘¥
 			if (false == wall.create(Device, -1, -1, 1.5f, 2.5f, 1.0f, d3d::GRAY)) return false;
 			wall.setPosition(i * WORLD_WIDTH / 2, 1.25f, j * WORLD_DEPTH /6);
 			swall2.push_back(wall);
-			//²ÀÁşÁ¡ ±âµÕ
+			//ê¼­ì§“ì  ê¸°ë‘¥
 			if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
 			wall.setPosition(i * WORLD_WIDTH / 2, 1.5f, j * WORLD_DEPTH / 2);
 			swall2.push_back(wall);
@@ -1019,7 +1019,7 @@ bool Setup()
 {
 	int i;
 
-	// ±ÛÀÚÃâ·Â ---------------------
+	// ê¸€ìì¶œë ¥ ---------------------
 	if (FAILED(D3DXCreateFont(Device, 40, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET,
 		OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Tahoma", &TIMEfont)))
 	{
@@ -1058,28 +1058,28 @@ bool Setup()
 	otank.setPosition(0, 0.38f, WORLD_DEPTH / 2 - 5);
 	otank.setLastCoord(otank.getCenter());
 
-	// tank¶û blue ball ¿¬°á
+	// tankë‘ blue ball ì—°ê²°
 	g_target_blueball.linkTank(&tank);
 
-	// º®, ¹Ù´Ú »ı¼º
+	// ë²½, ë°”ë‹¥ ìƒì„±
 	createMap();
-	// Àå¾Ö¹° »ı¼º
+	// ì¥ì• ë¬¼ ìƒì„±
 	createObstacle();
 
-	// Àå¾Ö¹°(º®) »ı¼º
-	// º® ÇÏ³ª´Â ¿©·¯°³ÀÇ ÆÄÆ¼¼ÇÀ¸·Î ³ª´©¾îÁü
-	D3DXCOLOR wall_color = d3d::BLUE; // º® »ö»ó
-	float wallPartition_width = 0.12f; // °¢ ÆÄÆ¼¼ÇÀÇ °¡·Î³ĞÀÌ
-	float wallPartition_height = 0.6f; // °¢ ÆÄÆ¼¼ÇÀÇ ³ôÀÌ
-	float wallPartition_depth = 1; // °¢ ÆÄÆ¼¼ÇÀÇ ¼¼·Î³ĞÀÌ
-	int partitionCount_land = 3; // °¡·Î·Î ¸î °³ ³õÀ»Áö
-	int partitionCount_sky = 3; // ¼¼·Î·Î ¸î °³ ³õÀ»Áö
-	float base_x = 0.0f, base_y = wallPartition_height * 0.5, base_z = -3.0f; // º® »ı¼º À§Ä¡
+	// ì¥ì• ë¬¼(ë²½) ìƒì„±
+	// ë²½ í•˜ë‚˜ëŠ” ì—¬ëŸ¬ê°œì˜ íŒŒí‹°ì…˜ìœ¼ë¡œ ë‚˜ëˆ„ì–´ì§
+	D3DXCOLOR wall_color = d3d::BLUE; // ë²½ ìƒ‰ìƒ
+	float wallPartition_width = 0.12f; // ê° íŒŒí‹°ì…˜ì˜ ê°€ë¡œë„“ì´
+	float wallPartition_height = 0.6f; // ê° íŒŒí‹°ì…˜ì˜ ë†’ì´
+	float wallPartition_depth = 1; // ê° íŒŒí‹°ì…˜ì˜ ì„¸ë¡œë„“ì´
+	int partitionCount_land = 3; // ê°€ë¡œë¡œ ëª‡ ê°œ ë†“ì„ì§€
+	int partitionCount_sky = 3; // ì„¸ë¡œë¡œ ëª‡ ê°œ ë†“ì„ì§€
+	float base_x = 0.0f, base_y = wallPartition_height * 0.5, base_z = -3.0f; // ë²½ ìƒì„± ìœ„ì¹˜
 
-	// º® »ı¼º & ¹èÄ¡
+	// ë²½ ìƒì„± & ë°°ì¹˜
 	createWall(wallPartition_width, wallPartition_height, wallPartition_depth, partitionCount_land, partitionCount_sky, base_x, base_y, base_z, wall_color);
 
-	// ºí·° »ı¼º (Å×½ºÆ®)
+	// ë¸”ëŸ­ ìƒì„± (í…ŒìŠ¤íŠ¸)
 	createBlock(0.2f, 0.2f, 0.2f, 10, 10, 10, 2, 0, 2, d3d::BROWN);
 
 	// create blue ball for set direction
@@ -1094,13 +1094,13 @@ bool Setup()
 	D3DLIGHT9 lit;
 	::ZeroMemory(&lit, sizeof(lit));
 	lit.Type = D3DLIGHT_POINT;
-	lit.Diffuse = d3d::WHITE * 1.8f;  // ¿ø·¡ 1¹è¿´À½
-	lit.Specular = d3d::WHITE * 1.5f;  //¿ø·¡ 0.9¹è¿´À½
-	lit.Ambient = d3d::WHITE * 0.9f;//¿ø·¡ 0.9¹è¿´À½
+	lit.Diffuse = d3d::WHITE * 1.8f;  // ì›ë˜ 1ë°°ì˜€ìŒ
+	lit.Specular = d3d::WHITE * 1.5f;  //ì›ë˜ 0.9ë°°ì˜€ìŒ
+	lit.Ambient = d3d::WHITE * 0.9f;//ì›ë˜ 0.9ë°°ì˜€ìŒ
 	lit.Range = 100.0f;
-	lit.Attenuation0 = 0.0f;//»ó¼ö °¨¼è
-	lit.Attenuation1 = 0.3f;//¼±Çü°¨¼è ¿ø·¡ 0.9f¿´À½.
-	lit.Attenuation2 = 0.0f;//Á¦°ö°¨¼è
+	lit.Attenuation0 = 0.0f;//ìƒìˆ˜ ê°ì‡ 
+	lit.Attenuation1 = 0.3f;//ì„ í˜•ê°ì‡  ì›ë˜ 0.9fì˜€ìŒ.
+	lit.Attenuation2 = 0.0f;//ì œê³±ê°ì‡ 
 	lit.Position = D3DXVECTOR3(0.0f, 15.0f, WORLD_DEPTH / 4 + 4);
 	if (false == g_light.create(Device, lit))
 		return false;
@@ -1140,7 +1140,7 @@ void Cleanup(void)
 	destroyAllLegoBlock();
 	g_light.destroy();
 
-	// ±ÛÀÚÃâ·Â ----------------------------
+	// ê¸€ìì¶œë ¥ ----------------------------
 	if (TIMEfont != NULL)
 	{
 		TIMEfont->Release();
@@ -1231,9 +1231,19 @@ bool Display(float timeDelta)
 
 			target = D3DXVECTOR3(tank.getHead()[0] + x_camera, tank.getHead()[1] + y_camera, tank.getHead()[2]);
 		}
-		else {
+		else if (camera_option == 1) {
 			pos = D3DXVECTOR3(20.0, 10.0, 0.0);
 			target = D3DXVECTOR3(0, 1, 0);
+		}
+		else {
+			pos = D3DXVECTOR3(tank.getHead()[0], tank.getHead()[1] + 0.5f, tank.getHead()[2]+0.4f-0.8f*isOriginTank);
+			if (abs(tank.getHead()[2] - g_target_blueball.getCenter()[2]) < 5) {
+				target = D3DXVECTOR3(g_target_blueball.getCenter()[0], g_target_blueball.getCenter()[1], g_target_blueball.getCenter()[2]);
+			}
+			else {
+				target = D3DXVECTOR3(g_target_blueball.getCenter()[0], g_target_blueball.getCenter()[1] - 2.0f, g_target_blueball.getCenter()[2]);
+			}
+			
 		}
 	}
 
@@ -1259,12 +1269,12 @@ bool Display(float timeDelta)
 			startTime = currTime;
 
 			if (isOriginTank) {
-				g_target_blueball.setCenter(tank.getCenter().x - 0.01f, (float)M_RADIUS + 1, tank.getCenter().z - 3.0f);
-				// 0.01f »©´Â ÀÌÀ¯´Â »çºĞ¸é ±¸ºĞ¿¡¼­ 0ÀÌ Æ÷ÇÔµÇ´Â °æ¿ì°¡ ÁßÃ¸µÇ¾î xÀÇ Â÷ÀÌ°¡ 0ÀÎ °æ¿ì ¿À·ù°¡ ¹ß»ıÇÏ±â ¶§¹®.
+				g_target_blueball.setCenter(tank.getCenter().x - 0.01f, (float)M_RADIUS + 3, tank.getCenter().z - 5.0f);
+				// 0.01f ë¹¼ëŠ” ì´ìœ ëŠ” ì‚¬ë¶„ë©´ êµ¬ë¶„ì—ì„œ 0ì´ í¬í•¨ë˜ëŠ” ê²½ìš°ê°€ ì¤‘ì²©ë˜ì–´ xì˜ ì°¨ì´ê°€ 0ì¸ ê²½ìš° ì˜¤ë¥˜ê°€ ë°œìƒí•˜ê¸° ë•Œë¬¸.
 				isOriginTank = FALSE;
 			}
 			else {
-				g_target_blueball.setCenter(tank.getCenter().x - 0.01f, (float)M_RADIUS + 1, tank.getCenter().z + 3.0f);
+				g_target_blueball.setCenter(tank.getCenter().x - 0.01f, (float)M_RADIUS + 3, tank.getCenter().z + 5.0f);
 				isOriginTank = TRUE;
 			}
 		}
@@ -1275,8 +1285,8 @@ bool Display(float timeDelta)
 		char* time = new char[str.length() + 1];
 		str.copy(time, str.length());
 		time[str.length()] = '\0';
-		// ±ÛÀÚÃâ·Â-------------------------------------------------------------------------------------
-		RECT rect = { 10, 10, 0, 0 };  // ±ÛÀÚÀÇ À§Ä¡ (10, 10)¿¡¼­ ½ÃÀÛ
+		// ê¸€ìì¶œë ¥-------------------------------------------------------------------------------------
+		RECT rect = { 10, 10, 0, 0 };  // ê¸€ìì˜ ìœ„ì¹˜ (10, 10)ì—ì„œ ì‹œì‘
 		TIMEfont->DrawText(NULL, time, -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
 		rect = { Width-300, 10, 0, 0 };
 		DISTANCEfont->DrawText(NULL, ("Distance: " + to_string(int(tank.getDistance()))).c_str(), -1, & rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
@@ -1288,23 +1298,23 @@ bool Display(float timeDelta)
 		//----------------------------------------------------------------------------------------------
 
 
-		// ÅÊÅ© À§Ä¡ º¯°æ
+		// íƒ±í¬ ìœ„ì¹˜ ë³€ê²½
 		tank.tankUpdate(timeDelta, obstacles, otank, g_legoWall);
-		// ¹Ì»çÀÏ À§Ä¡µµ º¯°æ & º®°ú Ãæµ¹Çß´ÂÁö Ã¼Å©
+		// ë¯¸ì‚¬ì¼ ìœ„ì¹˜ë„ ë³€ê²½ & ë²½ê³¼ ì¶©ëŒí–ˆëŠ”ì§€ ì²´í¬
 		missile.ballUpdate(timeDelta);
 		for (i = 0; i < g_legoWall.size(); i++) {
 			for (j = 0; j < g_legoWall[i].size(); j++)
 				g_legoWall[i][j].hitBy(missile);
 		}
 
-		// ºí·çº¼ À§Ä¡ º¯°æ
+		// ë¸”ë£¨ë³¼ ìœ„ì¹˜ ë³€ê²½
 		g_target_blueball.ballUpdate(timeDelta);;
 		// check whether any two balls hit together and update the direction of balls
 
 		// draw plane, walls, and spheres
 		tank.draw(Device, g_mWorld);
 		g_target_blueball.draw(Device, g_mWorld);
-		missile.draw(Device, g_mWorld);  // ¹Ì»çÀÏµµ ±×¸²
+		missile.draw(Device, g_mWorld);  // ë¯¸ì‚¬ì¼ë„ ê·¸ë¦¼
 
 		g_legoPlane.draw(Device, g_mWorld);
 		for (int i = 0; i < g_legoWall.size(); i++)
@@ -1340,13 +1350,13 @@ bool Display(float timeDelta)
 			}
 		}
 
-		// ·£´ı Àå¾Ö¹° ÆÄ±« Ã¼Å© & ÆÄ±« ¾ÈµÇ¸é ±×¸²
+		// ëœë¤ ì¥ì• ë¬¼ íŒŒê´´ ì²´í¬ & íŒŒê´´ ì•ˆë˜ë©´ ê·¸ë¦¼
 		for (int i = 0; i < obstacles.size(); i++) {
 			if (obstacles[i].get_created()) {
 				if (obstacles[i].hasIntersected(missile)) {
 					obstacles[i].hitBy(missile);
-					// ¸¸¾à Àå¾Ö¹° ÆÄ±«½Ã, Æø¹ßÇÑ´Ù (= ÁÖº¯ Àå¾Ö¹°µµ ´Ù½Ã ±×¸²)
-					// ½ºÆÄ°ÔÆ¼ ÄÚµåÁö¸¸ ¸¶°¨ ¾ó¸¶ ¾È³²¾ÒÀ¸´Ï±î ÀÌ´ë·Î °©½Ã´Ù
+					// ë§Œì•½ ì¥ì• ë¬¼ íŒŒê´´ì‹œ, í­ë°œí•œë‹¤ (= ì£¼ë³€ ì¥ì• ë¬¼ë„ ë‹¤ì‹œ ê·¸ë¦¼)
+					// ìŠ¤íŒŒê²Œí‹° ì½”ë“œì§€ë§Œ ë§ˆê° ì–¼ë§ˆ ì•ˆë‚¨ì•˜ìœ¼ë‹ˆê¹Œ ì´ëŒ€ë¡œ ê°‘ì‹œë‹¤
 					double mx = missile.getCenter().x;
 					double my = missile.getCenter().y;
 					double mz = missile.getCenter().z;
@@ -1367,13 +1377,13 @@ bool Display(float timeDelta)
 			}
 		}
 
-		// Àå¾Ö¹°(º®) ÆÄ±« Ã¼Å© & ÆÄ±« ¾ÈµÇ¸é ±×¸²
+		// ì¥ì• ë¬¼(ë²½) íŒŒê´´ ì²´í¬ & íŒŒê´´ ì•ˆë˜ë©´ ê·¸ë¦¼
 		for (int i = 0; i < obstacle_wall.size(); i++) {
 			if (obstacle_wall[i].get_created()) {
 				if (obstacle_wall[i].hasIntersected(missile)) {
 					obstacle_wall[i].hitBy(missile);
-					// ¸¸¾à Àå¾Ö¹° ÆÄ±«½Ã, Æø¹ßÇÑ´Ù (= ÁÖº¯ Àå¾Ö¹°µµ ´Ù½Ã ±×¸²)
-					// ½ºÆÄ°ÔÆ¼ ÄÚµåÁö¸¸ ¸¶°¨ ¾ó¸¶ ¾È³²¾ÒÀ¸´Ï±î ÀÌ´ë·Î °©½Ã´Ù
+					// ë§Œì•½ ì¥ì• ë¬¼ íŒŒê´´ì‹œ, í­ë°œí•œë‹¤ (= ì£¼ë³€ ì¥ì• ë¬¼ë„ ë‹¤ì‹œ ê·¸ë¦¼)
+					// ìŠ¤íŒŒê²Œí‹° ì½”ë“œì§€ë§Œ ë§ˆê° ì–¼ë§ˆ ì•ˆë‚¨ì•˜ìœ¼ë‹ˆê¹Œ ì´ëŒ€ë¡œ ê°‘ì‹œë‹¤
 					for (int j = 0; j < obstacles.size(); j++) {
 						if (obstacles[j].hasIntersected(missile.getCenter().x, missile.getCenter().y, missile.getCenter().z, MISSILE_EXPOLSION_RADIUS)) {
 							obstacles[j].hitBy(missile);
@@ -1410,10 +1420,10 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	switch (msg) {
 		/*
-		'W' Å°: VK_W (0x57)
-		'S' Å°: VK_S (0x53)
-		'A' Å°: VK_A (0x41)
-		'D' Å°: VK_D (0x44)
+		'W' í‚¤: VK_W (0x57)
+		'S' í‚¤: VK_S (0x53)
+		'A' í‚¤: VK_A (0x41)
+		'D' í‚¤: VK_D (0x44)
 		*/
 	case WM_DESTROY:
 	{
@@ -1424,17 +1434,17 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
 		switch (wParam) {
 		case VK_ESCAPE:
-			// esc ´©¸§
+			// esc ëˆ„ë¦„
 			::DestroyWindow(hwnd);
 			break;
 		case VK_RETURN:
-			// ¿£ÅÍ ´©¸§
-			// °ÔÀÓ ½ÃÀÛ ÀüÀÏ °æ¿ì, °ÔÀÓ ½ÃÀÛÇÏ°í ³¡
+			// ì—”í„° ëˆ„ë¦„
+			// ê²Œì„ ì‹œì‘ ì „ì¼ ê²½ìš°, ê²Œì„ ì‹œì‘í•˜ê³  ë
 			if (!GAME_START) {
 				GAME_START = true;
 				break;
 			}
-			// ¹°Ã¼ ·»´õ¸µ »óÅÂ º¸¿©ÁÜ
+			// ë¬¼ì²´ ë Œë”ë§ ìƒíƒœ ë³´ì—¬ì¤Œ
 			if (NULL != Device) {
 				wire = !wire;
 				Device->SetRenderState(D3DRS_FILLMODE,
@@ -1442,26 +1452,26 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		case VK_SPACE:
-		{	// ½ºÆäÀÌ½º¹Ù ´©¸§
-			// ÆÄ¶õ °ø ÂÊÀ¸·Î ¹Ì»çÀÏ ¹ß»ç
+		{	// ìŠ¤í˜ì´ìŠ¤ë°” ëˆ„ë¦„
+			// íŒŒë€ ê³µ ìª½ìœ¼ë¡œ ë¯¸ì‚¬ì¼ ë°œì‚¬
 			if (!missile.getCreated() && GAME_START) {
 				D3DXVECTOR3 targetpos = g_target_blueball.getCenter();
 				D3DXVECTOR3	whitepos = tank.getHead();
 				double theta = acos(
 					sqrt(pow(targetpos.x - whitepos.x, 2)) /
 					sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2))
-				);		// ±âº» 1 »çºĞ¸é
-				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x >= 0) { theta = -theta; }	//4 »çºĞ¸é
-				if (targetpos.z - whitepos.z >= 0 && targetpos.x - whitepos.x <= 0) { theta = PI - theta; } //2 »çºĞ¸é
-				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0) { theta = PI + theta; } // 3 »çºĞ¸é
-				double distance_land = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)); // xz¸¸ °í·ÁÇÑ °Å¸®
+				);		// ê¸°ë³¸ 1 ì‚¬ë¶„ë©´
+				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x >= 0) { theta = -theta; }	//4 ì‚¬ë¶„ë©´
+				if (targetpos.z - whitepos.z >= 0 && targetpos.x - whitepos.x <= 0) { theta = PI - theta; } //2 ì‚¬ë¶„ë©´
+				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0) { theta = PI + theta; } // 3 ì‚¬ë¶„ë©´
+				double distance_land = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)); // xzë§Œ ê³ ë ¤í•œ ê±°ë¦¬
 
 				double theta_sky = acos(
 					sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)) /
 					sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.y - whitepos.y, 2) + pow(targetpos.z - whitepos.z, 2))
 				);
-				double distance_sky = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.y - whitepos.y, 2) + pow(targetpos.z - whitepos.z, 2));  // yÁÂÇ¥ °í·ÁÇÑ °Å¸®
-				//double distance = sqrt( sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)) + pow(targetpos.y - whitepos.y, 2)); // yÁÂÇ¥ Æ÷ÇÔ °è»ê
+				double distance_sky = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.y - whitepos.y, 2) + pow(targetpos.z - whitepos.z, 2));  // yì¢Œí‘œ ê³ ë ¤í•œ ê±°ë¦¬
+				//double distance = sqrt( sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)) + pow(targetpos.y - whitepos.y, 2)); // yì¢Œí‘œ í¬í•¨ ê³„ì‚°
 
 				missile.destroy();
 				missile.create(Device, d3d::BLACK);
@@ -1469,7 +1479,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				missile.setPower(distance_land * cos(theta) * MISSILE_POWER, distance_sky * sin(theta_sky), distance_land * sin(theta) * MISSILE_POWER);
 				break;
 			}
-			// °ÔÀÓ ½ÃÀÛ ÀüÀÏ °æ¿ì, °ÔÀÓ ½ÃÀÛÇÏ°í ³¡
+			// ê²Œì„ ì‹œì‘ ì „ì¼ ê²½ìš°, ê²Œì„ ì‹œì‘í•˜ê³  ë
 			if (!GAME_START) {
 				GAME_START = true;
 			}
@@ -1479,7 +1489,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case VK_LEFT:
 		{
 			if (GAME_START) {
-				// Å°º¸µå ÁÂÃø ¹öÆ°
+				// í‚¤ë³´ë“œ ì¢Œì¸¡ ë²„íŠ¼
 				CBlueBall* moveTarget = &g_target_blueball;
 				Tank* shooter = &tank;
 				double velocity = -1 * BLUEBALL_VELOCITY;
@@ -1498,7 +1508,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case VK_RIGHT:
 		{
 			if (GAME_START) {
-				// Å°º¸µå ¿ìÃø ¹öÆ°
+				// í‚¤ë³´ë“œ ìš°ì¸¡ ë²„íŠ¼
 				CBlueBall* moveTarget = &g_target_blueball;
 				Tank* shooter = &tank;
 				double velocity = BLUEBALL_VELOCITY;
@@ -1517,7 +1527,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case VK_UP:
 		{
 			if (GAME_START) {
-				// Å°º¸µå À§Ãø ¹öÆ°
+				// í‚¤ë³´ë“œ ìœ„ì¸¡ ë²„íŠ¼
 				CBlueBall* moveTarget = &g_target_blueball;
 				Tank* shooter = &tank;
 				double velocity = BLUEBALL_VELOCITY;
@@ -1537,7 +1547,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case VK_DOWN:
 		{
 			if (GAME_START) {
-				// Å°º¸µå ¾Æ·¡Ãø ¹öÆ°
+				// í‚¤ë³´ë“œ ì•„ë˜ì¸¡ ë²„íŠ¼
 				CBlueBall* moveTarget = &g_target_blueball;
 				Tank* shooter = &tank;
 				double velocity = -BLUEBALL_VELOCITY;
@@ -1553,12 +1563,12 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 		
-		// ÀçÈ¯ÀÌ + ³ª ¹öÀü
+		// ì¬í™˜ì´ + ë‚˜ ë²„ì „
 		case 0x57:
 		{
 			if (GAME_START && tank.getDistance() > 0) {
 				// W
-				Tank* moveTarget = &tank;  // ¿òÁ÷ÀÏ ´ë»ó
+				Tank* moveTarget = &tank;  // ì›€ì§ì¼ ëŒ€ìƒ
 				double speed = TANK_SPEED;
 				if (isOriginTank) {
 					moveTarget->setPower(moveTarget->getVelocity_X(), speed * 5);
@@ -1574,7 +1584,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			if (GAME_START && tank.getDistance() > 0) {
 				// A
-				Tank* moveTarget = &tank;  // ¿òÁ÷ÀÏ ´ë»ó
+				Tank* moveTarget = &tank;  // ì›€ì§ì¼ ëŒ€ìƒ
 				double speed = TANK_SPEED;
 				if (isOriginTank) {
 					moveTarget->setPower(-speed * 5, moveTarget->getVelocity_Z());
@@ -1590,7 +1600,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			if (GAME_START && tank.getDistance() > 0) {
 				// S
-				Tank* moveTarget = &tank;  // ¿òÁ÷ÀÏ ´ë»ó
+				Tank* moveTarget = &tank;  // ì›€ì§ì¼ ëŒ€ìƒ
 				double speed = TANK_SPEED;
 				if (isOriginTank) {
 					moveTarget->setPower(moveTarget->getVelocity_X(), -speed * 5);
@@ -1606,7 +1616,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			if (GAME_START && tank.getDistance() > 0) {
 				// D
-				Tank* moveTarget = &tank;;  // ¿òÁ÷ÀÏ ´ë»ó
+				Tank* moveTarget = &tank;;  // ì›€ì§ì¼ ëŒ€ìƒ
 				double speed = TANK_SPEED;
 				if (isOriginTank) {
 					moveTarget->setPower(speed * 5, moveTarget->getVelocity_Z());
@@ -1620,8 +1630,9 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case 0x56:
 		{
 			if (GAME_START) {
-				// v ¹öÆ° ´©¸¦ ½Ã
+				// v ë²„íŠ¼ ëˆ„ë¥¼ ì‹œ
 				if (camera_option == 0) { camera_option = 1; }
+				else if (camera_option == 1) { camera_option = 2; }
 				else { camera_option = 0; }
 			}
 			break;
@@ -1630,8 +1641,8 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case 0x51:
 		{
 			if (GAME_START) {
-				// Shift, QÅ°
-				// blueball ¿Ã¸²
+				// Shift, Qí‚¤
+				// blueball ì˜¬ë¦¼
 				CBlueBall* moveTarget = &g_target_blueball;
 				double velocity = BLUEBALL_VELOCITY;
 				moveTarget->setPower(moveTarget->getVelocity_X(), velocity, moveTarget->getVelocity_Z());
@@ -1642,8 +1653,8 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case 0x11:
 		{
 			if (GAME_START) {
-				// CtrlÅ°, EÅ°
-				// blueball ³»¸²
+				// Ctrlí‚¤, Eí‚¤
+				// blueball ë‚´ë¦¼
 				CBlueBall* moveTarget = &g_target_blueball;
 				double velocity = -1 * BLUEBALL_VELOCITY;
 				moveTarget->setPower(moveTarget->getVelocity_X(), velocity, moveTarget->getVelocity_Z());
@@ -1768,16 +1779,16 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case 0x44:
 		case 0x41:
 		{
-			// A, DÅ° ¶À	
-			Tank* moveTarget = &tank;  // ¿òÁ÷ÀÏ ´ë»ó
+			// A, Dí‚¤ ë—Œ	
+			Tank* moveTarget = &tank;  // ì›€ì§ì¼ ëŒ€ìƒ
 			moveTarget->setPower(0, moveTarget->getVelocity_Z());
 			break;
 		}
 		case 0x57:
 		case 0x53:
 		{
-			// W, SÅ° ¶À
-			Tank* moveTarget = &tank;  // ¿òÁ÷ÀÏ ´ë»ó
+			// W, Sí‚¤ ë—Œ
+			Tank* moveTarget = &tank;  // ì›€ì§ì¼ ëŒ€ìƒ
 			moveTarget->setPower(moveTarget->getVelocity_X(), 0);
 			break;
 		}
@@ -1786,8 +1797,8 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case 0x45:
 		case 0x11:
 		{
-			// Shift, Q, Ctrl, EÅ° ¶À
-			// blueball »óÇÏ¿òÁ÷ÀÓ Ãë¼Ò
+			// Shift, Q, Ctrl, Eí‚¤ ë—Œ
+			// blueball ìƒí•˜ì›€ì§ì„ ì·¨ì†Œ
 			CBlueBall* moveTarget = &g_target_blueball;
 			moveTarget->setPower(moveTarget->getVelocity_X(), 0, moveTarget->getVelocity_Z());
 			break;
@@ -1795,7 +1806,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case VK_UP:
 		case VK_DOWN:
 		{
-			// Å°º¸µå À§, ¾Æ·¡Ãø ¹öÆ° ¶À
+			// í‚¤ë³´ë“œ ìœ„, ì•„ë˜ì¸¡ ë²„íŠ¼ ë—Œ
 			CBlueBall* moveTarget = &g_target_blueball;
 			moveTarget->setPower(moveTarget->getVelocity_X(), moveTarget->getVelocity_Y(), 0);
 			break;
@@ -1803,7 +1814,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case VK_LEFT:
 		case VK_RIGHT:
 		{
-			// Å°º¸µå ÁÂ, ¿ìÃø ¹öÆ° ¶À
+			// í‚¤ë³´ë“œ ì¢Œ, ìš°ì¸¡ ë²„íŠ¼ ë—Œ
 			CBlueBall* moveTarget = &g_target_blueball;
 			moveTarget->setPower(0, moveTarget->getVelocity_Y(), moveTarget->getVelocity_Z());
 			break;
@@ -1813,7 +1824,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 
 	case WM_MOUSEMOVE:
-		//ÀÌ°Å Ä«¸Ş¶óÀÇ È¸Àü ±âÁ¡ÀÌ ±¤¿øÀ¸·Î ¼³Á¤µÈ°Å °°À½
+		//ì´ê±° ì¹´ë©”ë¼ì˜ íšŒì „ ê¸°ì ì´ ê´‘ì›ìœ¼ë¡œ ì„¤ì •ëœê±° ê°™ìŒ
 	{
 		int new_x = LOWORD(lParam);
 		int new_y = HIWORD(lParam);
@@ -1821,8 +1832,8 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		float dy;
 
 		if (LOWORD(wParam) & MK_LBUTTON) {
-			// ÁÂÅ¬¸¯
-			// È­¸é ÀÌµ¿
+			// ì¢Œí´ë¦­
+			// í™”ë©´ ì´ë™
 			if (isReset) {
 				isReset = false;
 			}
@@ -1851,8 +1862,8 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		else {
 			isReset = true;
-			// ¿ìÅ¬¸¯
-			// blue ball ¿òÁ÷ÀÌ±â
+			// ìš°í´ë¦­
+			// blue ball ì›€ì§ì´ê¸°
 			if (LOWORD(wParam) & MK_RBUTTON) {
 				if (isOriginTank) {
 					dx = (old_x - new_x);// * 0.01f;
