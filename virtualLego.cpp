@@ -790,8 +790,8 @@ public:
 		this->setPower(getVelocity_X() * rate, getVelocity_Y() * rate, getVelocity_Z() * rate);
 		/*
 		// 파란공이 범위 벗어나면, 해당 방향 속도 0으로 만든다
-		double diffFromTankX = labs(tankX - tX);
-		double diffFromTankZ = labs(tankZ - tY);
+		double diffFromTankX = fabs(tankX - tX);
+		double diffFromTankZ = fabs(tankZ - tY);
 		if (diffFromTankX > MAX_BLUEBALL_WIDTH) {
 			// X값이 벗어난 경우
 			this->setPower(0, getVelocity_Y() * rate, getVelocity_Z() * rate);
@@ -1783,9 +1783,18 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			if (LOWORD(wParam) & MK_RBUTTON) {
 				dx = (old_x - new_x);// * 0.01f;
 				dy = (old_y - new_y);// * 0.01f;
-
 				D3DXVECTOR3 coord3d = g_target_blueball.getCenter();
-				g_target_blueball.setCenter(coord3d.x + dx * (-0.007f), coord3d.y, coord3d.z + dy * 0.007f);
+				double nx = coord3d.x + dx * (-0.007f);
+				double ny = coord3d.y;
+				double nz = coord3d.z + dy * (0.007f);
+				Tank* curTank = &tank;
+				if (fabs(curTank->getCenter().x - nx) > MAX_BLUEBALL_WIDTH ) {
+					nx = coord3d.x;
+				}
+				if (fabs(curTank->getCenter().z - nz) < MIN_BLUEBALL_RADIUS || fabs(curTank->getCenter().z - nz) > MAX_BLUEBALL_RADIUS) {
+					nz = coord3d.z;
+				}
+				g_target_blueball.setCenter(nx, ny, nz);
 			}
 			old_x = new_x;
 			old_y = new_y;
