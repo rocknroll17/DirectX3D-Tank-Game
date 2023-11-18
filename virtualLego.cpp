@@ -533,11 +533,14 @@ protected:
 	bool					isO;
 	CWall tank_part[3];
 	bool created;
+	float distance;
+	D3DXVECTOR3 last_coord;
 public:
 	Tank(bool isOtank) {
 		m_velocity_x = 0;
 		m_velocity_z = 0;
 		isO = isOtank;
+		distance = 15;
 	}
 
 	bool create(IDirect3DDevice9* pDevice, float ix, float iz, D3DXCOLOR color = d3d::WHITE) {
@@ -561,6 +564,7 @@ public:
 		else
 			tank_part[1].setPosition(x, y + 0.35f, z - 0.3f);
 		tank_part[2].setPosition(x, y + 0.35f, z);
+ 		
 	}
 
 	bool get_created()
@@ -660,6 +664,13 @@ public:
 		}
 		this->setPosition(tX, cord.y, tZ);
 
+		if (this->getCenter()[0] != last_coord[0] || this->getCenter()[2] != last_coord[2]) {
+			distance = distance - sqrt(pow(this->getCenter()[0] - last_coord[0], 2) + pow(this->getCenter()[2] - last_coord[2], 2));
+			last_coord = this->getCenter();
+		}
+		if (distance < 0) {
+			setPower(0, 0);
+		}
 
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
 		//double rate = 1 - (1 - TANK_VELOCITY_RATE) * timeDiff * 400;
@@ -678,6 +689,17 @@ public:
 		this->m_velocity_x = vx;
 		this->m_velocity_z = vz;
 
+	}
+
+	void setDistance() {
+		distance = 15;
+	}
+	void setLastCoord(D3DXVECTOR3 pos) {
+		last_coord = pos;
+	}
+
+	float getDistance() {
+		return distance;
 	}
 };
 
@@ -828,9 +850,10 @@ vector<CObstacle> obstacle_wall; // 장애물 (벽)
 
 CSphere missile;   // c 누르면 나가는 미사일
 
-ID3DXFont* pFont = NULL; // 글자 출력을 위한 객체
+ID3DXFont* TIMEfont = NULL; // 글자 출력을 위한 객체
 ID3DXFont* ENDfont = NULL;
 ID3DXFont* PLAYERfont = NULL;
+ID3DXFont* DISTANCEfont = NULL;
 
 // -----------------------------------------------------------------------------
 // Functions
@@ -981,8 +1004,8 @@ bool Setup()
 	int i;
 
 	// 글자출력 ---------------------
-	if (FAILED(D3DXCreateFont(Device, 20, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET,
-		OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Tahoma", &pFont)))
+	if (FAILED(D3DXCreateFont(Device, 40, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET,
+		OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Tahoma", &TIMEfont)))
 	{
 		::MessageBox(0, "D3DXCreateFont() - FAILED", 0, 0);
 		return false;
@@ -999,6 +1022,12 @@ bool Setup()
 		::MessageBox(0, "D3DXCreateFont() - FAILED", 0, 0);
 		return false;
 	}
+	if (FAILED(D3DXCreateFont(Device, 50, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET,
+		OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Tahoma", &DISTANCEfont)))
+	{
+		::MessageBox(0, "D3DXCreateFont() - FAILED", 0, 0);
+		return false;
+	}
 	// ------------------------------
 
 	D3DXMatrixIdentity(&g_mWorld);
@@ -1007,9 +1036,11 @@ bool Setup()
 
 	if (false == tank.create(Device, -1, -1, d3d::BROWN)) return false;
 	tank.setPosition(0, 0.2f, -WORLD_DEPTH / 2 + 5);
+	tank.setLastCoord(tank.getCenter());
 
 	if (false == otank.create(Device, -1, -1, d3d::RED)) return false;
 	otank.setPosition(0, 0.2f, WORLD_DEPTH / 2 - 5);
+	otank.setLastCoord(otank.getCenter());
 
 	// tank랑 blue ball 연결
 	g_target_blueball.linkTank(&tank);
@@ -1094,10 +1125,10 @@ void Cleanup(void)
 	g_light.destroy();
 
 	// 글자출력 ----------------------------
-	if (pFont != NULL)
+	if (TIMEfont != NULL)
 	{
-		pFont->Release();
-		pFont = NULL;
+		TIMEfont->Release();
+		TIMEfont = NULL;
 	}
 	//--------------------------------------
 
@@ -1203,6 +1234,9 @@ bool Display(float timeDelta)
 			tank = otank;
 			otank = tempTank;
 			g_target_blueball.linkTank(&tank);
+			camera_option = 0;
+			back_camera = 1;
+			otank.setDistance();
 
 			startTime = currTime;
 
@@ -1225,7 +1259,9 @@ bool Display(float timeDelta)
 		time[str.length()] = '\0';
 		// 글자출력-------------------------------------------------------------------------------------
 		RECT rect = { 10, 10, 0, 0 };  // 글자의 위치 (10, 10)에서 시작
-		pFont->DrawText(NULL, time, -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(255, 255, 255));
+		TIMEfont->DrawText(NULL, time, -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+		rect = { Width-300, 10, 0, 0 };
+		DISTANCEfont->DrawText(NULL, ("Distance: " + to_string(int(tank.getDistance()))).c_str(), -1, & rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
 		/*
 		Device->EndScene();
 		Device->Present(0, 0, 0, 0);
@@ -1502,7 +1538,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		// 재환이 + 나 버전
 		case 0x57:
 		{
-			if (GAME_START) {
+			if (GAME_START && tank.getDistance() > 0) {
 				// W
 				Tank* moveTarget = &tank;  // 움직일 대상
 				double speed = TANK_SPEED;
@@ -1518,7 +1554,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		case 0x41:
 		{
-			if (GAME_START) {
+			if (GAME_START && tank.getDistance() > 0) {
 				// A
 				Tank* moveTarget = &tank;  // 움직일 대상
 				double speed = TANK_SPEED;
@@ -1534,9 +1570,9 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		case 0x53:
 		{
-			if (GAME_START) {
+			if (GAME_START && tank.getDistance() > 0) {
 				// S
-				Tank* moveTarget = &tank;;  // 움직일 대상
+				Tank* moveTarget = &tank;  // 움직일 대상
 				double speed = TANK_SPEED;
 				if (isOriginTank) {
 					moveTarget->setPower(moveTarget->getVelocity_X(), -speed * 5);
@@ -1544,12 +1580,13 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				else {
 					moveTarget->setPower(moveTarget->getVelocity_X(), speed * 5);
 				}
+			
 			}
 			break;
 		}
 		case 0x44:
 		{
-			if (GAME_START) {
+			if (GAME_START && tank.getDistance() > 0) {
 				// D
 				Tank* moveTarget = &tank;;  // 움직일 대상
 				double speed = TANK_SPEED;
@@ -1727,67 +1764,41 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 
 	case WM_MOUSEMOVE:
-		//이거 카메라의 회전 기점이 광원으로 설정된거 같음
 	{
 		int new_x = LOWORD(lParam);
 		int new_y = HIWORD(lParam);
 		float dx;
 		float dy;
 
-		if (LOWORD(wParam) & MK_LBUTTON) {
-			// 좌클릭
-			// 화면 이동
-			if (isReset) {
-				isReset = false;
-			}
-			else {
-				D3DXVECTOR3 vDist;
-				D3DXVECTOR3 vTrans;
-				D3DXMATRIX mTrans;
-				D3DXMATRIX mX;
-				D3DXMATRIX mY;
-
-				switch (move) {
-				case WORLD_MOVE:
-					dx = (old_x - new_x) * 0.01f;
-					dy = (old_y - new_y) * 0.01f;
-					D3DXMatrixRotationY(&mX, dx);
-					D3DXMatrixRotationX(&mY, dy);
-					g_mWorld = g_mWorld * mX * mY;
-
-					break;
-				}
-			}
-
-			old_x = new_x;
-			old_y = new_y;
-
-		}
-		else {
-			isReset = true;
 			// 우클릭
 			// blue ball 움직이기
-			if (LOWORD(wParam) & MK_RBUTTON) {
-				dx = (old_x - new_x);// * 0.01f;
-				dy = (old_y - new_y);// * 0.01f;
-				D3DXVECTOR3 coord3d = g_target_blueball.getCenter();
-				double nx = coord3d.x + dx * (-0.007f);
-				double ny = coord3d.y;
-				double nz = coord3d.z + dy * (0.007f);
-				Tank* curTank = &tank;
-				if (fabs(curTank->getCenter().x - nx) > MAX_BLUEBALL_WIDTH ) {
-					nx = coord3d.x;
-				}
-				if (fabs(curTank->getCenter().z - nz) < MIN_BLUEBALL_RADIUS || fabs(curTank->getCenter().z - nz) > MAX_BLUEBALL_RADIUS) {
-					nz = coord3d.z;
-				}
-				g_target_blueball.setCenter(nx, ny, nz);
+		if (LOWORD(wParam) & MK_RBUTTON) {
+			if (isOriginTank) {
+				dx = (old_x - new_x);
+				dy = (old_y - new_y);
 			}
-			old_x = new_x;
-			old_y = new_y;
+			else {
+				dx = -(old_x - new_x);
+				dy = -(old_y - new_y);
+			}
 
-			move = WORLD_MOVE;
+			D3DXVECTOR3 coord3d = g_target_blueball.getCenter();
+			double nx = coord3d.x + dx * (-0.007f);
+			double ny = coord3d.y;
+			double nz = coord3d.z + dy * (0.007f);
+			Tank* curTank = &tank;
+			if (fabs(curTank->getCenter().x - nx) > MAX_BLUEBALL_WIDTH) {
+				nx = coord3d.x;
+			}
+			if (fabs(curTank->getCenter().z - nz) < MIN_BLUEBALL_RADIUS || fabs(curTank->getCenter().z - nz) > MAX_BLUEBALL_RADIUS) {
+				nz = coord3d.z;
+			}
+			g_target_blueball.setCenter(nx, ny, nz);
 		}
+		old_x = new_x;
+		old_y = new_y;
+
+		move = WORLD_MOVE;
 		break;
 	}
 	}
