@@ -967,7 +967,7 @@ bool createMap() // create plane + wall
 {
 	CWall wall;
 
-	if (false == g_legoPlane.create(Device, -1, -1, WORLD_WIDTH, 0.03f, WORLD_DEPTH, d3d::GREEN)) return false;
+	if (false == g_legoPlane.create(Device, -1, -1, WORLD_WIDTH, 0.03f, WORLD_DEPTH, d3d::DARKGREEN)) return false;
 	g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
 
 	for (int i = -1; i <= 1; i += 2) {
@@ -1285,12 +1285,12 @@ bool Display(float timeDelta)
 			startTime = currTime;
 
 			if (isOriginTank) {
-				g_target_blueball.setCenter(tank.getCenter().x - 0.01f, (float)M_RADIUS + 1, tank.getCenter().z - 3.0f);
+				g_target_blueball.setCenter(tank.getCenter().x - 0.01f, (float)M_RADIUS + 3, tank.getCenter().z - 5.0f);
 				// 0.01f 빼는 이유는 사분면 구분에서 0이 포함되는 경우가 중첩되어 x의 차이가 0인 경우 오류가 발생하기 때문.
 				isOriginTank = FALSE;
 			}
 			else {
-				g_target_blueball.setCenter(tank.getCenter().x - 0.01f, (float)M_RADIUS + 1, tank.getCenter().z + 3.0f);
+				g_target_blueball.setCenter(tank.getCenter().x - 0.01f, (float)M_RADIUS + 3, tank.getCenter().z + 5.0f);
 				isOriginTank = TRUE;
 			}
 		}
@@ -1339,28 +1339,18 @@ bool Display(float timeDelta)
 				g_legoWall[i][j].draw(Device, g_mWorld);
 		}
 
-		if (missile.get_created() == true) {
+		if (missile.get_created()) {
 			missile.hitBy();
 		}
 		if (otank.get_created()) {
-			if (otank.hasIntersected(missile)) {
-				otank.hitBy(missile);
-				GAME_FINISH = true;
-				winner = true;
+			if (otank.hasIntersected(missile) && missile.get_created()) {
+				if (otank.hasIntersected(missile)) {
+					otank.hitBy(missile);
+					GAME_FINISH = true;
+					winner = true;
+				}
 			}
-			else if (otank.get_created()) {
-				otank.tankUpdate(timeDelta, obstacles, tank, g_legoWall);
-				otank.draw(Device, g_mWorld);
-			}
-		}
-
-		if (otank.get_created()) {
-			if (otank.hasIntersected(missile)) {
-				otank.hitBy(missile);
-				GAME_FINISH = true;
-				winner = true;
-			}
-			else if (otank.get_created()) {
+			else {
 				otank.tankUpdate(timeDelta, obstacles, tank, g_legoWall);
 				otank.draw(Device, g_mWorld);
 			}
