@@ -27,6 +27,12 @@ const int Width = 1920;
 const int Height = 1080;
 const double TANK_SPEED = 0.45;
 
+// There are four balls
+// initialize the position (coordinate) of each ball (ball0 ~ ball3)
+const float spherePos[4][2] = { {-2.7f,0} , {+2.4f,0} , {3.3f,0} , {-2.7f,-0.9f} };
+// initialize the color of each ball (ball0 ~ ball3)
+const D3DXCOLOR sphereColor[4] = { d3d::RED, d3d::RED, d3d::YELLOW, d3d::WHITE };
+
 // -----------------------------------------------------------------------------
 // Transform matrices
 // -----------------------------------------------------------------------------
@@ -44,9 +50,10 @@ D3DXMATRIX g_mProj;
 #define MAX_BLUEBALL_RADIUS 2  // blueball 어디까지 멀어질 수 있는지
 
 #define MISSILE_POWER 1.88
+#define MISSILE_EXPOLSION_RADIUS M_RADIUS+0.25 // 미사일 폭발 반경
 
-#define WORLD_WIDTH 24
-#define WORLD_DEPTH 36
+#define WORLD_WIDTH 36
+#define WORLD_DEPTH 48
 #define BORDER_WIDTH 0.12f // 가장자리 벽 굵기
 
 #define NUM_OBSTACLE 10	// 장애물 개수
@@ -427,10 +434,8 @@ protected:
 class CObstacle : public CWall {
 public:
 	void hitBy(CSphere& missile) {
-		if (hasIntersected(missile)) {
-			missile.destroy();
-			destroy();
-		}
+		missile.destroy();
+		destroy();
 	}
 };
 
@@ -795,7 +800,34 @@ CSphere missile;   // c 누르면 나가는 미사일
 // Functions
 // -----------------------------------------------------------------------------
 
-bool createWall(float partitionWidth, float partitionHeight, float partitonDepth,
+bool createBlock(float partitionWidth, float partitionHeight, float partitionDepth,
+	int partitionCount_x, int partitionCount_y, int partitionCount_z,
+	float x, float y, float z,
+	D3DXCOLOR wallColor = d3d::WHITE) {
+	// (partitionCount_land * partitionCount_sky) 크기의 벽을 생성함.
+	// 각 partition의 크기는 (partitionWidth, partitionHeight, partitionDepth)
+	for (int i = 0; i < partitionCount_x; i++) {
+		for (int j = 0; j < partitionCount_y; j++) {
+			for (int k = 0; k < partitionCount_z; k++) {
+				// 좌표 결정
+				float nx, ny, nz;
+				nx = x + partitionWidth * i;
+				ny = y + partitionHeight * j;
+				nz = z + partitionDepth * k;
+				// 장애물 생성 & 배치
+				CObstacle partition;
+				if (false == partition.create(Device, -1, -1, partitionWidth, partitionHeight, partitionDepth, wallColor)) return false;
+				partition.setPosition(nx, ny, nz);
+				obstacle_wall.push_back(partition);
+				// 전역변수에 저장
+			}
+		}
+	}
+	return true;
+}
+
+// 세로로 벽 만들기
+bool createDWall(float partitionWidth, float partitionHeight, float partitonDepth,
 	int partitionCount_land, int partitionCount_sky,
 	float x, float y, float z,
 	D3DXCOLOR wallColor = d3d::WHITE) {
@@ -819,35 +851,92 @@ bool createWall(float partitionWidth, float partitionHeight, float partitonDepth
 	return true;
 }
 
-bool createObstacle() // create obstacle
-{
-	// 장애물 랜덤 생성
-	for (int i = 0; i < NUM_OBSTACLE; i++) {
-		random_device rd;
-		mt19937 gen(rd());
-
-		uniform_real_distribution<float> disW(0, 1.0f);	// width<=1.0f
-		uniform_real_distribution<float> disD(0, 1.5f);	// depth<=1.5f
-		uniform_real_distribution<float> disH(0, 2.5f);	// height<=2.5f
-
-		float width = disW(gen);
-		float depth = disD(gen);
-		float height = disH(gen);
-
-		uniform_real_distribution<float> disX(-(WORLD_WIDTH / 2) + width / 2, (WORLD_WIDTH / 2) - width);	// x 범위
-		uniform_real_distribution<float> disZ(-(WORLD_WIDTH / 2) + depth / 2, (WORLD_WIDTH / 2) - depth);	// z 범위
-
-		float x = disX(gen);
-		float y = height / 2;
-		float z = disZ(gen);
-
-		CObstacle obs;
-		if (false == obs.create(Device, x, z, width, height, depth, d3d::WHITE)) return false;
-		obs.setPosition(x, y, z);
-
-		obstacles.push_back(obs);
+// 가로로 벽 만들기
+bool createWWall(float partitionWidth, float partitionHeight, float partitonDepth,
+	int partitionCount_land, int partitionCount_sky,
+	float x, float y, float z,
+	D3DXCOLOR wallColor = d3d::WHITE) {
+	// (partitionCount_land * partitionCount_sky) 크기의 벽을 생성함.
+	// 각 partition의 크기는 (partitionWidth, partitionHeight, partitionDepth)
+	for (int i = 0; i < partitionCount_land; i++) {
+		for (int j = 0; j < partitionCount_sky; j++) {
+			// 좌표 결정
+			float nx, ny, nz;
+			nx = x + partitionWidth * i;
+			ny = y + partitionHeight * j;
+			nz = z;
+			// 장애물 생성 & 배치
+			CObstacle partition;
+			if (false == partition.create(Device, -1, -1, partitionWidth, partitionHeight, partitonDepth, wallColor)) return false;
+			partition.setPosition(nx, ny, nz);
+			obstacle_wall.push_back(partition);
+			// 전역변수에 저장
+		}
 	}
 	return true;
+}
+
+bool createObstacle() // create obstacle
+{
+	float w = WORLD_WIDTH;
+	float d = WORLD_DEPTH;
+
+	// 상단부
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4, 0, d / 6 + 0.04 * d, d3d::DARKBROWN);
+	createDWall(0.02 * w, 0.7f, 0.02 * d, 8, 3, -w / 4, 0, d / 6 - 0.115 * d, d3d::BROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4, 0, d / 6 - 0.135 * d, d3d::DARKBROWN);
+	createWWall(0.02 * w, 0.7f, 0.015 * d, 6, 3, -w / 4 + 0.025 * w, 0, d / 6 - 0.135 * d, d3d::BROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4 + 0.123 * w, 0, d / 6 - 0.135 * d, d3d::DARKBROWN);
+	createDWall(0.02 * w, 0.7f, 0.02 * d, 14, 3, -w / 4 + 0.123 * w, 0, d / 6 - 0.115 * d, d3d::BROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4 + 0.123 * w, 0, d / 6 + 0.165 * d, d3d::DARKBROWN);
+	createWWall(0.02 * w, 0.7f, 0.016 * d, 10, 3, -w / 4 + 0.148 * w, 0, d / 6 + 0.165 * d, d3d::BROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4 + 0.353 * w, 0, d / 6 + 0.165 * d, d3d::DARKBROWN);
+	createDWall(0.02 * w, 0.7f, 0.02 * d, 6, 3, -w / 4 + 0.353 * w, 0, d / 6 + 0.045 * d, d3d::BROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4 + 0.353 * w, 0, d / 6 + 0.025 * d, d3d::DARKBROWN);
+
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0, 0, d / 6, d3d::DARKBROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0, 0, d / 8, d3d::DARKBROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0, 0, d / 12, d3d::DARKBROWN);
+
+	createWWall(0.02 * w, 0.5f, 0.02 * d, 10, 4, 0.025 * w, 0, d / 12, d3d::BROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.23 * w, 0, d / 12, d3d::DARKBROWN);
+	createDWall(0.02 * w, 0.7f, 0.02 * d, 7, 3, 0.23 * w, 0, d / 12 + 0.02 * d, d3d::BROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.23 * w, 0, d / 12 + 0.16 * d, d3d::DARKBROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.30 * w, 0, d / 12 + 0.16 * d, d3d::DARKBROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.37 * w, 0, d / 12 + 0.16 * d, d3d::DARKBROWN);
+	
+	// 하단부
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4 - 0.1 * w, 0, -d / 3, d3d::DARKBROWN);
+	createDWall(0.02 * w, 0.7f, 0.02 * d, 6, 3, -w / 4 - 0.1 * w, 0, -d / 3 + 0.02 * d, d3d::BROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4 - 0.1 * w, 0, -d / 3 + 0.14 * d, d3d::DARKBROWN);
+	createDWall(0.02 * w, 0.7f, 0.02 * d, 4, 3, -w / 4 - 0.1 * w, 0, -d / 3 + 0.16 * d, d3d::BROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4 - 0.1 * w, 0, -d / 3 + 0.24 * d, d3d::DARKBROWN);
+	createWWall(0.02 * w, 0.7f, 0.02 * d, 5, 3, -w / 4 - 0.075 * w, 0, -d / 3 + 0.24 * d, d3d::BROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4 + 0.03 * w, 0, -d / 3 + 0.24 * d, d3d::DARKBROWN);
+
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -0.18 * w, 0, -d / 3 + 0.19 * d, d3d::DARKBROWN);
+	createDWall(0.02 * w, 0.7f, 0.02 * d, 6, 3, -0.18 * w, 0, -d / 3 + 0.07 * d, d3d::BROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -0.18 * w, 0, -d / 3 + 0.05 * d, d3d::DARKBROWN);
+	createWWall(0.02 * w, 0.7f, 0.02 * d, 8, 3, -0.155 * w, 0, -d / 3 + 0.05 * d, d3d::BROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.01 * w, 0, -d / 3 + 0.05 * d, d3d::DARKBROWN);
+
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0, 0, -d / 6 - 0.04 * d, d3d::DARKBROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 6, 0.05 * w, 0, -d / 6, d3d::DARKBROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 7, 0.1 * w, 0, -d / 6 + 0.04 * d, d3d::DARKBROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 8, 0.15 * w, 0, -d / 6 + 0.08 * d, d3d::DARKBROWN);
+
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.15 * w, 0, -d / 6, d3d::DARKBROWN);
+	createWWall(0.02 * w, 0.7f, 0.02 * d, 7, 3, 0.175 * w, 0, -d / 6, d3d::BROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.32 * w, 0, -d / 6, d3d::DARKBROWN);
+	createDWall(0.02 * w, 0.7f, 0.02 * d, 10, 3, 0.32 * w, 0, -d / 6 - 0.2 * d, d3d::BROWN);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.32 * w, 0, -d / 6 - 0.22 * d, d3d::DARKBROWN);
+
+	// 블럭 
+	createBlock(0.25f, 0.25f, 0.25f, 10, 10, 10, 0.2 * w, 0, -0.03 * d, d3d::RED);
+	createBlock(0.25f, 0.25f, 0.25f, 10, 10, 10, -0.3 * w, 0, -0.07 * d, d3d::RED);
+	createBlock(0.3f, 0.3f, 0.3f, 12, 12, 12, -0.35 * w, 0, 0.35 * d, d3d::RED);
+
+	return true;	
 }
 
 bool createMap() // create plane + wall
@@ -948,11 +1037,11 @@ bool Setup()
 	D3DXMatrixIdentity(&g_mView);
 	D3DXMatrixIdentity(&g_mProj);
 
-	if (false == tank.create(Device, -1, -1, d3d::BROWN)) return false;
-	tank.setPosition(-1, 0.2f, -1);
+	if (false == tank.create(Device, -1, -1, d3d::YELLOW)) return false;
+	tank.setPosition(-0.4 * WORLD_WIDTH, 0.2f, -0.4 * WORLD_DEPTH);
 
-	if (false == otank.create(Device, -1, -1, d3d::BROWN)) return false;
-	otank.setPosition(-1, 0.2f, 1);
+	if (false == otank.create(Device, -1, -1, d3d::BLUE)) return false;
+	otank.setPosition(0.4 * WORLD_WIDTH, 0.2f, 0.4 * WORLD_DEPTH);
 
 	// tank랑 blue ball 연결
 	g_target_blueball.linkTank(&tank);
@@ -973,7 +1062,7 @@ bool Setup()
 	float base_x = 0.0f, base_y = wallPartition_height * 0.5, base_z = -3.0f; // 벽 생성 위치
 
 	// 벽 생성 & 배치
-	createWall(wallPartition_width, wallPartition_height, wallPartition_depth, partitionCount_land, partitionCount_sky, base_x, base_y, base_z, wall_color);
+	// createWall(wallPartition_width, wallPartition_height, wallPartition_depth, partitionCount_land, partitionCount_sky, base_x, base_y, base_z, wall_color);
 
 	// create blue ball for set direction
 	if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
@@ -1089,7 +1178,7 @@ bool Display(float timeDelta)
 		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
 		Device->BeginScene();
 		// 탱크 위치 변경
-		tank.tankUpdate(timeDelta, obstacles, otank, g_legoWall);
+		tank.tankUpdate(timeDelta, obstacle_wall, otank, g_legoWall);
 		// 미사일 위치도 변경 & 벽과 충돌했는지 체크
 		missile.ballUpdate(timeDelta);
 		for (i = 0; i < g_legoWall.size(); i++) {
@@ -1123,28 +1212,52 @@ bool Display(float timeDelta)
 				exit(1);		// 탱크 터지면 메시지 띄우고 바로 끝내야 할 듯, 안 끝내면 otank 이미 사라져서 오류뜸
 			}
 			else if (otank.get_created()) {
-				otank.tankUpdate(timeDelta, obstacles, tank, g_legoWall);
+				otank.tankUpdate(timeDelta, obstacle_wall, tank, g_legoWall);
 				otank.draw(Device, g_mWorld);
 			}
 		}
 
+		/*
 		// 랜덤 장애물 파괴 체크 & 파괴 안되면 그림
 		for (int i = 0; i < obstacles.size(); i++) {
 			if (obstacles[i].get_created()) {
 				if (obstacles[i].hasIntersected(missile)) {
 					obstacles[i].hitBy(missile);
+					// 만약 장애물 파괴시, 폭발한다 (= 주변 장애물도 다시 그림)
+					// 스파게티 코드지만 마감 얼마 안남았으니까 이대로 갑시다
+					double mx = missile.getCenter().x;
+					double my = missile.getCenter().y;
+					double mz = missile.getCenter().z;
+					for (int j = 0; j < obstacles.size(); j++) {
+						if (obstacles[j].hasIntersected(mx, my, mz, MISSILE_EXPOLSION_RADIUS)) {
+							obstacles[j].hitBy(missile);
+						}
+					}
+					for (int j = 0; j < obstacle_wall.size(); j++) {
+						if (obstacle_wall[j].hasIntersected(mx, my, mz, MISSILE_EXPOLSION_RADIUS)) {
+							obstacle_wall[j].hitBy(missile);
+						}
+					}
 				}
 				else {
 					obstacles[i].draw(Device, g_mWorld);
 				}
 			}
 		}
+		*/
 
 		// 장애물(벽) 파괴 체크 & 파괴 안되면 그림
 		for (int i = 0; i < obstacle_wall.size(); i++) {
 			if (obstacle_wall[i].get_created()) {
 				if (obstacle_wall[i].hasIntersected(missile)) {
 					obstacle_wall[i].hitBy(missile);
+					// 만약 장애물 파괴시, 폭발한다 (= 주변 장애물도 다시 그림)
+					// 스파게티 코드지만 마감 얼마 안남았으니까 이대로 갑시다
+					for (int j = 0; j < obstacle_wall.size(); j++) {
+						if (obstacle_wall[j].hasIntersected(missile.getCenter().x, missile.getCenter().y, missile.getCenter().z, MISSILE_EXPOLSION_RADIUS)) {
+							obstacle_wall[j].hitBy(missile);
+						}
+					}
 				}
 				else if (obstacle_wall[i].get_created()) {
 					obstacle_wall[i].draw(Device, g_mWorld);
