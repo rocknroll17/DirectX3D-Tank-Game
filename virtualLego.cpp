@@ -46,18 +46,20 @@ D3DXMATRIX g_mProj;
 #define MIN_BLUEBALL_RADIUS 0.4 // blueball 어디 이상 멀어져야 하는지 (앞으로)
 #define MAX_BLUEBALL_WIDTH 1 // blueball 어디까지 멀어질 수 있는지 (옆으로)
 
-#define MISSILE_POWER 1.25
+#define MISSILE_POWER 1.2
 #define MISSILE_GRAVITY_RATE 3.5
-#define MISSILE_DECREASE_RATE 0.9975  // 미사일 마찰력
+#define MISSILE_DECREASE_RATE 0.9985  // 미사일 마찰력
 #define MISSILE_EXPOLSION_RADIUS M_RADIUS+0.25 // 미사일 폭발 반경
 
 #define WORLD_WIDTH 24
-#define WORLD_DEPTH 72
+#define WORLD_DEPTH 100
 #define BORDER_WIDTH 0.12f // 가장자리 벽 굵기
 
 #define NUM_OBSTACLE 20	// 장애물 개수
 #define TANK_DISTANCE 35
 
+double fireDegree;
+double fireDistance;
 bool GAME_START = false;
 bool GAME_FINISH = false;
 float MOVEMENT = 0.0f;
@@ -875,6 +877,12 @@ ID3DXFont* DISTANCEfont = NULL;
 // Functions
 // -----------------------------------------------------------------------------
 
+void updateFireDegreeAndDistance() {
+	double degree, distance;
+	D3DXVECTOR3 targetCoord = g_target_blueball.getCenter(); // blue ball 위치
+	D3DXVECTOR3 tankCoord = tank.getCenter(); // 탱크 위치
+}
+
 bool createBlock(float partitionWidth, float partitionHeight, float partitionDepth,
 	int partitionCount_x, int partitionCount_y, int partitionCount_z,
 	float x, float y, float z,
@@ -1018,6 +1026,8 @@ void destroyAllLegoBlock(void)
 bool Setup()
 {
 	int i;
+	// 전역변수 초기화
+	fireDistance = fireDegree = 0;
 
 	// 글자출력 ---------------------
 	if (FAILED(D3DXCreateFont(Device, 40, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET,
