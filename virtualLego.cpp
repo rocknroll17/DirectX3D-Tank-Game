@@ -587,6 +587,10 @@ public:
 		isDistanceZero = isDist;
 	}
 
+	bool getIsDistanceZero() {
+		return isDistanceZero;
+	}
+
 	bool get_created()
 	{
 		return created;
@@ -1284,9 +1288,11 @@ bool Display(float timeDelta)
 		{
 			Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
 			Device->BeginScene();
-			RECT rect = { Width / 2 - 200, Height / 7, 0, 0 };
+			RECT screenRect;
+			GetClientRect(GetDesktopWindow(), &screenRect);
+			RECT rect = { screenRect.right / 2-180, Height / 7, screenRect.right, screenRect.bottom };
 			ENDfont->DrawText(NULL, "Winner", -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
-			rect = { Width / 2 - 90, Height / 7 + 150, 0, 0 };
+			rect = { screenRect.right / 2-85, Height / 7 + 150,screenRect.right, screenRect.bottom};
 			if (isOriginTank) {
 				PLAYERfont->DrawText(NULL, "PLAYER1", -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
 			}
@@ -1391,8 +1397,14 @@ bool Display(float timeDelta)
 		// 글자출력-------------------------------------------------------------------------------------
 		if (GAME_START) {
 			RECT rect = { 10, 10, 0, 0 };  // 글자의 위치 (10, 10)에서 시작
-			string time = "TIME: " + to_string((turnTime / 1000) - static_cast<int>(timediff / 1000));
-			TIMEfont->DrawText(NULL, time.c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+			if ((turnTime / 1000) - static_cast<int>(timediff / 1000) > 5) {
+				string time = "TIME: " + to_string((turnTime / 1000) - static_cast<int>(timediff / 1000));
+				TIMEfont->DrawText(NULL, time.c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+			}
+			else {
+				string time = "TIME: " + to_string((turnTime / 1000) - static_cast<int>(timediff / 1000));
+				TIMEfont->DrawText(NULL, time.c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(255, 0, 0));
+			}
 		}
 		if (GAME_START && !isFire) {
 			RECT rect = { 10, 50, 0, 0 };
@@ -1406,7 +1418,13 @@ bool Display(float timeDelta)
 			s = oss.str();  //발사거리 문자열로
 			FIREDISTANCEfont->DrawText(NULL, s.c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
 			rect = { 10, 130, 0, 0 };
-			DISTANCEfont->DrawText(NULL, ("Tank Distance: " + to_string(int(tank.getDistance()))).c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+			if (tank.getIsDistanceZero()) {
+				DISTANCEfont->DrawText(NULL, "Tank: SLOWED", -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(255, 0, 0));
+			}
+			else {
+				DISTANCEfont->DrawText(NULL, ("Tank Distance: " + to_string(int(tank.getDistance()))).c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+			}
+			
 		}
 
 
