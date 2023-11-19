@@ -56,7 +56,7 @@ D3DXMATRIX g_mProj;
 #define BORDER_WIDTH 0.12f // 가장자리 벽 굵기
 
 #define NUM_OBSTACLE 20
-#define TANK_DISTANCE 10
+#define TANK_DISTANCE 15
 
 
 bool GAME_START = false;
@@ -717,7 +717,7 @@ public:
 	}
 
 	void setDistance() {
-		distance = 15;
+		distance = TANK_DISTANCE;
 	}
 	void setLastCoord(D3DXVECTOR3 pos) {
 		last_coord = pos;
