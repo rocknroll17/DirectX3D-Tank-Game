@@ -1239,16 +1239,16 @@ bool Display(float timeDelta)
 		target = D3DXVECTOR3(0.0f, 0.0f, -WORLD_DEPTH / 2 + MOVEMENT);
 		up = D3DXVECTOR3(0.0f, 2.0f, 0.0f);
 
-		RECT rect = {200, 200, 0, 0 };
-		TITLEfont->DrawText(NULL, "Tank Game", -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+		
 
 		MOVEMENT = MOVEMENT + 0.01;
 		startTime = currTime;
 		if (MOVEMENT > WORLD_DEPTH) {
 			GAME_START = true;
 		}
-		D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
-		Device->SetTransform(D3DTS_VIEW, &g_mView);
+		//D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
+		//Device->SetTransform(D3DTS_VIEW, &g_mView);
+
 	}
 	else if (GAME_FINISH) {
 		tank.setPosition(0.0f, podium.getCenter()[1] + podium.getHeight() / 2 + 0.40, 0.0f);
@@ -1319,6 +1319,7 @@ bool Display(float timeDelta)
 	D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
 	Device->SetTransform(D3DTS_VIEW, &g_mView);
 
+
 	if (Device)
 	{
 
@@ -1349,6 +1350,7 @@ bool Display(float timeDelta)
 				isOriginTank = TRUE;
 			}
 		}
+
 		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
 		Device->BeginScene();
 
@@ -1361,6 +1363,8 @@ bool Display(float timeDelta)
 		TIMEfont->DrawText(NULL, time, -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
 		rect = { Width / 2, 10, 0, 0 };
 		DISTANCEfont->DrawText(NULL, ("Distance: " + to_string(int(tank.getDistance()))).c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+
+
 		/*
 		Device->EndScene();
 		Device->Present(0, 0, 0, 0);
@@ -1482,6 +1486,11 @@ bool Display(float timeDelta)
 		}
 		tankLastCoord = tankCoord;
 		blueballLastCoord = blueballCoord;
+		if (GAME_START == false) {
+			RECT rect = { 200, 200, 0, 0 };
+			TITLEfont->DrawText(NULL, "Tank Game", -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+		}
+
 
 		Device->EndScene();
 		Device->Present(0, 0, 0, 0);
@@ -2012,5 +2021,3 @@ int WINAPI WinMain(HINSTANCE hinstance,
 
 	return 0;
 }
-
-
