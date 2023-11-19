@@ -65,6 +65,7 @@ D3DXMATRIX g_mProj;
 bool GAME_START = false;
 bool GAME_FINISH = false;
 float MOVEMENT = 0.0f;
+float CAMERA_SPEED = 0.01;
 float Tank_spawn_point[3] = { 0, 0.2f, -WORLD_DEPTH / 2 + 5 };
 int camera_option = 0;
 // -----------------------------------------------------------------------------
@@ -569,7 +570,7 @@ public:
 		tank_part[3].setPosition(x - 0.24375, y - 0.28f, z);
 		tank_part[4].setPosition(x + 0.24375, y - 0.28f, z);
 		tank_part[5].setPosition(x - 0.24375, y - 0.24f, z);
-		tank_part[6].setPosition(x + 0.24375, 0.24f, z);
+		tank_part[6].setPosition(x + 0.24375, y - 0.24f, z);
 
 	}
 
@@ -797,7 +798,7 @@ public:
 
 			// 현재 위치에서 아주 조금 옆으로 움직여줌
 			double epsilon = 0.00001;
-			if (tX > tankX) epsilon *= -1;
+			if (tX > tankX) epsilon *= -1; 
 			this->setCenter(tX + epsilon, tY, tZ);
 		}
 		if (diffFromTankZ > MAX_BLUEBALL_RADIUS || diffFromTankZ < MIN_BLUEBALL_RADIUS) {
@@ -1065,8 +1066,10 @@ bool createMap()
 
 void destroyAllLegoBlock(void)
 {
-	for (int q = 0; obstacle_wall[q].get_created() != FALSE; q++) {
-		obstacle_wall[q].destroy();
+	for (int q = 0; q < obstacle_wall.size(); q++) {
+		if (obstacle_wall[q].get_created() != FALSE) {
+			obstacle_wall[q].destroy();
+		}
 	}
 	g_legoPlane.destroy();
 	for (int i = 0; i < g_legoWall.size(); i++) {
@@ -1283,7 +1286,7 @@ bool Display(float timeDelta)
 		tank.setPower(0, 0);
 	}
 
-	if (isFire && !missile.getCreated() && !threeTime) { /////////////
+	if (isFire && !missile.getCreated() && !threeTime) {
 		startTime = currTime;
 		timediff = 0;
 		turnTime = 3000;
@@ -1299,7 +1302,7 @@ bool Display(float timeDelta)
 
 
 
-		MOVEMENT = MOVEMENT + 0.015;
+		MOVEMENT = MOVEMENT + timediff * CAMERA_SPEED;
 		startTime = currTime;
 		if (MOVEMENT > WORLD_DEPTH) {
 			GAME_START = true;
@@ -1486,18 +1489,6 @@ bool Display(float timeDelta)
 		if (missile.get_created() == true) {
 			missile.hitBy();
 		}
-		if (otank.get_created()) {
-			if (otank.hasIntersected(missile)) {
-				otank.hitBy(missile);
-				GAME_FINISH = true;
-				winner = true;
-			}
-			else if (otank.get_created()) {
-				otank.tankUpdate(timeDelta, obstacle_wall, tank, g_legoWall);
-				otank.draw(Device, g_mWorld);
-			}
-		}
-
 		if (otank.get_created()) {
 			if (otank.hasIntersected(missile)) {
 				otank.hitBy(missile);
@@ -1998,6 +1989,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			// 우클릭
 			// blue ball 움직이기
 			if (LOWORD(wParam) & MK_RBUTTON) {
+
 				if (isOriginTank) {
 					dx = (old_x - new_x);// * 0.01f;
 					dy = (old_y - new_y);// * 0.01f;
