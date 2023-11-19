@@ -1154,10 +1154,10 @@ bool Setup()
 	lit.Attenuation0 = 0.0f;//상수 감쇠
 	lit.Attenuation1 = 0.3f;//선형감쇠 원래 0.9f였음.
 	lit.Attenuation2 = 0.0f;//제곱감쇠
-	lit.Position = D3DXVECTOR3(0.0f, 15.0f, WORLD_DEPTH / 4 + 4);
+	lit.Position = D3DXVECTOR3(0.0f, 10.0f, WORLD_DEPTH / 4 + 4);
 	if (false == g_light.create(Device, lit))
 		return false;
-	lit.Position = D3DXVECTOR3(0.0f, 15.0f, -WORLD_DEPTH / 4 - 4);
+	lit.Position = D3DXVECTOR3(0.0f, 10.0f, -WORLD_DEPTH / 4 - 4);
 	if (false == g_light2.create(Device, lit))
 		return false;
 
@@ -1383,28 +1383,29 @@ bool Display(float timeDelta)
 		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
 		Device->BeginScene();
 
-		std::string time = "TIME: " + std::to_string((turnTime / 1000) - static_cast<int>(timediff / 1000));
+		
 		// 글자출력-------------------------------------------------------------------------------------
-		RECT rect = { 10, 10, 0, 0 };  // 글자의 위치 (10, 10)에서 시작
-		TIMEfont->DrawText(NULL, time.c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
-		rect = { 10, 50, 0, 0 };
-		ostringstream oss;
-		oss << "FIRE Degree: " << fixed << setprecision(2) << fireDegree;
-		string s = oss.str();
-		DEGREEfont->DrawText(NULL, s.c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
-		rect = { 10, 90, 0, 0 };
-		oss.str("");  // 스트림 비움
-		oss << "FIRE Distance: " << std::fixed << std::setprecision(2) << fireDistance;
-		s = oss.str();  //발사거리 문자열로
-		FIREDISTANCEfont->DrawText(NULL, s.c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
-		rect = { 10, 130, 0, 0 };
-		DISTANCEfont->DrawText(NULL, ("Distance: " + to_string(int(tank.getDistance()))).c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+		if (GAME_START) {
+			RECT rect = { 10, 10, 0, 0 };  // 글자의 위치 (10, 10)에서 시작
+			string time = "TIME: " + to_string((turnTime / 1000) - static_cast<int>(timediff / 1000));
+			TIMEfont->DrawText(NULL, time.c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+		}
+		if (GAME_START && !isFire) {
+			RECT rect = { 10, 50, 0, 0 };
+			ostringstream oss;
+			oss << "FIRE Degree: " << fixed << setprecision(2) << fireDegree << "°";
+			string s = oss.str();
+			DEGREEfont->DrawText(NULL, s.c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+			rect = { 10, 90, 0, 0 };
+			oss.str("");  // 스트림 비움
+			oss << "FIRE Distance: " << std::fixed << std::setprecision(2) << fireDistance;
+			s = oss.str();  //발사거리 문자열로
+			FIREDISTANCEfont->DrawText(NULL, s.c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+			rect = { 10, 130, 0, 0 };
+			DISTANCEfont->DrawText(NULL, ("Tank Distance: " + to_string(int(tank.getDistance()))).c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+		}
 
-		/*
-		Device->EndScene();
-		Device->Present(0, 0, 0, 0);
-		Device->SetTexture(0, NULL);
-		*/
+
 		//----------------------------------------------------------------------------------------------
 
 
@@ -1526,7 +1527,7 @@ bool Display(float timeDelta)
 			RECT screenRect;
 			GetClientRect(GetDesktopWindow(), &screenRect);
 			// 화면 중앙에 텍스트 출력
-			RECT rect = { 0, screenRect.bottom / 5, screenRect.right, screenRect.bottom };
+			RECT rect = { 0, screenRect.bottom / 4, screenRect.right, screenRect.bottom };
 			TITLEfont->DrawText(NULL, "Tank Game", -1, &rect, DT_CENTER, D3DCOLOR_XRGB(0, 0, 0));
 		}
 
