@@ -583,6 +583,10 @@ public:
 
 	}
 
+	void setIsDistanceZero(bool isDist) {
+		isDistanceZero = isDist;
+	}
+
 	bool get_created()
 	{
 		return created;
@@ -685,18 +689,17 @@ public:
 		}
 		this->setPosition(tX, cord.y, tZ);
 
-		if (this->getCenter()[0] != last_coord[0] || this->getCenter()[2] != last_coord[2]) {
+		if ((this->getCenter()[0] != last_coord[0] || this->getCenter()[2] != last_coord[2]) && distance > 0 && !isDistanceZero) {
 			distance = distance - sqrt(pow(this->getCenter()[0] - last_coord[0], 2) + pow(this->getCenter()[2] - last_coord[2], 2));
 			last_coord = this->getCenter();
 		}
-		if (distance < 0) {
+		if (distance <= 0) {
+			isDistanceZero = TRUE;
+		}
+		if (isDistanceZero && distance <= 0) {
 			setPower(0, 0);
 			TANK_SPEED = 0.05;
-			isDistanceZero = FALSE;
-		}
-		if (distance < 0) {
-			isDistanceZero = TRUE;
-			distance = 50; // 
+			distance = 0.1;
 		}
 
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
@@ -1351,6 +1354,7 @@ bool Display(float timeDelta)
 
 		if (timediff > turnTime) {
 			tank.setPower(0, 0);
+			tank.setIsDistanceZero(FALSE);
 			Tank tempTank = tank;
 			tank = otank;
 			otank = tempTank;
