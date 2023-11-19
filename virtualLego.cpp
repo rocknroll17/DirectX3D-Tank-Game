@@ -1269,7 +1269,36 @@ void Cleanup(void)
 	destroyAllLegoBlock();
 	g_light.destroy();
 
+	tank.destroy();
+	otank.destroy();
+	g_target_blueball.destroy();
+	podium.destroy();
+
 	// 글자출력 ----------------------------
+	if (DEGREEfont != NULL) {
+		DEGREEfont->Release();
+		DEGREEfont = NULL;
+	}
+	if (FIREDISTANCEfont != NULL) {
+		FIREDISTANCEfont->Release();
+		FIREDISTANCEfont = NULL;
+	}
+	if (TITLEfont != NULL) {
+		TITLEfont->Release();
+		TITLEfont = NULL;
+	}
+	if (ENDfont != NULL) {
+		ENDfont->Release();
+		ENDfont = NULL;
+	}
+	if (PLAYERfont != NULL) {
+		PLAYERfont->Release();
+		PLAYERfont = NULL;
+	}
+	if (DISTANCEfont != NULL) {
+		DISTANCEfont->Release();
+		DISTANCEfont = NULL;
+	}
 	if (TIMEfont != NULL)
 	{
 		TIMEfont->Release();
