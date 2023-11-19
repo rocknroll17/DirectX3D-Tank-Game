@@ -694,7 +694,7 @@ public:
 		}
 		if (distance < 0) {
 			isDistanceZero = TRUE;
-			distance = 50;
+			distance = 50; // 
 		}
 
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
@@ -875,14 +875,37 @@ vector<CObstacle> obstacle_wall; // 장애물 (벽)
 
 CSphere missile;   // c 누르면 나가는 미사일
 
+ID3DXFont* TITLEfont = NULL;
 ID3DXFont* TIMEfont = NULL; // 글자 출력을 위한 객체
 ID3DXFont* ENDfont = NULL;
 ID3DXFont* PLAYERfont = NULL;
 ID3DXFont* DISTANCEfont = NULL;
 
+double fireDegree = 0; // blueball - 탱크 간 각도
+double fireDistance = 0; // blueball - 탱크 간 거리 (땅 기준)
+
+D3DXVECTOR3 tankLastCoord; // 탱크 이전 프레임 위치
+D3DXVECTOR3 blueballLastCoord; // bleuball 이전 프레임 위치
+
 // -----------------------------------------------------------------------------
 // Functions
 // -----------------------------------------------------------------------------
+
+void updateFireDegree() {
+	D3DXVECTOR3 targetCoord = g_target_blueball.getCenter(); // blue ball 위치
+	D3DXVECTOR3 tankCoord = tank.getHead(); // 탱크 위치
+	double radian = acos(
+		sqrt(pow(targetCoord.x - tankCoord.x, 2) + pow(targetCoord.z - tankCoord.z, 2)) /
+		sqrt(pow(targetCoord.x - tankCoord.x, 2) + pow(targetCoord.y - tankCoord.y, 2) + pow(targetCoord.z - tankCoord.z, 2))
+	);
+	fireDegree = radian * 180 / PI;
+}
+
+void updateFireDistance() {
+	D3DXVECTOR3 targetCoord = g_target_blueball.getCenter(); // blue ball 위치
+	D3DXVECTOR3 tankCoord = tank.getHead(); // 탱크 위치
+	fireDistance = sqrt(pow(tankCoord.x - targetCoord.x, 2) + pow(tankCoord.z - targetCoord.z, 2));  // 땅 거리
+}
 
 bool createBlock(float partitionWidth, float partitionHeight, float partitionDepth,
 	int partitionCount_x, int partitionCount_y, int partitionCount_z,
@@ -1029,6 +1052,12 @@ bool Setup()
 	int i;
 
 	// 글자출력 ---------------------
+	if (FAILED(D3DXCreateFont(Device, 350, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET,
+		OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Tahoma", &TITLEfont)))
+	{
+		::MessageBox(0, "D3DXCreateFont() - FAILED", 0, 0);
+		return false;
+	}
 	if (FAILED(D3DXCreateFont(Device, 40, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET,
 		OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Tahoma", &TIMEfont)))
 	{
@@ -1207,19 +1236,24 @@ bool Display(float timeDelta)
 		turnTime = 3000;
 		threeTime = TRUE;
 		zoomOutTiming = TRUE;
+
 	}
 
 	if (GAME_START == false) {
 		pos = D3DXVECTOR3(20.0f, 12.0f, -WORLD_DEPTH / 2 + MOVEMENT);
 		target = D3DXVECTOR3(0.0f, 0.0f, -WORLD_DEPTH / 2 + MOVEMENT);
+		up = D3DXVECTOR3(0.0f, 2.0f, 0.0f);
+
+
 
 		MOVEMENT = MOVEMENT + 0.01;
 		startTime = currTime;
 		if (MOVEMENT > WORLD_DEPTH) {
 			GAME_START = true;
 		}
-		D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
-		Device->SetTransform(D3DTS_VIEW, &g_mView);
+		//D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
+		//Device->SetTransform(D3DTS_VIEW, &g_mView);
+
 	}
 	else if (GAME_FINISH) {
 		tank.setPosition(0.0f, podium.getCenter()[1] + podium.getHeight() / 2 + 0.40, 0.0f);
@@ -1296,6 +1330,7 @@ bool Display(float timeDelta)
 	D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
 	Device->SetTransform(D3DTS_VIEW, &g_mView);
 
+
 	if (Device)
 	{
 
@@ -1329,6 +1364,7 @@ bool Display(float timeDelta)
 				isOriginTank = TRUE;
 			}
 		}
+
 		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
 		Device->BeginScene();
 
@@ -1341,6 +1377,8 @@ bool Display(float timeDelta)
 		TIMEfont->DrawText(NULL, time, -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
 		rect = { Width / 2, 10, 0, 0 };
 		DISTANCEfont->DrawText(NULL, ("Distance: " + to_string(int(tank.getDistance()))).c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+
+
 		/*
 		Device->EndScene();
 		Device->Present(0, 0, 0, 0);
@@ -1359,8 +1397,7 @@ bool Display(float timeDelta)
 		}
 
 		// 블루볼 위치 변경
-		g_target_blueball.ballUpdate(timeDelta);;
-		// check whether any two balls hit together and update the direction of balls
+		g_target_blueball.ballUpdate(timeDelta);
 
 		// draw plane, walls, and spheres
 		tank.draw(Device, g_mWorld);
@@ -1454,6 +1491,25 @@ bool Display(float timeDelta)
 
 		//g_light.draw(Device);
 
+		D3DXVECTOR3 tankCoord = tank.getHead();
+		D3DXVECTOR3 blueballCoord = g_target_blueball.getCenter();
+		if (tankCoord != tankLastCoord || blueballCoord != blueballLastCoord) {
+			// 탱크나 블루볼 움직였으면, 각도 및 거리 재계산
+			updateFireDegree();
+			updateFireDistance();
+		}
+		tankLastCoord = tankCoord;
+		blueballLastCoord = blueballCoord;
+		if (GAME_START == false) {
+			// 화면 크기 얻기
+			RECT screenRect;
+			GetClientRect(GetDesktopWindow(), &screenRect);
+			// 화면 중앙에 텍스트 출력
+			RECT rect = { 0, screenRect.bottom / 5, screenRect.right, screenRect.bottom };
+			TITLEfont->DrawText(NULL, "Tank Game", -1, &rect, DT_CENTER, D3DCOLOR_XRGB(0, 0, 0));
+		}
+
+
 		Device->EndScene();
 		Device->Present(0, 0, 0, 0);
 		Device->SetTexture(0, NULL);
@@ -1515,12 +1571,16 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x >= 0) { theta = -theta; }	//4 사분면
 				if (targetpos.z - whitepos.z >= 0 && targetpos.x - whitepos.x <= 0) { theta = PI - theta; } //2 사분면
 				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0) { theta = PI + theta; } // 3 사분면
+				/*
 				double distance_land = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)); // xz만 고려한 거리
 
 				double theta_sky = acos(
 					sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)) /
 					sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.y - whitepos.y, 2) + pow(targetpos.z - whitepos.z, 2))
 				);
+				*/
+				double distance_land = fireDistance;  // 전역변수에서 가져옴
+				double theta_sky = fireDegree * PI / 180;  // 전역변수에서 가져옴
 				double distance_sky = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.y - whitepos.y, 2) + pow(targetpos.z - whitepos.z, 2));  // y좌표 고려한 거리
 				//double distance = sqrt( sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)) + pow(targetpos.y - whitepos.y, 2)); // y좌표 포함 계산
 
@@ -1979,6 +2039,3 @@ int WINAPI WinMain(HINSTANCE hinstance,
 
 	return 0;
 }
-
-
-
