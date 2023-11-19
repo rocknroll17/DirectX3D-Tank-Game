@@ -24,8 +24,8 @@ using namespace std;
 IDirect3DDevice9* Device = NULL;
 
 // window size
-const int Width = 1920;
-const int Height = 1080;
+const int Width = 1600;
+const int Height = 900;
 const double TANK_SPEED = 0.45;
 
 // There are four balls
@@ -58,7 +58,7 @@ D3DXMATRIX g_mProj;
 #define MISSILE_EXPOLSION_RADIUS M_RADIUS+0.25 // 미사일 폭발 반경
 
 #define WORLD_WIDTH 24
-#define WORLD_DEPTH 36
+#define WORLD_DEPTH 100
 #define BORDER_WIDTH 0.12f // 가장자리 벽 굵기
 
 
@@ -884,6 +884,7 @@ bool createBlock(float partitionWidth, float partitionHeight, float partitionDep
 	return true;
 }
 
+// 세로 장애물 생성
 bool createDWall(float partitionWidth, float partitionHeight, float partitonDepth,
 	int partitionCount_land, int partitionCount_sky,
 	float x, float y, float z,
@@ -908,7 +909,7 @@ bool createDWall(float partitionWidth, float partitionHeight, float partitonDept
 	return true;
 }
 
-// 가로로 벽 만들기
+// 가로 장애물 생성
 bool createWWall(float partitionWidth, float partitionHeight, float partitonDepth,
 	int partitionCount_land, int partitionCount_sky,
 	float x, float y, float z,
@@ -940,27 +941,30 @@ bool createWall(D3DXCOLOR wallColor) // create wall
 	for (int i = -1; i <= 1; i += 2) {
 		//앞뒤 기둥
 		if (false == wall.create(Device, -1, -1, WORLD_WIDTH - 1, 2.0f, 1.0f, wallColor)) return false;
-		wall.setPosition(0.0f, 1.0f, i * WORLD_DEPTH / 2);
+		wall.setPosition(0.0f, 1.0f, (float)i * WORLD_DEPTH / 2);
 		lwall1.push_back(wall);
 		//앞뒤 벽
 		if (false == wall.create(Device, -1, -1, 1.0f, 2.5f, 1.5f, wallColor)) return false;
-		wall.setPosition(0, 1.25f, i * WORLD_DEPTH / 2);
+		wall.setPosition(0, 1.25f, (float)i * WORLD_DEPTH / 2);
 		swall1.push_back(wall);
 		//좌측 벽
 		if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, WORLD_DEPTH - 1, wallColor)) return false;
-		wall.setPosition(i * WORLD_WIDTH / 2, 1.0f, 0.0f);
+		wall.setPosition((float)i * WORLD_WIDTH / 2, 1.0f, 0.0f);
 		lwall2.push_back(wall);
 	}
 
 	for (int i = -1; i <= 1; i += 2) {
-		for (int j = -1; j <= 1; j += 2) {
+		for (int j = -2; j <= 2; j++) {
 			//중간 기둥
-			if (false == wall.create(Device, -1, -1, 1.5f, 2.5f, 1.0f, wallColor)) return false;
-			wall.setPosition(i * WORLD_WIDTH / 2, 1.25f, j * WORLD_WIDTH / 4);
+			if (false == wall.create(Device, -1, -1, 1.5f, 2.5f, 2.0f, wallColor)) return false;
+			wall.setPosition((float)i * WORLD_WIDTH / 2, 1.25f, (float)j * WORLD_DEPTH / 6);
 			swall2.push_back(wall);
+		}
+
+		for (int j = -1; j <= 1; j += 2) {
 			//꼭짓점 기둥
-			if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, wallColor)) return false;
-			wall.setPosition(i * WORLD_WIDTH / 2, 1.5f, j * WORLD_DEPTH / 2);
+			if (false == wall.create(Device, -1, -1, 1.5f, 3.0f, 1.5f, wallColor)) return false;
+			wall.setPosition((float)i * WORLD_WIDTH / 2, 1.5f, (float)j * WORLD_DEPTH / 2);
 			swall2.push_back(wall);
 		}
 	}
@@ -971,77 +975,8 @@ bool createWall(D3DXCOLOR wallColor) // create wall
 	g_legoWall.push_back(swall2);
 
 	return true;
-}
-
-bool createMap1() // 1번 맵
-{
-	float w = WORLD_WIDTH;
-	float d = WORLD_DEPTH;
-
-	// 벽
-	createWall(d3d::LIGHTBROWN);
-
-	// 바닥
-	if (false == g_legoPlane.create(Device, -1, -1, WORLD_WIDTH, 0.03f, WORLD_DEPTH, d3d::DARKGREEN)) return false;
-	g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
-
-	// 장애물
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4, 0.25f, d / 6 + 0.04 * d, d3d::DARKBROWN);
-	createDWall(0.02 * w, 0.7f, 0.02 * d, 8, 3, -w / 4, 0.35f, d / 6 - 0.115 * d, d3d::BROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4, 0.25f, d / 6 - 0.135 * d, d3d::DARKBROWN);
-	createWWall(0.02 * w, 0.7f, 0.015 * d, 6, 3, -w / 4 + 0.025 * w, 0.35f, d / 6 - 0.135 * d, d3d::BROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4 + 0.123 * w, 0.25f, d / 6 - 0.135 * d, d3d::DARKBROWN);
-	createDWall(0.02 * w, 0.7f, 0.02 * d, 14, 3, -w / 4 + 0.123 * w, 0.35f, d / 6 - 0.115 * d, d3d::BROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4 + 0.123 * w, 0.25f, d / 6 + 0.165 * d, d3d::DARKBROWN);
-	createWWall(0.02 * w, 0.7f, 0.016 * d, 10, 3, -w / 4 + 0.148 * w, 0.35f, d / 6 + 0.165 * d, d3d::BROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4 + 0.353 * w, 0.25f, d / 6 + 0.165 * d, d3d::DARKBROWN);
-	createDWall(0.02 * w, 0.7f, 0.02 * d, 6, 3, -w / 4 + 0.353 * w, 0.35f, d / 6 + 0.045 * d, d3d::BROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4 + 0.353 * w, 0.25f, d / 6 + 0.025 * d, d3d::DARKBROWN);
-
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0, 0.25f, d / 6, d3d::DARKBROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0, 0.25f, d / 8, d3d::DARKBROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0, 0.25f, d / 12, d3d::DARKBROWN);
-
-	createWWall(0.02 * w, 0.5f, 0.02 * d, 10, 4, 0.025 * w, 0.25f, d / 12, d3d::BROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.23 * w, 0.25f, d / 12, d3d::DARKBROWN);
-	createDWall(0.02 * w, 0.7f, 0.02 * d, 7, 3, 0.23 * w, 0.35f, d / 12 + 0.02 * d, d3d::BROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.23 * w, 0.25f, d / 12 + 0.16 * d, d3d::DARKBROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.30 * w, 0.25f, d / 12 + 0.16 * d, d3d::DARKBROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.37 * w, 0.25f, d / 12 + 0.16 * d, d3d::DARKBROWN);
-
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4 - 0.1 * w, 0.25f, -d / 3, d3d::DARKBROWN);
-	createDWall(0.02 * w, 0.7f, 0.02 * d, 6, 3, -w / 4 - 0.1 * w, 0.35f, -d / 3 + 0.02 * d, d3d::BROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4 - 0.1 * w, 0.25f, -d / 3 + 0.14 * d, d3d::DARKBROWN);
-	createDWall(0.02 * w, 0.7f, 0.02 * d, 4, 3, -w / 4 - 0.1 * w, 0.35f, -d / 3 + 0.16 * d, d3d::BROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4 - 0.1 * w, 0.25f, -d / 3 + 0.24 * d, d3d::DARKBROWN);
-	createWWall(0.02 * w, 0.7f, 0.02 * d, 5, 3, -w / 4 - 0.075 * w, 0.35f, -d / 3 + 0.24 * d, d3d::BROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4 + 0.03 * w, 0.25f, -d / 3 + 0.24 * d, d3d::DARKBROWN);
-
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -0.18 * w, 0.25f, -d / 3 + 0.19 * d, d3d::DARKBROWN);
-	createDWall(0.02 * w, 0.7f, 0.02 * d, 6, 3, -0.18 * w, 0.35f, -d / 3 + 0.07 * d, d3d::BROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -0.18 * w, 0.25f, -d / 3 + 0.05 * d, d3d::DARKBROWN);
-	createWWall(0.02 * w, 0.7f, 0.02 * d, 8, 3, -0.155 * w, 0.35f, -d / 3 + 0.05 * d, d3d::BROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.01 * w, 0.25f, -d / 3 + 0.05 * d, d3d::DARKBROWN);
-
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0, 0.25f, -d / 6 - 0.04 * d, d3d::DARKBROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 6, 0.05 * w, 0.25f, -d / 6, d3d::DARKBROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 7, 0.1 * w, 0.25f, -d / 6 + 0.04 * d, d3d::DARKBROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 8, 0.15 * w, 0.25f, -d / 6 + 0.08 * d, d3d::DARKBROWN);
-
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.15 * w, 0.25f, -d / 6, d3d::DARKBROWN);
-	createWWall(0.02 * w, 0.7f, 0.02 * d, 7, 3, 0.175 * w, 0.35f, -d / 6, d3d::BROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.32 * w, 0.25f, -d / 6, d3d::DARKBROWN);
-	createDWall(0.02 * w, 0.7f, 0.02 * d, 10, 3, 0.32 * w, 0.35f, -d / 6 - 0.2 * d, d3d::BROWN);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.32 * w, 0.25f, -d / 6 - 0.22 * d, d3d::DARKBROWN);
-
-	createBlock(0.25f, 0.25f, 0.25f, 10, 10, 10, 0.2 * w, 0.125f, -0.03 * d, d3d::BROWN);
-	createBlock(0.25f, 0.25f, 0.25f, 10, 10, 10, -0.3 * w, 0.125f, -0.07 * d, d3d::BROWN);
-	createBlock(0.25f, 0.25f, 0.25f, 10, 10, 10, -0.35 * w, 0.125f, 0.35 * d, d3d::BROWN);
-
-	return true;
-}
-
-bool createMap2() // 2번 맵
+} 
+bool createMap() 
 {
 	float w = WORLD_WIDTH;
 	float d = WORLD_DEPTH;
@@ -1054,78 +989,89 @@ bool createMap2() // 2번 맵
 	g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
 
 	// 장애물
-	createWWall(0.02 * w, 0.7f, 0.02 * d, 18, 3, -w / 2 + 0.01 * w, 0.35f, d / 6, d3d::GRAY);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 2 + 0.375 * w, 0.25f, d / 6, d3d::GRAY);
-	createDWall(0.02 * w, 0.7f, 0.02 * d, 6, 3, -w / 2 + 0.375 * w, 0.35f, d / 6 - 0.12 * d, d3d::GRAY);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 2 + 0.375 * w, 0.25f, d / 6 - 0.14 * d, d3d::GRAY);
+	createWWall(0.4f, 0.7f, 1.0f, 18, 3, -w / 2 + 0.85f, 0.35f, d / 6 , d3d::GRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, -w / 2 + 7.95f, 0.25f, d / 6, d3d::GRAY);
+	createDWall(0.4f, 0.7f, 1.0f, 10, 3, -w / 2 + 7.95f, 0.35f, d / 6 - 10.25f, d3d::GRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, -w / 2 + 7.95f, 0.25f, d / 6 - 11.5f, d3d::GRAY);
 
-	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 6, -0.07 * w, 0.25f, -d / 4.5, d3d::GRAY);
-	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 7, -0.04 * w, 0.25f, -2.5 * d / 9, d3d::GRAY);
+	createWWall(0.4f, 0.7f, 1.0f, 18, 3, -w / 2 + 0.85f, 0.35f, -d / 6, d3d::GRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, -w / 2 + 7.95f, 0.25f, -d / 6, d3d::GRAY);
+	createDWall(0.4f, 0.7f, 1.0f, 10, 3, -w / 2 + 7.95f, 0.35f, -d / 6 + 1.25f, d3d::GRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, -w / 2 + 7.95f, 0.25f, -d / 6 + 11.25f, d3d::GRAY);
 
-	createWWall(0.02 * w, 0.7f, 0.02 * d, 18, 3, -w / 2 + 0.01 * w, 0.35f, -d / 6, d3d::GRAY);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 2 + 0.375 * w, 0.25f, -d / 6, d3d::GRAY);
-	createDWall(0.02 * w, 0.7f, 0.02 * d, 6, 3, -w / 2 + 0.375 * w, 0.35f, -d / 6 + 0.02 * d, d3d::GRAY);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 2 + 0.375 * w, 0.25f, -d / 6 + 0.14 * d, d3d::GRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 0, 0.25f, -d / 3, d3d::GRAY);
+	createWWall(0.4f, 0.7f, 1.0f, 15, 3, 0.95f, 0.35f, -d / 3, d3d::GRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 7.5f, 0.25f, -d / 3, d3d::GRAY);
+	createDWall(0.8f, 0.7f, 1.0f, 25, 3, 7.5f, 0.35f, -d / 3 + 1.25f, d3d::GRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 7.5f, 0.25f, -d / 3 + 26.5f, d3d::GRAY);
+	createWWall(0.4f, 0.7f, 1.0f, 15, 3, 0.95f, 0.35f, -d / 3 + 26.5f, d3d::GRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 0, 0.25f, -d / 3 + 26.5f, d3d::GRAY);
 
-	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 6, -0.07 * w, 0.25f, d / 4.5, d3d::GRAY);
-	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 7, -0.04 * w, 0.25f, 2.5 * d / 9, d3d::GRAY);
-
-	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 7, 0, 0.25f, -d / 3, d3d::GRAY);
-	createWWall(0.03 * w, 0.7f, 0.02 * d, 7, 3, 0.035 * w, 0.35f, -d / 3, d3d::GRAY);
-	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 7, 0.25 * w, 0.25f, -d / 3, d3d::GRAY);
-	createDWall(0.03 * w, 0.7f, 0.02 * d, 13, 3, 0.25 * w, 0.35f, -d / 3 + 0.025 * d, d3d::GRAY);
-	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 7, 0.25 * w, 0.25f, -d / 3 + 0.29 * d, d3d::GRAY);
-	createWWall(0.03 * w, 0.7f, 0.02 * d, 7, 3, 0.035 * w, 0.35f, -d / 3 + 0.29 * d, d3d::GRAY);
-	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 7, 0, 0.25f, -d / 3 + 0.29 * d, d3d::GRAY);
-
-	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 7, 0, 0.25f, d / 3, d3d::GRAY);
-	createWWall(0.03 * w, 0.7f, 0.02 * d, 7, 3, 0.035 * w, 0.35f, d / 3, d3d::GRAY);
-	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 7, 0.25 * w, 0.25f, d / 3, d3d::GRAY);
-	createDWall(0.03 * w, 0.7f, 0.02 * d, 13, 3, 0.25 * w, 0.35f, d / 3 - 0.265 * d, d3d::GRAY);
-	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 7, 0.25 * w, 0.25f, d / 3 - 0.29 * d, d3d::GRAY);
-	createWWall(0.03 * w, 0.7f, 0.02 * d, 7, 3, 0.035 * w, 0.35f, d / 3 - 0.29 * d, d3d::GRAY);
-	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 7, 0, 0.25f, d / 3 - 0.29 * d, d3d::GRAY);
-
-	createBlock(0.25f, 0.25f, 0.25f, 14, 10, 5, 0.3 * w, 0.125f, -0.5f, d3d::GRAY);	
-
-	return true;
-}
-
-bool createMap3() // 3번 맵
-{
-	float w = WORLD_WIDTH;
-	float d = WORLD_DEPTH;
-
-	// 벽
-	createWall(d3d::DARKGRAY);
-
-	// 바닥
-	if (false == g_legoPlane.create(Device, -1, -1, WORLD_WIDTH, 0.03f, WORLD_DEPTH, d3d::WHITE)) return false;
-	g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
-
-	// 장애물
-	createWWall(0.02 * w, 0.7f, 0.02 * d, 26, 3, -w / 2 + 0.01 * w, 0.35f, -d / 6, d3d::GRAY);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.035 * w, 0.25f, -d / 6, d3d::GRAY);
-	createBlock(0.25f, 0.25f, 0.25f, 15, 6, 2, 0.07 * w, 0.125f, -d / 6 - 0.125f, d3d::GRAY);
-
-	createDWall(0.02 * w, 0.7f, 0.02 * d, 22, 3, w / 4, 0.35f, -0.49 * d + 0.5f, d3d::GRAY);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, w / 4, 0.25f, -0.05 * d + 0.5f, d3d::GRAY);
-	createBlock(0.25f, 0.25f, 0.25f, 2, 6, 20, w / 4, 0.25f, 0.008f, d3d::GRAY);
-
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -0.035 * w, 0.25f, d / 6, d3d::GRAY);
-	createWWall(0.02 * w, 0.7f, 0.02 * d, 26, 3, -0.01 * w, 0.35f, d / 6, d3d::GRAY);
-	createBlock(0.25f, 0.25f, 0.25f, 15, 6, 2, -0.07 * w - 3.75f, 0.125f, d / 6 + 0.125f, d3d::GRAY);
-
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4, 0.25f, 0.05 * d - 0.5f, d3d::GRAY);
-	createDWall(0.02 * w, 0.7f, 0.02 * d, 22, 3, -w / 4, 0.35f, 0.07 * d - 0.5f, d3d::GRAY);
-	createBlock(0.25f, 0.25f, 0.25f, 2, 6, 20, -w / 4, 0.25f, 0.05*d - 6.5f, d3d::GRAY);
-
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 6, w / 16, 0.25f, 0, d3d::GRAY);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 6, -w / 16, 0.25f, 0, d3d::GRAY);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 6, 0, 0.25f, w / 16, d3d::GRAY);
-	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 6, 0, 0.25f, -w / 16, d3d::GRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 0, 0.25f, d / 3, d3d::GRAY);
+	createWWall(0.4f, 0.7f, 1.0f, 15, 3, 0.95f, 0.35f, d / 3, d3d::GRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 7.5f, 0.25f, d / 3, d3d::GRAY);
+	createDWall(0.8f, 0.7f, 1.0f, 25, 3, 7.5f, 0.35f, d / 3 - 25.25f, d3d::GRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 7.5f, 0.25f, d / 3 - 26.5f, d3d::GRAY);
+	createWWall(0.4f, 0.7f, 1.0f, 15, 3, 0.95f, 0.35f, d / 3 - 26.5f, d3d::GRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 0, 0.25f, d / 3 - 26.5f, d3d::GRAY);
 
 
+	createWWall(1.2f, 0.5f, 1.2f, 1, 8, -2.0f, 0.25f, 3.0f, d3d::GRAY);
+	createWWall(1.2f, 0.5f, 1.2f, 1, 8, -2.0f, 0.25f, -3.0f, d3d::GRAY);
+	createWWall(1.2f, 0.5f, 1.2f, 1, 7, -1.0f, 0.25f, 4.0f, d3d::GRAY);
+	createWWall(1.2f, 0.5f, 1.2f, 1, 7, -1.0f, 0.25f, -4.0f, d3d::GRAY);;
+	createWWall(1.2f, 0.5f, 1.2f, 1, 9, -3.0f, 0.25f, 1.5f, d3d::GRAY);
+	createWWall(1.2f, 0.5f, 1.2f, 1, 9, -3.0f, 0.25f, -1.5f, d3d::GRAY);
+	// 경기장 모형
+	createWWall(1.2f, 0.8f, 1.2f, 1, 5, 3.0f, 0.4f, 3.0f, d3d::GRAY);
+
+	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 1.2f, 3.0f, d3d::GRAY);
+	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 2.0f, 3.0f, d3d::GRAY);
+	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 2.8f, 3.0f, d3d::GRAY);
+	
+	createWWall(1.2f, 0.8f, 1.2f, 1, 5, 8.2f, 0.4f, 3.0f, d3d::GRAY);
+	
+	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 8.2f, 1.2f, -2.2f, d3d::GRAY);
+	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 8.2f, 2.0f, -2.2f, d3d::GRAY);
+	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 8.2f, 2.8f, -2.2f, d3d::GRAY);
+	
+	createWWall(1.2f, 0.8f, 1.2f, 1, 5, 8.2f, 0.4f, -3.0f, d3d::GRAY);
+
+	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 1.2f, -3.0f, d3d::GRAY);
+	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 2.0f, -3.0f, d3d::GRAY);
+	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 2.8f, -3.0f, d3d::GRAY);
+
+	createWWall(1.2f, 0.8f, 1.2f, 1, 5, 3.0f, 0.4f, -3.0f, d3d::GRAY);
+
+	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 3.0f, 1.2f, -2.2f, d3d::GRAY);
+	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 3.0f, 2.0f, -2.2f, d3d::GRAY);
+	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 3.0f, 2.8f, -2.2f, d3d::GRAY);
+
+	// 위 아래 ㄷ
+
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 14.4f, 0.25f, -d / 4 + 13.4f, d3d::GRAY);
+	createDWall(0.5f, 0.7f, 1.0f, 12, 3, -w / 2 + 14.4f, 0.35f, -d / 4 + 1.2f, d3d::GRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 14.4f, 0.25f, -d / 4, d3d::GRAY);
+	createWWall(0.5f, 0.7f, 1.0f, 16, 3, -w / 2 + 5.95f, 0.25f, -d / 4, d3d::GRAY);
+
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 5.0f, 0.25f, -d / 4, d3d::GRAY);
+	createDWall(0.5f, 0.7f, 1.0f, 14, 3, -w / 2 + 5.0f, 0.35f, -d / 4 - 14.2f, d3d::GRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 5.0f, 0.25f, -d / 4 - 15.4f, d3d::GRAY);
+	createWWall(0.5f, 0.7f, 1.0f, 20, 3, -w / 2 + 5.95f, 0.35f, -d / 4 - 15.4f, d3d::GRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 16.4f, 0.25f, -d / 4 - 15.4f, d3d::GRAY);
+
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 14.4f, 0.25f,  d / 4 - 13.4f, d3d::GRAY);
+	createDWall(0.5f, 0.7f, 1.0f, 12, 3, -w / 2 + 14.4f, 0.35f, d / 4 - 12.2f, d3d::GRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 14.4f, 0.25f, d / 4, d3d::GRAY);
+	createWWall(0.5f, 0.7f, 1.0f, 16, 3, -w / 2 + 5.95f, 0.25f, d / 4, d3d::GRAY);
+
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 5.0f, 0.25f, d / 4, d3d::GRAY);
+	createDWall(0.5f, 0.7f, 1.0f, 14, 3, -w / 2 + 5.0f, 0.35f, d / 4 + 1.2f, d3d::GRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 5.0f, 0.25f, d / 4 + 15.4f, d3d::GRAY);
+	createWWall(0.5f, 0.7f, 1.0f, 20, 3, -w / 2 + 5.95f, 0.25f, d / 4 + 15.4f, d3d::GRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 16.4f, 0.25f, d / 4 + 15.4f, d3d::GRAY);
+
+	
 	return true;
 }
 
@@ -1180,12 +1126,7 @@ bool Setup()
 	// tank랑 blue ball 연결
 	g_target_blueball.linkTank(&tank);
 
-	// 1번 맵
-	// createMap1();
-	// 2번 맵
-	// createMap2();
-	// 3번 맵
-	// createMap3();
+	createMap();
 
 	// create blue ball for set direction
 	if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
@@ -1337,7 +1278,7 @@ bool Display(float timeDelta)
 			target = D3DXVECTOR3(tank.getHead()[0] + x_camera, tank.getHead()[1] + y_camera, tank.getHead()[2]);
 		}
 		else {
-			pos = D3DXVECTOR3(20.0, 10.0, 0.0);
+			pos = D3DXVECTOR3(60.0, 30.0, 0.0); // 20,10
 			target = D3DXVECTOR3(0, 1, 0);
 		}
 	}
