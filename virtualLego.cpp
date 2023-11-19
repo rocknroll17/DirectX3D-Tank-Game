@@ -1203,6 +1203,11 @@ void Cleanup(void)
 	g_target_blueball.destroy();
 	podium.destroy();
 
+	tank.destroy();
+	otank.destroy();
+	g_target_blueball.destroy();
+	podium.destroy();
+
 	// 글자출력 ----------------------------
 	if (DEGREEfont != NULL) {
 		DEGREEfont->Release();
