@@ -40,8 +40,7 @@ D3DXMATRIX g_mProj;
 #define M_RADIUS 0.06   // ball radius
 #define PI 3.14159265
 #define M_HEIGHT 0.01
-#define DECREASE_RATE 0.9982
-#define TANK_VELOCITY_RATE 0.99
+
 
 #define BLUEBALL_VELOCITY 0.8 // blueball 조작 속도
 #define MAX_BLUEBALL_RADIUS 15  // blueball 어디까지 멀어질 수 있는지
@@ -50,15 +49,17 @@ D3DXMATRIX g_mProj;
 
 #define MISSILE_POWER 1.25
 #define MISSILE_GRAVITY_RATE 3.5
-#define MISSILE_DECREASE_RATE 0.9975  // 미사일 마찰력
+#define MISSILE_DECREASE_RATE 0.9985  // 미사일 마찰력
 #define MISSILE_EXPOLSION_RADIUS M_RADIUS+1.5 // 미사일 폭발 반경
 
 #define WORLD_WIDTH 24
 #define WORLD_DEPTH 100
-#define BORDER_WIDTH 0.12f // 가장자리 벽 굵기
+//#define DECREASE_RATE 0.9975
+//#define TANK_VELOCITY_RATE 0.99
+//#define BORDER_WIDTH 0.12f // 가장자리 벽 굵기
 
 #define NUM_OBSTACLE 20
-#define TANK_DISTANCE 1000
+#define TANK_DISTANCE 30
 
 
 bool GAME_START = false;
@@ -152,14 +153,6 @@ public:
 		return intersectX && intersectY && intersectZ;
 	}
 
-	void hitBy(CSphere& ball)	// 공끼리 충돌하면 공이 전부 사라짐
-	{
-		if (hasIntersected(ball)) {
-			destroy();
-			ball.destroy();
-		}
-	}
-
 	void hitBy() {
 		if (center_y <= M_RADIUS) {
 			destroy();
@@ -194,7 +187,6 @@ public:
 		Out();	// 미사일이 밖으로 나가면 바닥에 닿을 때 터짐
 
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
-
 		double rate = 1 - (1 - MISSILE_DECREASE_RATE) * timeDiff * 400;
 		if (rate < 0)
 			rate = 0;
@@ -408,9 +400,6 @@ public:
 	float getWidth(void) const { return m_width; };
 	float getDepth(void) const { return m_depth; };
 	float getHeight(void) const { return m_height; }
-
-
-	//void setLocalTransform(const D3DXMATRIX& mLocal) { m_mLocal = mLocal; }
 
 	//private :
 protected:
@@ -654,23 +643,12 @@ public:
 		float tZ = cord.z + TIME_SCALE * timeDiff * m_velocity_z;
 
 		// tank가 맵을 벗어나지 않게
-		if (tX >= ((WORLD_WIDTH / 2) - tank_part[0].getWidth() / 2))
-			tX = (WORLD_WIDTH / 2) - tank_part[0].getWidth() / 2;
-
-		else if (tX <= (-(WORLD_WIDTH / 2) + tank_part[0].getWidth() / 2))
-			tX = -(WORLD_WIDTH / 2) + tank_part[0].getWidth() / 2;
-
-		else if (tZ <= (-(WORLD_DEPTH / 2) + tank_part[0].getDepth() / 2))
-			tZ = -(WORLD_DEPTH / 2) + tank_part[0].getDepth() / 2;
-
-		else if (tZ >= ((WORLD_DEPTH / 2) - tank_part[0].getDepth() / 2))
-			tZ = (WORLD_DEPTH / 2) - tank_part[0].getDepth() / 2;
 
 		// tank가 장애물, 탱크, 벽에 충돌하면 정지
 		this->setPosition(tX, cord.y, tZ);
 		for (int i = 0; i < obstacles.size(); i++) {
 			if (obstacles[i].get_created()) {
-				if (tank_part[0].hasIntersected(obstacles[i])) {
+				if (hasIntersected(obstacles[i])) {
 					tX = cord.x;
 					tZ = cord.z;
 					break;
@@ -761,33 +739,10 @@ public:
 			tz = linkedTank->getCenter().z;
 		return sqrt(pow(x - tx, 2) + pow(y - ty, 2) + pow(z - tz, 2));
 	}
+
 	bool hasIntersected(CSphere& ball)
 	{
 		return false;
-	}
-
-	double getDistanceFromTank(double new_x, double new_y, double new_z) {
-		// 인자로 받은 좌표에서 탱크까지의 거리
-		double tx = linkedTank->getCenter().x,
-			ty = 0,
-			tz = linkedTank->getCenter().z;
-		return sqrt(pow(new_x - tx, 2) + pow(new_y - ty, 2) + pow(new_z - tz, 2));
-	}
-
-	double getDistanceFromTank2D() {
-		// 파란공에서 탱크까지의 거리 (땅 기준)
-		double x = getCenter().x,
-			z = getCenter().z;
-		double tx = linkedTank->getCenter().x,
-			tz = linkedTank->getCenter().z;
-		return sqrt(pow(x - tx, 2) + pow(z - tz, 2));
-	}
-
-	double getDistanceFromTank2D(double new_x, double new_z) {
-		// 인자로 받은 좌표에서 탱크까지의 거리 (땅 기준)
-		double tx = linkedTank->getCenter().x,
-			tz = linkedTank->getCenter().z;
-		return sqrt(pow(new_x - tx, 2) + pow(new_z - tz, 2));
 	}
 
 	double getRadius() { return radius; }
@@ -868,7 +823,8 @@ vector<CWall> lwall1;
 vector<CWall> swall1;
 vector<CWall> lwall2;
 vector<CWall> swall2;
-vector<vector<CWall> > g_legoWall;
+vector<vector<CWall> > g_legoWall;//둘레벽
+vector<CObstacle> obstacle_wall; // 가운데 장애물 (벽)
 
 CBlueBall	g_target_blueball;
 CLight	g_light;
@@ -877,11 +833,6 @@ Tank tank(0);
 Tank otank(1);
 bool winner;
 CWall podium;
-
-CObstacle obstacle; // 장애물 (테스트용)
-CObstacle obstacle1;
-vector<CObstacle> obstacles;	// 랜덤 장애물 모음
-vector<CObstacle> obstacle_wall; // 장애물 (벽)
 
 CSphere missile;   // c 누르면 나가는 미사일
 ID3DXFont* DEGREEfont = NULL;
@@ -916,32 +867,6 @@ void updateFireDistance() {
 	D3DXVECTOR3 targetCoord = g_target_blueball.getCenter(); // blue ball 위치
 	D3DXVECTOR3 tankCoord = tank.getHead(); // 탱크 위치
 	fireDistance = sqrt(pow(tankCoord.x - targetCoord.x, 2) + pow(tankCoord.z - targetCoord.z, 2));  // 땅 거리
-}
-
-bool createBlock(float partitionWidth, float partitionHeight, float partitionDepth,
-	int partitionCount_x, int partitionCount_y, int partitionCount_z,
-	float x, float y, float z,
-	D3DXCOLOR wallColor = d3d::WHITE) {
-	// (partitionCount_land * partitionCount_sky) 크기의 벽을 생성함.
-	// 각 partition의 크기는 (partitionWidth, partitionHeight, partitionDepth)
-	for (int i = 0; i < partitionCount_x; i++) {
-		for (int j = 0; j < partitionCount_y; j++) {
-			for (int k = 0; k < partitionCount_z; k++) {
-				// 좌표 결정
-				float nx, ny, nz;
-				nx = x + partitionWidth * i;
-				ny = y + partitionHeight * j;
-				nz = z + partitionDepth * k;
-				// 장애물 생성 & 배치
-				CObstacle partition;
-				if (false == partition.create(Device, -1, -1, partitionWidth, partitionHeight, partitionDepth, wallColor)) return false;
-				partition.setPosition(nx, ny, nz);
-				obstacle_wall.push_back(partition);
-				// 전역변수에 저장
-			}
-		}
-	}
-	return true;
 }
 
 bool createDWall(float partitionWidth, float partitionHeight, float partitonDepth,
@@ -1140,6 +1065,14 @@ bool createMap()
 
 void destroyAllLegoBlock(void)
 {
+	for (int q = 0; obstacle_wall[q].get_created() != FALSE; q++) {
+		obstacle_wall[q].destroy();
+	}
+	g_legoPlane.destroy();
+	for (int i = 0; i < g_legoWall.size(); i++) {
+		for (int j = 0; j < g_legoWall[i].size(); j++)
+			g_legoWall[i][j].destroy();
+	}
 }
 
 // initialization
@@ -1261,22 +1194,46 @@ bool Setup()
 
 void Cleanup(void)
 {
-	g_legoPlane.destroy();
-	for (int i = 0; i < g_legoWall.size(); i++) {
-		for (int j = 0; j < g_legoWall[i].size(); j++)
-			g_legoWall[i][j].destroy();
-	}
 	destroyAllLegoBlock();
 	g_light.destroy();
+	g_light2.destroy();
+
+	tank.destroy();
+	otank.destroy();
+	g_target_blueball.destroy();
+	podium.destroy();
 
 	// 글자출력 ----------------------------
+	if (DEGREEfont != NULL) {
+		DEGREEfont->Release();
+		DEGREEfont = NULL;
+	}
+	if (FIREDISTANCEfont != NULL) {
+		FIREDISTANCEfont->Release();
+		FIREDISTANCEfont = NULL;
+	}
+	if (TITLEfont != NULL) {
+		TITLEfont->Release();
+		TITLEfont = NULL;
+	}
+	if (ENDfont != NULL) {
+		ENDfont->Release();
+		ENDfont = NULL;
+	}
+	if (PLAYERfont != NULL) {
+		PLAYERfont->Release();
+		PLAYERfont = NULL;
+	}
+	if (DISTANCEfont != NULL) {
+		DISTANCEfont->Release();
+		DISTANCEfont = NULL;
+	}
 	if (TIMEfont != NULL)
 	{
 		TIMEfont->Release();
 		TIMEfont = NULL;
 	}
 	//--------------------------------------
-
 }
 
 float x_camera = 0.0f;
@@ -1292,13 +1249,13 @@ bool isFire = FALSE;
 int turnTime = 20000;
 
 bool threeTime = FALSE;
-bool zoomOutTiming = FALSE; //정재민
+bool zoomOutTiming = FALSE;
 
 double startTime = (double)timeGetTime();
 double currTime = (double)timeGetTime();
 double timediff = currTime - startTime;
 
-float zoomOutSpeed = 0.0; //정재민
+float zoomOutSpeed = 0.0;
 
 
 // timeDelta represents the time between the current image frame and the last image frame.
@@ -1342,8 +1299,6 @@ bool Display(float timeDelta)
 		if (MOVEMENT > WORLD_DEPTH) {
 			GAME_START = true;
 		}
-		//D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
-		//Device->SetTransform(D3DTS_VIEW, &g_mView);
 
 	}
 	else if (GAME_FINISH) {
@@ -1413,7 +1368,7 @@ bool Display(float timeDelta)
 		}
 	}
 
-	if (zoomOutTiming) { //정재민
+	if (zoomOutTiming) {
 		pos = D3DXVECTOR3(missile.getCenter()[0], missile.getCenter()[1] + 0.9f + zoomOutSpeed, missile.getCenter()[2] + 1.5f - 3.0f * isOriginTank);
 		target = D3DXVECTOR3(missile.getCenter().x, missile.getCenter().y, missile.getCenter().z);
 		zoomOutSpeed += 0.0018f;
@@ -1442,9 +1397,9 @@ bool Display(float timeDelta)
 			isFire = FALSE;
 			threeTime = FALSE;
 			turnTime = 20000;
-			TANK_SPEED = 0.45; //정재민
-			zoomOutTiming = FALSE; //정재민
-			zoomOutSpeed = 0.0; //정재민
+			TANK_SPEED = 0.45;
+			zoomOutTiming = FALSE;
+			zoomOutSpeed = 0.0;
 
 			startTime = currTime;
 
@@ -1495,7 +1450,6 @@ bool Display(float timeDelta)
 			}
 
 		}
-
 
 		//----------------------------------------------------------------------------------------------
 
@@ -1570,8 +1524,6 @@ bool Display(float timeDelta)
 			}
 		}
 
-		//g_light.draw(Device);
-
 		D3DXVECTOR3 tankCoord = tank.getHead();
 		D3DXVECTOR3 blueballCoord = g_target_blueball.getCenter();
 		if (tankCoord != tankLastCoord || blueballCoord != blueballLastCoord) {
@@ -1608,12 +1560,6 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	static enum { WORLD_MOVE, LIGHT_MOVE, BLOCK_MOVE } move = WORLD_MOVE;
 
 	switch (msg) {
-		/*
-		'W' 키: VK_W (0x57)
-		'S' 키: VK_S (0x53)
-		'A' 키: VK_A (0x41)
-		'D' 키: VK_D (0x44)
-		*/
 	case WM_DESTROY:
 	{
 		::PostQuitMessage(0);
@@ -1653,19 +1599,9 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x >= 0) { theta = -theta; }	//4 사분면
 				if (targetpos.z - whitepos.z >= 0 && targetpos.x - whitepos.x <= 0) { theta = PI - theta; } //2 사분면
 				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0) { theta = PI + theta; } // 3 사분면
-				/*
-				double distance_land = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)); // xz만 고려한 거리
-
-				double theta_sky = acos(
-					sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)) /
-					sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.y - whitepos.y, 2) + pow(targetpos.z - whitepos.z, 2))
-				);
-				*/
 				double distance_land = fireDistance;  // 전역변수에서 가져옴
 				double theta_sky = fireDegree * PI / 180;  // 전역변수에서 가져옴
 				double distance_sky = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.y - whitepos.y, 2) + pow(targetpos.z - whitepos.z, 2));  // y좌표 고려한 거리
-				//double distance = sqrt( sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)) + pow(targetpos.y - whitepos.y, 2)); // y좌표 포함 계산
-
 				missile.destroy();
 				missile.create(Device, d3d::BLACK);
 				missile.setCenter(whitepos.x, whitepos.y, whitepos.z);
@@ -1755,8 +1691,6 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		}
-
-		// 재환이 + 나 버전
 
 		case 0x57:
 		{
@@ -2026,6 +1960,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		float dy;
 
 		if (LOWORD(wParam) & MK_LBUTTON) {
+			/*
 			// 좌클릭
 			// 화면 이동
 			if (isReset) {
@@ -2049,10 +1984,9 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					break;
 				}
 			}
-
 			old_x = new_x;
 			old_y = new_y;
-
+			*/
 		}
 		else {
 			isReset = true;
@@ -2116,8 +2050,6 @@ int WINAPI WinMain(HINSTANCE hinstance,
 	d3d::EnterMsgLoop(Display);
 
 	Cleanup();
-
 	Device->Release();
-
 	return 0;
 }
