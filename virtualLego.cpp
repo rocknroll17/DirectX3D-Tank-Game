@@ -26,7 +26,7 @@ IDirect3DDevice9* Device = NULL;
 // window size
 const int Width = 1920;
 const int Height = 1080;
-const double TANK_SPEED = 0.45;
+double TANK_SPEED = 0.45;
 
 // -----------------------------------------------------------------------------
 // Transform matrices
@@ -55,8 +55,9 @@ D3DXMATRIX g_mProj;
 #define WORLD_DEPTH 72
 #define BORDER_WIDTH 0.12f // 가장자리 벽 굵기
 
-#define NUM_OBSTACLE 20	// 장애물 개수
-#define TANK_DISTANCE 35
+#define NUM_OBSTACLE 20
+#define TANK_DISTANCE 10
+
 
 bool GAME_START = false;
 bool GAME_FINISH = false;
@@ -195,7 +196,7 @@ public:
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
 
 		double rate = 1 - (1 - MISSILE_DECREASE_RATE) * timeDiff * 400;
-		if(rate < 0)
+		if (rate < 0)
 			rate = 0;
 		this->setPower(getVelocity_X() * rate, getVelocity_Y() - MISSILE_GRAVITY_RATE * timeDiff, getVelocity_Z() * rate);
 
@@ -526,6 +527,7 @@ protected:
 	float					m_velocity_x;
 	float					m_velocity_z;
 	bool					isO;
+	bool					isDistanceZero;
 	CWall tank_part[7];
 	bool created;
 	float distance;
@@ -536,6 +538,7 @@ public:
 		m_velocity_z = 0;
 		isO = isOtank;
 		distance = TANK_DISTANCE;
+		isDistanceZero = FALSE;
 	}
 
 	bool create(IDirect3DDevice9* pDevice, float ix, float iz, D3DXCOLOR color = d3d::WHITE) {
@@ -571,11 +574,11 @@ public:
 		else
 			tank_part[1].setPosition(x, y + 0.35f, z - 0.3f);
 		tank_part[2].setPosition(x, y + 0.35f, z);
-		tank_part[3].setPosition(x- 0.24375, y-0.28f, z);
+		tank_part[3].setPosition(x - 0.24375, y - 0.28f, z);
 		tank_part[4].setPosition(x + 0.24375, y - 0.28f, z);
-		tank_part[5].setPosition(x - 0.24375, y-0.24f, z);
+		tank_part[5].setPosition(x - 0.24375, y - 0.24f, z);
 		tank_part[6].setPosition(x + 0.24375, 0.24f, z);
- 		
+
 	}
 
 	bool get_created()
@@ -592,8 +595,8 @@ public:
 
 	bool hasIntersected(CSphere& missile)
 	{
-		return tank_part[0].hasIntersected(missile) || tank_part[1].hasIntersected(missile) || tank_part[2].hasIntersected(missile)|| tank_part[3].hasIntersected(missile)
-			|| tank_part[4].hasIntersected(missile)|| tank_part[5].hasIntersected(missile)|| tank_part[6].hasIntersected(missile);
+		return tank_part[0].hasIntersected(missile) || tank_part[1].hasIntersected(missile) || tank_part[2].hasIntersected(missile) || tank_part[3].hasIntersected(missile)
+			|| tank_part[4].hasIntersected(missile) || tank_part[5].hasIntersected(missile) || tank_part[6].hasIntersected(missile);
 	}
 
 	bool hasIntersected(CObstacle& obstacle)
@@ -686,6 +689,12 @@ public:
 		}
 		if (distance < 0) {
 			setPower(0, 0);
+			TANK_SPEED = 0.05;
+			isDistanceZero = FALSE;
+		}
+		if (distance < 0) {
+			isDistanceZero = TRUE;
+			distance = 50; // �ӽ� ���� �̰� ���ϸ� ��� distance < 0�̶� ��
 		}
 
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
@@ -813,7 +822,7 @@ public:
 		// 속도 설정
 		double rate = 1;
 		this->setPower(getVelocity_X() * rate, getVelocity_Y() * rate, getVelocity_Z() * rate);
-		
+
 		// 파란공이 범위 벗어나면, 해당 방향 속도 0으로 만든다
 		double diffFromTankX = fabs(tankX - tX);
 		double diffFromTankZ = fabs(tankZ - tZ);
@@ -834,7 +843,7 @@ public:
 			if (tZ > tankZ) epsilon *= -1;
 			this->setCenter(tX, tY, tZ + epsilon);
 		}
-		
+
 		tankLastX = tankX;
 		tankLastZ = tankZ;
 	}
@@ -967,7 +976,7 @@ bool createMap() // create plane + wall
 {
 	CWall wall;
 
-	if (false == g_legoPlane.create(Device, -1, -1, WORLD_WIDTH, 0.03f, WORLD_DEPTH, d3d::DARKGREEN)) return false;
+	if (false == g_legoPlane.create(Device, -1, -1, WORLD_WIDTH, 0.03f, WORLD_DEPTH, d3d::GREEN)) return false;
 	g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
 
 	for (int i = -1; i <= 1; i += 2) {
@@ -984,14 +993,14 @@ bool createMap() // create plane + wall
 		wall.setPosition(i * WORLD_WIDTH / 2, 1.0f, 0.0f);
 		lwall2.push_back(wall);
 	}
-	
+
 
 
 	for (int i = -1; i <= 1; i += 2) {
 		for (int j = -1; j <= 1; j += 2) {
 			//중간 기둥
 			if (false == wall.create(Device, -1, -1, 1.5f, 2.5f, 1.0f, d3d::GRAY)) return false;
-			wall.setPosition(i * WORLD_WIDTH / 2, 1.25f, j * WORLD_DEPTH /6);
+			wall.setPosition(i * WORLD_WIDTH / 2, 1.25f, j * WORLD_DEPTH / 6);
 			swall2.push_back(wall);
 			//꼭짓점 기둥
 			if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
@@ -1168,6 +1177,7 @@ double startTime = (double)timeGetTime();
 double currTime = (double)timeGetTime();
 double timediff = currTime - startTime;
 
+
 // timeDelta represents the time between the current image frame and the last image frame.
 // the distance of moving balls should be "velocity * timeDelta"
 bool Display(float timeDelta)
@@ -1262,14 +1272,13 @@ bool Display(float timeDelta)
 			target = D3DXVECTOR3(0, 1, 0);
 		}
 		else {
-			pos = D3DXVECTOR3(tank.getHead()[0], tank.getHead()[1] + 0.5f, tank.getHead()[2]+0.4f-0.8f*isOriginTank);
+			pos = D3DXVECTOR3(tank.getHead()[0], tank.getHead()[1] + 0.5f, tank.getHead()[2] + 0.4f - 0.8f * isOriginTank);
 			if (abs(tank.getHead()[2] - g_target_blueball.getCenter()[2]) < 5) {
 				target = D3DXVECTOR3(g_target_blueball.getCenter()[0], g_target_blueball.getCenter()[1], g_target_blueball.getCenter()[2]);
 			}
 			else {
 				target = D3DXVECTOR3(g_target_blueball.getCenter()[0], g_target_blueball.getCenter()[1] - 2.0f, g_target_blueball.getCenter()[2]);
 			}
-			
 		}
 	}
 
@@ -1317,8 +1326,8 @@ bool Display(float timeDelta)
 		// 글자출력-------------------------------------------------------------------------------------
 		RECT rect = { 10, 10, 0, 0 };  // 글자의 위치 (10, 10)에서 시작
 		TIMEfont->DrawText(NULL, time, -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
-		rect = { Width/2, 10, 0, 0 };
-		DISTANCEfont->DrawText(NULL, ("Distance: " + to_string(int(tank.getDistance()))).c_str(), -1, & rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+		rect = { Width / 2, 10, 0, 0 };
+		DISTANCEfont->DrawText(NULL, ("Distance: " + to_string(int(tank.getDistance()))).c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
 		/*
 		Device->EndScene();
 		Device->Present(0, 0, 0, 0);
@@ -1352,18 +1361,28 @@ bool Display(float timeDelta)
 				g_legoWall[i][j].draw(Device, g_mWorld);
 		}
 
-		if (missile.get_created()) {
+		if (missile.get_created() == true) {
 			missile.hitBy();
 		}
 		if (otank.get_created()) {
-			if (otank.hasIntersected(missile) && missile.get_created()) {
-				if (otank.hasIntersected(missile)) {
-					otank.hitBy(missile);
-					GAME_FINISH = true;
-					winner = true;
-				}
+			if (otank.hasIntersected(missile)) {
+				otank.hitBy(missile);
+				GAME_FINISH = true;
+				winner = true;
 			}
-			else {
+			else if (otank.get_created()) {
+				otank.tankUpdate(timeDelta, obstacles, tank, g_legoWall);
+				otank.draw(Device, g_mWorld);
+			}
+		}
+
+		if (otank.get_created()) {
+			if (otank.hasIntersected(missile)) {
+				otank.hitBy(missile);
+				GAME_FINISH = true;
+				winner = true;
+			}
+			else if (otank.get_created()) {
 				otank.tankUpdate(timeDelta, obstacles, tank, g_legoWall);
 				otank.draw(Device, g_mWorld);
 			}
@@ -1519,7 +1538,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					velocity *= -1;
 					dx *= -1;
 				}
-				if (dx < MAX_BLUEBALL_WIDTH) moveTarget->setPower(velocity, moveTarget->getVelocity_Y(),  moveTarget->getVelocity_Z());
+				if (dx < MAX_BLUEBALL_WIDTH) moveTarget->setPower(velocity, moveTarget->getVelocity_Y(), moveTarget->getVelocity_Z());
 			}
 			break;
 		}
@@ -1557,7 +1576,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					velocity *= -1;
 					dz *= -1;
 				}
-				if (dz < MAX_BLUEBALL_RADIUS) 
+				if (dz < MAX_BLUEBALL_RADIUS)
 					moveTarget->setPower(moveTarget->getVelocity_X(), moveTarget->getVelocity_Y(), velocity);
 			}
 			break;
@@ -1583,9 +1602,10 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		
 		// 재환이 + 나 버전
+
 		case 0x57:
 		{
-			if (!isFire && GAME_START && tank.getDistance() > 0) {
+			if (!isFire && GAME_START) {
 				// W
 				Tank* moveTarget = &tank;  // 움직일 대상
 				double speed = TANK_SPEED;
@@ -1601,7 +1621,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		case 0x41:
 		{
-			if (!isFire && GAME_START && tank.getDistance() > 0) {
+			if (!isFire && GAME_START) {
 				// A
 				Tank* moveTarget = &tank;  // 움직일 대상
 				double speed = TANK_SPEED;
@@ -1617,7 +1637,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		case 0x53:
 		{
-			if (!isFire && GAME_START && tank.getDistance() > 0) {
+			if (!isFire && GAME_START) {
 				// S
 				Tank* moveTarget = &tank;  // 움직일 대상
 				double speed = TANK_SPEED;
@@ -1627,13 +1647,13 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				else {
 					moveTarget->setPower(moveTarget->getVelocity_X(), speed * 5);
 				}
-			
+
 			}
 			break;
 		}
 		case 0x44:
 		{
-			if (!isFire && GAME_START && tank.getDistance() > 0) {
+			if (!isFire && GAME_START) {
 				// D
 				Tank* moveTarget = &tank;;  // 움직일 대상
 				double speed = TANK_SPEED;
@@ -1719,7 +1739,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					x_camera = x_camera - camera_prefix;
 				}
 				y_camera = y_camera - camera_prefix;
-				
+
 			}
 			break;
 		}
