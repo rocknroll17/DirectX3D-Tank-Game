@@ -982,94 +982,95 @@ bool createMap()
 	float d = WORLD_DEPTH;
 
 	// 벽
-	createWall(d3d::DARKGRAY);
+	createWall(d3d::WHITE);
 
 	// 바닥
-	if (false == g_legoPlane.create(Device, -1, -1, WORLD_WIDTH, 0.03f, WORLD_DEPTH, d3d::WHITE)) return false;
+	if (false == g_legoPlane.create(Device, -1, -1, WORLD_WIDTH, 0.03f, WORLD_DEPTH, d3d::WHITER_SAND)) return false;
 	g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
 
 	// 장애물
-	createWWall(0.4f, 0.7f, 1.0f, 18, 3, -w / 2 + 0.85f, 0.35f, d / 6 , d3d::GRAY);
-	createWWall(1.5f, 0.5f, 1.5f, 1, 5, -w / 2 + 7.95f, 0.25f, d / 6, d3d::GRAY);
-	createDWall(0.4f, 0.7f, 1.0f, 10, 3, -w / 2 + 7.95f, 0.35f, d / 6 - 10.25f, d3d::GRAY);
-	createWWall(1.5f, 0.5f, 1.5f, 1, 5, -w / 2 + 7.95f, 0.25f, d / 6 - 11.5f, d3d::GRAY);
+	createWWall(0.4f, 0.7f, 1.0f, 18, 3, -w / 2 + 0.85f, 0.35f, d / 6 , d3d::LIGHTGRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, -w / 2 + 7.95f, 0.25f, d / 6, d3d::LIGHTGRAY);
+	createDWall(0.4f, 0.7f, 1.0f, 10, 3, -w / 2 + 7.95f, 0.35f, d / 6 - 10.25f, d3d::LIGHTGRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, -w / 2 + 7.95f, 0.25f, d / 6 - 11.5f, d3d::LIGHTGRAY);
 
-	createWWall(0.4f, 0.7f, 1.0f, 18, 3, -w / 2 + 0.85f, 0.35f, -d / 6, d3d::GRAY);
-	createWWall(1.5f, 0.5f, 1.5f, 1, 5, -w / 2 + 7.95f, 0.25f, -d / 6, d3d::GRAY);
-	createDWall(0.4f, 0.7f, 1.0f, 10, 3, -w / 2 + 7.95f, 0.35f, -d / 6 + 1.25f, d3d::GRAY);
-	createWWall(1.5f, 0.5f, 1.5f, 1, 5, -w / 2 + 7.95f, 0.25f, -d / 6 + 11.25f, d3d::GRAY);
+	createWWall(0.4f, 0.7f, 1.0f, 18, 3, -w / 2 + 0.85f, 0.35f, -d / 6, d3d::LIGHTGRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, -w / 2 + 7.95f, 0.25f, -d / 6, d3d::LIGHTGRAY);
+	createDWall(0.4f, 0.7f, 1.0f, 10, 3, -w / 2 + 7.95f, 0.35f, -d / 6 + 1.25f, d3d::LIGHTGRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, -w / 2 + 7.95f, 0.25f, -d / 6 + 11.25f, d3d::LIGHTGRAY);
 
-	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 0, 0.25f, -d / 3, d3d::GRAY);
-	createWWall(0.4f, 0.7f, 1.0f, 15, 3, 0.95f, 0.35f, -d / 3, d3d::GRAY);
-	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 7.5f, 0.25f, -d / 3, d3d::GRAY);
-	createDWall(0.8f, 0.7f, 1.0f, 25, 3, 7.5f, 0.35f, -d / 3 + 1.25f, d3d::GRAY);
-	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 7.5f, 0.25f, -d / 3 + 26.5f, d3d::GRAY);
-	createWWall(0.4f, 0.7f, 1.0f, 15, 3, 0.95f, 0.35f, -d / 3 + 26.5f, d3d::GRAY);
-	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 0, 0.25f, -d / 3 + 26.5f, d3d::GRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 0, 0.25f, -d / 3, d3d::LIGHTGRAY);
+	createWWall(0.4f, 0.7f, 1.0f, 15, 3, 0.95f, 0.35f, -d / 3, d3d::LIGHTGRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 7.5f, 0.25f, -d / 3, d3d::LIGHTGRAY);
+	createDWall(0.8f, 0.7f, 1.0f, 25, 3, 7.5f, 0.35f, -d / 3 + 1.25f, d3d::LIGHTGRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 7.5f, 0.25f, -d / 3 + 26.5f, d3d::LIGHTGRAY);
+	createWWall(0.4f, 0.7f, 1.0f, 15, 3, 0.95f, 0.35f, -d / 3 + 26.5f, d3d::LIGHTGRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 0, 0.25f, -d / 3 + 26.5f, d3d::LIGHTGRAY);
 
-	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 0, 0.25f, d / 3, d3d::GRAY);
-	createWWall(0.4f, 0.7f, 1.0f, 15, 3, 0.95f, 0.35f, d / 3, d3d::GRAY);
-	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 7.5f, 0.25f, d / 3, d3d::GRAY);
-	createDWall(0.8f, 0.7f, 1.0f, 25, 3, 7.5f, 0.35f, d / 3 - 25.25f, d3d::GRAY);
-	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 7.5f, 0.25f, d / 3 - 26.5f, d3d::GRAY);
-	createWWall(0.4f, 0.7f, 1.0f, 15, 3, 0.95f, 0.35f, d / 3 - 26.5f, d3d::GRAY);
-	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 0, 0.25f, d / 3 - 26.5f, d3d::GRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 0, 0.25f, d / 3, d3d::LIGHTGRAY);
+	createWWall(0.4f, 0.7f, 1.0f, 15, 3, 0.95f, 0.35f, d / 3, d3d::LIGHTGRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 7.5f, 0.25f, d / 3, d3d::LIGHTGRAY);
+	createDWall(0.8f, 0.7f, 1.0f, 25, 3, 7.5f, 0.35f, d / 3 - 25.25f, d3d::LIGHTGRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 7.5f, 0.25f, d / 3 - 26.5f, d3d::LIGHTGRAY);
+	createWWall(0.4f, 0.7f, 1.0f, 15, 3, 0.95f, 0.35f, d / 3 - 26.5f, d3d::LIGHTGRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 0, 0.25f, d / 3 - 26.5f, d3d::LIGHTGRAY);
 
 
-	createWWall(1.2f, 0.5f, 1.2f, 1, 8, -2.0f, 0.25f, 3.0f, d3d::GRAY);
-	createWWall(1.2f, 0.5f, 1.2f, 1, 8, -2.0f, 0.25f, -3.0f, d3d::GRAY);
-	createWWall(1.2f, 0.5f, 1.2f, 1, 7, -1.0f, 0.25f, 4.0f, d3d::GRAY);
-	createWWall(1.2f, 0.5f, 1.2f, 1, 7, -1.0f, 0.25f, -4.0f, d3d::GRAY);;
-	createWWall(1.2f, 0.5f, 1.2f, 1, 9, -3.0f, 0.25f, 1.5f, d3d::GRAY);
-	createWWall(1.2f, 0.5f, 1.2f, 1, 9, -3.0f, 0.25f, -1.5f, d3d::GRAY);
+	createWWall(1.2f, 0.5f, 1.2f, 1, 8, -2.0f, 0.25f, 3.0f, d3d::LIGHTGRAY);
+	createWWall(1.2f, 0.5f, 1.2f, 1, 8, -2.0f, 0.25f, -3.0f, d3d::LIGHTGRAY);
+	createWWall(1.2f, 0.5f, 1.2f, 1, 7, -1.0f, 0.25f, 4.0f, d3d::LIGHTGRAY);
+	createWWall(1.2f, 0.5f, 1.2f, 1, 7, -1.0f, 0.25f, -4.0f, d3d::LIGHTGRAY);
+	createWWall(1.2f, 0.5f, 1.2f, 1, 9, -3.0f, 0.25f, 1.5f, d3d::LIGHTGRAY);
+	createWWall(1.2f, 0.5f, 1.2f, 1, 9, -3.0f, 0.25f, -1.5f, d3d::LIGHTGRAY);
+
 	// 경기장 모형
-	createWWall(1.2f, 0.8f, 1.2f, 1, 5, 3.0f, 0.4f, 3.0f, d3d::GRAY);
+	createWWall(1.2f, 0.8f, 1.2f, 1, 5, 3.0f, 0.4f, 3.0f, d3d::LIGHTGRAY);
 
-	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 1.2f, 3.0f, d3d::GRAY);
-	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 2.0f, 3.0f, d3d::GRAY);
-	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 2.8f, 3.0f, d3d::GRAY);
+	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 1.2f, 3.0f, d3d::LIGHTGRAY);
+	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 2.0f, 3.0f, d3d::LIGHTGRAY);
+	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 2.8f, 3.0f, d3d::LIGHTGRAY);
 	
-	createWWall(1.2f, 0.8f, 1.2f, 1, 5, 8.2f, 0.4f, 3.0f, d3d::GRAY);
+	createWWall(1.2f, 0.8f, 1.2f, 1, 5, 8.2f, 0.4f, 3.0f, d3d::LIGHTGRAY);
 	
-	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 8.2f, 1.2f, -2.2f, d3d::GRAY);
-	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 8.2f, 2.0f, -2.2f, d3d::GRAY);
-	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 8.2f, 2.8f, -2.2f, d3d::GRAY);
+	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 8.2f, 1.2f, -2.2f, d3d::LIGHTGRAY);
+	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 8.2f, 2.0f, -2.2f, d3d::LIGHTGRAY);
+	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 8.2f, 2.8f, -2.2f, d3d::LIGHTGRAY);
 	
-	createWWall(1.2f, 0.8f, 1.2f, 1, 5, 8.2f, 0.4f, -3.0f, d3d::GRAY);
+	createWWall(1.2f, 0.8f, 1.2f, 1, 5, 8.2f, 0.4f, -3.0f, d3d::LIGHTGRAY);
 
-	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 1.2f, -3.0f, d3d::GRAY);
-	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 2.0f, -3.0f, d3d::GRAY);
-	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 2.8f, -3.0f, d3d::GRAY);
+	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 1.2f, -3.0f, d3d::LIGHTGRAY);
+	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 2.0f, -3.0f, d3d::LIGHTGRAY);
+	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 2.8f, -3.0f, d3d::LIGHTGRAY);
 
-	createWWall(1.2f, 0.8f, 1.2f, 1, 5, 3.0f, 0.4f, -3.0f, d3d::GRAY);
+	createWWall(1.2f, 0.8f, 1.2f, 1, 5, 3.0f, 0.4f, -3.0f, d3d::LIGHTGRAY);
 
-	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 3.0f, 1.2f, -2.2f, d3d::GRAY);
-	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 3.0f, 2.0f, -2.2f, d3d::GRAY);
-	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 3.0f, 2.8f, -2.2f, d3d::GRAY);
+	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 3.0f, 1.2f, -2.2f, d3d::LIGHTGRAY);
+	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 3.0f, 2.0f, -2.2f, d3d::LIGHTGRAY);
+	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 3.0f, 2.8f, -2.2f, d3d::LIGHTGRAY);
 
 	// 위 아래 ㄷ
 
-	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 14.4f, 0.25f, -d / 4 + 13.4f, d3d::GRAY);
-	createDWall(0.5f, 0.7f, 1.0f, 12, 3, -w / 2 + 14.4f, 0.35f, -d / 4 + 1.2f, d3d::GRAY);
-	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 14.4f, 0.25f, -d / 4, d3d::GRAY);
-	createWWall(0.5f, 0.7f, 1.0f, 16, 3, -w / 2 + 5.95f, 0.25f, -d / 4, d3d::GRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 14.4f, 0.25f, -d / 4 + 13.4f, d3d::LIGHTGRAY);
+	createDWall(0.5f, 0.7f, 1.0f, 12, 3, -w / 2 + 14.4f, 0.35f, -d / 4 + 1.2f, d3d::LIGHTGRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 14.4f, 0.25f, -d / 4, d3d::LIGHTGRAY);
+	createWWall(0.5f, 0.7f, 1.0f, 16, 3, -w / 2 + 5.95f, 0.25f, -d / 4, d3d::LIGHTGRAY);
 
-	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 5.0f, 0.25f, -d / 4, d3d::GRAY);
-	createDWall(0.5f, 0.7f, 1.0f, 14, 3, -w / 2 + 5.0f, 0.35f, -d / 4 - 14.2f, d3d::GRAY);
-	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 5.0f, 0.25f, -d / 4 - 15.4f, d3d::GRAY);
-	createWWall(0.5f, 0.7f, 1.0f, 20, 3, -w / 2 + 5.95f, 0.35f, -d / 4 - 15.4f, d3d::GRAY);
-	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 16.4f, 0.25f, -d / 4 - 15.4f, d3d::GRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 5.0f, 0.25f, -d / 4, d3d::LIGHTGRAY);
+	createDWall(0.5f, 0.7f, 1.0f, 14, 3, -w / 2 + 5.0f, 0.35f, -d / 4 - 14.2f, d3d::LIGHTGRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 5.0f, 0.25f, -d / 4 - 15.4f, d3d::LIGHTGRAY);
+	createWWall(0.5f, 0.7f, 1.0f, 20, 3, -w / 2 + 5.95f, 0.35f, -d / 4 - 15.4f, d3d::LIGHTGRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 16.4f, 0.25f, -d / 4 - 15.4f, d3d::LIGHTGRAY);
 
-	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 14.4f, 0.25f,  d / 4 - 13.4f, d3d::GRAY);
-	createDWall(0.5f, 0.7f, 1.0f, 12, 3, -w / 2 + 14.4f, 0.35f, d / 4 - 12.2f, d3d::GRAY);
-	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 14.4f, 0.25f, d / 4, d3d::GRAY);
-	createWWall(0.5f, 0.7f, 1.0f, 16, 3, -w / 2 + 5.95f, 0.25f, d / 4, d3d::GRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 14.4f, 0.25f,  d / 4 - 13.4f, d3d::LIGHTGRAY);
+	createDWall(0.5f, 0.7f, 1.0f, 12, 3, -w / 2 + 14.4f, 0.35f, d / 4 - 12.2f, d3d::LIGHTGRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 14.4f, 0.25f, d / 4, d3d::LIGHTGRAY);
+	createWWall(0.5f, 0.7f, 1.0f, 16, 3, -w / 2 + 5.95f, 0.25f, d / 4, d3d::LIGHTGRAY);
 
-	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 5.0f, 0.25f, d / 4, d3d::GRAY);
-	createDWall(0.5f, 0.7f, 1.0f, 14, 3, -w / 2 + 5.0f, 0.35f, d / 4 + 1.2f, d3d::GRAY);
-	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 5.0f, 0.25f, d / 4 + 15.4f, d3d::GRAY);
-	createWWall(0.5f, 0.7f, 1.0f, 20, 3, -w / 2 + 5.95f, 0.25f, d / 4 + 15.4f, d3d::GRAY);
-	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 16.4f, 0.25f, d / 4 + 15.4f, d3d::GRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 5.0f, 0.25f, d / 4, d3d::LIGHTGRAY);
+	createDWall(0.5f, 0.7f, 1.0f, 14, 3, -w / 2 + 5.0f, 0.35f, d / 4 + 1.2f, d3d::LIGHTGRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 5.0f, 0.25f, d / 4 + 15.4f, d3d::LIGHTGRAY);
+	createWWall(0.5f, 0.7f, 1.0f, 20, 3, -w / 2 + 5.95f, 0.25f, d / 4 + 15.4f, d3d::LIGHTGRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 16.4f, 0.25f, d / 4 + 15.4f, d3d::LIGHTGRAY);
 
 	
 	return true;
