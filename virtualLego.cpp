@@ -51,22 +51,20 @@ D3DXMATRIX g_mProj;
 #define MISSILE_POWER 1.25
 #define MISSILE_GRAVITY_RATE 3.5
 #define MISSILE_DECREASE_RATE 0.9975  // 미사일 마찰력
-#define MISSILE_EXPOLSION_RADIUS M_RADIUS+0.25 // 미사일 폭발 반경
+#define MISSILE_EXPOLSION_RADIUS M_RADIUS+1.5 // 미사일 폭발 반경
 
 #define WORLD_WIDTH 24
-#define WORLD_DEPTH 72
+#define WORLD_DEPTH 100
 #define BORDER_WIDTH 0.12f // 가장자리 벽 굵기
 
 #define NUM_OBSTACLE 20
-#define TANK_DISTANCE 15
+#define TANK_DISTANCE 1000
 
 
 bool GAME_START = false;
 bool GAME_FINISH = false;
 float MOVEMENT = 0.0f;
 float Tank_spawn_point[3] = { 0, 0.2f, -WORLD_DEPTH / 2 + 5 };
-
-//double g_camera_pos[3] = { 0.0, 5.0, -8.0 };
 int camera_option = 0;
 // -----------------------------------------------------------------------------
 // CSphere class definition
@@ -363,15 +361,18 @@ public:
 		D3DXVECTOR3 Center = getCenter();
 		float width = m_width;
 		float depth = m_depth;
+		float height = m_height;
 
 		D3DXVECTOR3 wallCenter = wall.getCenter();
 		float wallWidth = wall.getWidth();
 		float wallDepth = wall.getDepth();
+		float wallHeight = wall.getHeight();
 
 		bool intersectX = (wallCenter.x - wallWidth / 2 <= Center.x + width / 2) && (wallCenter.x + wallWidth / 2 >= Center.x - width / 2);
+		bool intersectY = (wallCenter.y - wallHeight / 2 <= Center.y + height / 2) && (wallCenter.y + wallHeight / 2 >= Center.y - height / 2);
 		bool intersectZ = (wallCenter.z - wallDepth / 2 <= Center.z + depth / 2) && (wallCenter.z + wallDepth / 2 >= Center.z - depth / 2);
 
-		return intersectX && intersectZ;
+		return intersectX && intersectY && intersectZ;
 	}
 
 	void hitBy(CSphere& ball)	// 벽이랑 공이랑 충돌하면 공은 사라짐
@@ -943,8 +944,7 @@ bool createBlock(float partitionWidth, float partitionHeight, float partitionDep
 	return true;
 }
 
-
-bool createWall(float partitionWidth, float partitionHeight, float partitonDepth,
+bool createDWall(float partitionWidth, float partitionHeight, float partitonDepth,
 	int partitionCount_land, int partitionCount_sky,
 	float x, float y, float z,
 	D3DXCOLOR wallColor = d3d::WHITE) {
@@ -968,81 +968,66 @@ bool createWall(float partitionWidth, float partitionHeight, float partitonDepth
 	return true;
 }
 
-bool createObstacle() // create obstacle
-{
-	// 장애물 랜덤 생성
-	for (int i = 0; i < NUM_OBSTACLE; i++) {
-		random_device rd;
-		mt19937 gen(rd());
-
-		uniform_real_distribution<float> disW(0, 1.0f);	// width<=1.0f
-		uniform_real_distribution<float> disD(0, 1.5f);	// depth<=1.5f
-		uniform_real_distribution<float> disH(0, 2.5f);	// height<=2.5f
-
-		float width = disW(gen);
-		float depth = disD(gen);
-		float height = disH(gen);
-
-		uniform_real_distribution<float> disX(-(WORLD_WIDTH / 2) + width / 2, (WORLD_WIDTH / 2) - width);	// x 범위
-		uniform_real_distribution<float> disZ(-(WORLD_WIDTH / 2) + depth / 2, (WORLD_WIDTH / 2) - depth);	// z 범위
-
-		float x = disX(gen);
-		float y = height / 2;
-		float z = disZ(gen);
-		while ((sqrt(pow(x - Tank_spawn_point[0], 2) + pow(z - Tank_spawn_point[2], 2)) < 1) || (sqrt(pow(x - Tank_spawn_point[0], 2) + pow(z + Tank_spawn_point[2], 2)) < 1)) {
-			float x = disX(gen);
-			float y = height / 2;
-			float z = disZ(gen);
+// 가로 장애물 생성
+bool createWWall(float partitionWidth, float partitionHeight, float partitonDepth,
+	int partitionCount_land, int partitionCount_sky,
+	float x, float y, float z,
+	D3DXCOLOR wallColor = d3d::WHITE) {
+	// (partitionCount_land * partitionCount_sky) 크기의 벽을 생성함.
+	// 각 partition의 크기는 (partitionWidth, partitionHeight, partitionDepth)
+	for (int i = 0; i < partitionCount_land; i++) {
+		for (int j = 0; j < partitionCount_sky; j++) {
+			// 좌표 결정
+			float nx, ny, nz;
+			nx = x + partitionWidth * i;
+			ny = y + partitionHeight * j;
+			nz = z;
+			// 장애물 생성 & 배치
+			CObstacle partition;
+			if (false == partition.create(Device, -1, -1, partitionWidth, partitionHeight, partitonDepth, wallColor)) return false;
+			partition.setPosition(nx, ny, nz);
+			obstacle_wall.push_back(partition);
+			// 전역변수에 저장
 		}
-
-
-		CObstacle obs;
-		if (false == obs.create(Device, x, z, width, height, depth, d3d::WHITE)) return false;
-		obs.setPosition(x, y, z);
-
-		obstacles.push_back(obs);
 	}
 	return true;
 }
 
-bool createMap() // create plane + wall
+
+bool createWall(D3DXCOLOR wallColor) // create wall
 {
 	CWall wall;
 
-	if (false == g_legoPlane.create(Device, -1, -1, WORLD_WIDTH, 0.03f, WORLD_DEPTH, d3d::GREEN)) return false;
-	g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
-
 	for (int i = -1; i <= 1; i += 2) {
 		//앞뒤 기둥
-		if (false == wall.create(Device, -1, -1, WORLD_WIDTH - 1, 2.0f, 1.0f, d3d::GRAY)) return false;
-		wall.setPosition(0.0f, 1.0f, i * WORLD_DEPTH / 2);
+		if (false == wall.create(Device, -1, -1, WORLD_WIDTH - 1, 2.0f, 1.0f, wallColor)) return false;
+		wall.setPosition(0.0f, 1.0f, (float)i * WORLD_DEPTH / 2);
 		lwall1.push_back(wall);
 		//앞뒤 벽
-		if (false == wall.create(Device, -1, -1, 1.0f, 2.5f, 1.5f, d3d::GRAY)) return false;
-		wall.setPosition(0, 1.25f, i * WORLD_DEPTH / 2);
+		if (false == wall.create(Device, -1, -1, 1.0f, 2.5f, 1.5f, wallColor)) return false;
+		wall.setPosition(0, 1.25f, (float)i * WORLD_DEPTH / 2);
 		swall1.push_back(wall);
 		//좌측 벽
-		if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, WORLD_DEPTH - 1, d3d::GRAY)) return false;
-		wall.setPosition(i * WORLD_WIDTH / 2, 1.0f, 0.0f);
+		if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, WORLD_DEPTH - 1, wallColor)) return false;
+		wall.setPosition((float)i * WORLD_WIDTH / 2, 1.0f, 0.0f);
 		lwall2.push_back(wall);
 	}
 
-
-
 	for (int i = -1; i <= 1; i += 2) {
-		for (int j = -1; j <= 1; j += 2) {
+		for (int j = -2; j <= 2; j++) {
 			//중간 기둥
-			if (false == wall.create(Device, -1, -1, 1.5f, 2.5f, 1.0f, d3d::GRAY)) return false;
-			wall.setPosition(i * WORLD_WIDTH / 2, 1.25f, j * WORLD_DEPTH / 6);
+			if (false == wall.create(Device, -1, -1, 1.5f, 2.5f, 2.0f, wallColor)) return false;
+			wall.setPosition((float)i * WORLD_WIDTH / 2, 1.25f, (float)j * WORLD_DEPTH / 6);
 			swall2.push_back(wall);
+		}
+
+		for (int j = -1; j <= 1; j += 2) {
 			//꼭짓점 기둥
-			if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
-			wall.setPosition(i * WORLD_WIDTH / 2, 1.5f, j * WORLD_DEPTH / 2);
+			if (false == wall.create(Device, -1, -1, 1.5f, 3.0f, 1.5f, wallColor)) return false;
+			wall.setPosition((float)i * WORLD_WIDTH / 2, 1.5f, (float)j * WORLD_DEPTH / 2);
 			swall2.push_back(wall);
 		}
 	}
-
-
 
 	g_legoWall.push_back(lwall1);
 	g_legoWall.push_back(lwall2);
@@ -1051,6 +1036,107 @@ bool createMap() // create plane + wall
 
 	return true;
 }
+
+bool createMap()
+{
+	float w = WORLD_WIDTH;
+	float d = WORLD_DEPTH;
+
+	// 벽
+	createWall(d3d::WHITE);
+
+	// 바닥
+	if (false == g_legoPlane.create(Device, -1, -1, WORLD_WIDTH, 0.03f, WORLD_DEPTH, d3d::WHITER_SAND)) return false;
+	g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
+
+	// 장애물
+	createWWall(0.4f, 0.7f, 1.0f, 18, 3, -w / 2 + 0.85f, 0.35f, d / 6, d3d::LIGHTGRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, -w / 2 + 7.95f, 0.25f, d / 6, d3d::LIGHTGRAY);
+	createDWall(0.4f, 0.7f, 1.0f, 10, 3, -w / 2 + 7.95f, 0.35f, d / 6 - 10.25f, d3d::LIGHTGRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, -w / 2 + 7.95f, 0.25f, d / 6 - 11.5f, d3d::LIGHTGRAY);
+
+	createWWall(0.4f, 0.7f, 1.0f, 18, 3, -w / 2 + 0.85f, 0.35f, -d / 6, d3d::LIGHTGRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, -w / 2 + 7.95f, 0.25f, -d / 6, d3d::LIGHTGRAY);
+	createDWall(0.4f, 0.7f, 1.0f, 10, 3, -w / 2 + 7.95f, 0.35f, -d / 6 + 1.25f, d3d::LIGHTGRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, -w / 2 + 7.95f, 0.25f, -d / 6 + 11.25f, d3d::LIGHTGRAY);
+
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 0, 0.25f, -d / 3, d3d::LIGHTGRAY);
+	createWWall(0.4f, 0.7f, 1.0f, 15, 3, 0.95f, 0.35f, -d / 3, d3d::LIGHTGRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 7.5f, 0.25f, -d / 3, d3d::LIGHTGRAY);
+	createDWall(0.8f, 0.7f, 1.0f, 25, 3, 7.5f, 0.35f, -d / 3 + 1.25f, d3d::LIGHTGRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 7.5f, 0.25f, -d / 3 + 26.5f, d3d::LIGHTGRAY);
+	createWWall(0.4f, 0.7f, 1.0f, 15, 3, 0.95f, 0.35f, -d / 3 + 26.5f, d3d::LIGHTGRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 0, 0.25f, -d / 3 + 26.5f, d3d::LIGHTGRAY);
+
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 0, 0.25f, d / 3, d3d::LIGHTGRAY);
+	createWWall(0.4f, 0.7f, 1.0f, 15, 3, 0.95f, 0.35f, d / 3, d3d::LIGHTGRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 7.5f, 0.25f, d / 3, d3d::LIGHTGRAY);
+	createDWall(0.8f, 0.7f, 1.0f, 25, 3, 7.5f, 0.35f, d / 3 - 25.25f, d3d::LIGHTGRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 7.5f, 0.25f, d / 3 - 26.5f, d3d::LIGHTGRAY);
+	createWWall(0.4f, 0.7f, 1.0f, 15, 3, 0.95f, 0.35f, d / 3 - 26.5f, d3d::LIGHTGRAY);
+	createWWall(1.5f, 0.5f, 1.5f, 1, 5, 0, 0.25f, d / 3 - 26.5f, d3d::LIGHTGRAY);
+
+
+	createWWall(1.2f, 0.5f, 1.2f, 1, 8, -2.0f, 0.25f, 3.0f, d3d::LIGHTGRAY);
+	createWWall(1.2f, 0.5f, 1.2f, 1, 8, -2.0f, 0.25f, -3.0f, d3d::LIGHTGRAY);
+	createWWall(1.2f, 0.5f, 1.2f, 1, 7, -1.0f, 0.25f, 4.0f, d3d::LIGHTGRAY);
+	createWWall(1.2f, 0.5f, 1.2f, 1, 7, -1.0f, 0.25f, -4.0f, d3d::LIGHTGRAY);
+	createWWall(1.2f, 0.5f, 1.2f, 1, 9, -3.0f, 0.25f, 1.5f, d3d::LIGHTGRAY);
+	createWWall(1.2f, 0.5f, 1.2f, 1, 9, -3.0f, 0.25f, -1.5f, d3d::LIGHTGRAY);
+
+	// 경기장 모형
+	createWWall(1.2f, 0.8f, 1.2f, 1, 5, 3.0f, 0.4f, 3.0f, d3d::LIGHTGRAY);
+
+	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 1.2f, 3.0f, d3d::LIGHTGRAY);
+	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 2.0f, 3.0f, d3d::LIGHTGRAY);
+	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 2.8f, 3.0f, d3d::LIGHTGRAY);
+
+	createWWall(1.2f, 0.8f, 1.2f, 1, 5, 8.2f, 0.4f, 3.0f, d3d::LIGHTGRAY);
+
+	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 8.2f, 1.2f, -2.2f, d3d::LIGHTGRAY);
+	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 8.2f, 2.0f, -2.2f, d3d::LIGHTGRAY);
+	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 8.2f, 2.8f, -2.2f, d3d::LIGHTGRAY);
+
+	createWWall(1.2f, 0.8f, 1.2f, 1, 5, 8.2f, 0.4f, -3.0f, d3d::LIGHTGRAY);
+
+	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 1.2f, -3.0f, d3d::LIGHTGRAY);
+	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 2.0f, -3.0f, d3d::LIGHTGRAY);
+	createWWall(0.4f, 0.4f, 0.5f, 10, 1, 3.8f, 2.8f, -3.0f, d3d::LIGHTGRAY);
+
+	createWWall(1.2f, 0.8f, 1.2f, 1, 5, 3.0f, 0.4f, -3.0f, d3d::LIGHTGRAY);
+
+	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 3.0f, 1.2f, -2.2f, d3d::LIGHTGRAY);
+	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 3.0f, 2.0f, -2.2f, d3d::LIGHTGRAY);
+	createDWall(0.4f, 0.4f, 0.4f, 12, 1, 3.0f, 2.8f, -2.2f, d3d::LIGHTGRAY);
+
+	// 위 아래 ㄷ
+
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 14.4f, 0.25f, -d / 4 + 13.4f, d3d::LIGHTGRAY);
+	createDWall(0.5f, 0.7f, 1.0f, 12, 3, -w / 2 + 14.4f, 0.35f, -d / 4 + 1.2f, d3d::LIGHTGRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 14.4f, 0.25f, -d / 4, d3d::LIGHTGRAY);
+	createWWall(0.5f, 0.7f, 1.0f, 16, 3, -w / 2 + 5.95f, 0.25f, -d / 4, d3d::LIGHTGRAY);
+
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 5.0f, 0.25f, -d / 4, d3d::LIGHTGRAY);
+	createDWall(0.5f, 0.7f, 1.0f, 14, 3, -w / 2 + 5.0f, 0.35f, -d / 4 - 14.2f, d3d::LIGHTGRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 5.0f, 0.25f, -d / 4 - 15.4f, d3d::LIGHTGRAY);
+	createWWall(0.5f, 0.7f, 1.0f, 20, 3, -w / 2 + 5.95f, 0.35f, -d / 4 - 15.4f, d3d::LIGHTGRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 16.4f, 0.25f, -d / 4 - 15.4f, d3d::LIGHTGRAY);
+
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 14.4f, 0.25f, d / 4 - 13.4f, d3d::LIGHTGRAY);
+	createDWall(0.5f, 0.7f, 1.0f, 12, 3, -w / 2 + 14.4f, 0.35f, d / 4 - 12.2f, d3d::LIGHTGRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 14.4f, 0.25f, d / 4, d3d::LIGHTGRAY);
+	createWWall(0.5f, 0.7f, 1.0f, 16, 3, -w / 2 + 5.95f, 0.25f, d / 4, d3d::LIGHTGRAY);
+
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 5.0f, 0.25f, d / 4, d3d::LIGHTGRAY);
+	createDWall(0.5f, 0.7f, 1.0f, 14, 3, -w / 2 + 5.0f, 0.35f, d / 4 + 1.2f, d3d::LIGHTGRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 5.0f, 0.25f, d / 4 + 15.4f, d3d::LIGHTGRAY);
+	createWWall(0.5f, 0.7f, 1.0f, 20, 3, -w / 2 + 5.95f, 0.25f, d / 4 + 15.4f, d3d::LIGHTGRAY);
+	createWWall(1.4f, 0.5f, 1.4f, 1, 5, -w / 2 + 16.4f, 0.25f, d / 4 + 15.4f, d3d::LIGHTGRAY);
+
+
+	return true;
+}
+
 
 void destroyAllLegoBlock(void)
 {
@@ -1114,7 +1200,7 @@ bool Setup()
 	tank.setPosition(0, 0.38f, -WORLD_DEPTH / 2 + 5);
 	tank.setLastCoord(tank.getCenter());
 
-	if (false == otank.create(Device, -1, -1, d3d::RED)) return false;
+	if (false == otank.create(Device, -1, -1, d3d::GREEN)) return false;
 	otank.setPosition(0, 0.38f, WORLD_DEPTH / 2 - 5);
 	otank.setLastCoord(otank.getCenter());
 
@@ -1124,26 +1210,9 @@ bool Setup()
 	// 벽, 바닥 생성
 	createMap();
 	// 장애물 생성
-	createObstacle();
-
-	// 장애물(벽) 생성
-	// 벽 하나는 여러개의 파티션으로 나누어짐
-	D3DXCOLOR wall_color = d3d::BLUE; // 벽 색상
-	float wallPartition_width = 0.12f; // 각 파티션의 가로넓이
-	float wallPartition_height = 0.6f; // 각 파티션의 높이
-	float wallPartition_depth = 1; // 각 파티션의 세로넓이
-	int partitionCount_land = 3; // 가로로 몇 개 놓을지
-	int partitionCount_sky = 3; // 세로로 몇 개 놓을지
-	float base_x = 0.0f, base_y = wallPartition_height * 0.5, base_z = -3.0f; // 벽 생성 위치
-
-	// 벽 생성 & 배치
-	createWall(wallPartition_width, wallPartition_height, wallPartition_depth, partitionCount_land, partitionCount_sky, base_x, base_y, base_z, wall_color);
-
-	// 블럭 생성 (테스트)
-	createBlock(0.2f, 0.2f, 0.2f, 10, 10, 10, 2, 0, 2, d3d::BROWN);
 
 	// create blue ball for set direction
-	if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
+	if (false == g_target_blueball.create(Device, d3d::RED)) return false;
 	//g_target_blueball.setCenter(.0f, (float)M_RADIUS + 3, .0f);
 	g_target_blueball.setCenter(tank.getCenter().x - 0.01f, (float)M_RADIUS + 3, tank.getCenter().z + 5.0f);
 
@@ -1268,7 +1337,7 @@ bool Display(float timeDelta)
 
 
 
-		MOVEMENT = MOVEMENT + 0.01;
+		MOVEMENT = MOVEMENT + 0.015;
 		startTime = currTime;
 		if (MOVEMENT > WORLD_DEPTH) {
 			GAME_START = true;
@@ -1330,7 +1399,7 @@ bool Display(float timeDelta)
 			target = D3DXVECTOR3(tank.getHead()[0] + x_camera, tank.getHead()[1] + y_camera, tank.getHead()[2]);
 		}
 		else if (camera_option == 1) {
-			pos = D3DXVECTOR3(20.0, 10.0, 0.0);
+			pos = D3DXVECTOR3(50.0, 20.0, 0.0);
 			target = D3DXVECTOR3(0, 1, 0);
 		}
 		else {
@@ -1432,7 +1501,7 @@ bool Display(float timeDelta)
 
 
 		// 탱크 위치 변경
-		tank.tankUpdate(timeDelta, obstacles, otank, g_legoWall);
+		tank.tankUpdate(timeDelta, obstacle_wall, otank, g_legoWall);
 		// 미사일 위치도 변경 & 벽과 충돌했는지 체크
 		missile.ballUpdate(timeDelta);
 		for (i = 0; i < g_legoWall.size(); i++) {
@@ -1465,7 +1534,7 @@ bool Display(float timeDelta)
 				winner = true;
 			}
 			else if (otank.get_created()) {
-				otank.tankUpdate(timeDelta, obstacles, tank, g_legoWall);
+				otank.tankUpdate(timeDelta, obstacle_wall, tank, g_legoWall);
 				otank.draw(Device, g_mWorld);
 			}
 		}
@@ -1477,35 +1546,8 @@ bool Display(float timeDelta)
 				winner = true;
 			}
 			else if (otank.get_created()) {
-				otank.tankUpdate(timeDelta, obstacles, tank, g_legoWall);
+				otank.tankUpdate(timeDelta, obstacle_wall, tank, g_legoWall);
 				otank.draw(Device, g_mWorld);
-			}
-		}
-
-		// 랜덤 장애물 파괴 체크 & 파괴 안되면 그림
-		for (int i = 0; i < obstacles.size(); i++) {
-			if (obstacles[i].get_created()) {
-				if (obstacles[i].hasIntersected(missile)) {
-					obstacles[i].hitBy(missile);
-					// 만약 장애물 파괴시, 폭발한다 (= 주변 장애물도 다시 그림)
-					// 스파게티 코드지만 마감 얼마 안남았으니까 이대로 갑시다
-					double mx = missile.getCenter().x;
-					double my = missile.getCenter().y;
-					double mz = missile.getCenter().z;
-					for (int j = 0; j < obstacles.size(); j++) {
-						if (obstacles[j].hasIntersected(mx, my, mz, MISSILE_EXPOLSION_RADIUS)) {
-							obstacles[j].hitBy(missile);
-						}
-					}
-					for (int j = 0; j < obstacle_wall.size(); j++) {
-						if (obstacle_wall[j].hasIntersected(mx, my, mz, MISSILE_EXPOLSION_RADIUS)) {
-							obstacle_wall[j].hitBy(missile);
-						}
-					}
-				}
-				else {
-					obstacles[i].draw(Device, g_mWorld);
-				}
 			}
 		}
 
@@ -1516,11 +1558,6 @@ bool Display(float timeDelta)
 					obstacle_wall[i].hitBy(missile);
 					// 만약 장애물 파괴시, 폭발한다 (= 주변 장애물도 다시 그림)
 					// 스파게티 코드지만 마감 얼마 안남았으니까 이대로 갑시다
-					for (int j = 0; j < obstacles.size(); j++) {
-						if (obstacles[j].hasIntersected(missile.getCenter().x, missile.getCenter().y, missile.getCenter().z, MISSILE_EXPOLSION_RADIUS)) {
-							obstacles[j].hitBy(missile);
-						}
-					}
 					for (int j = 0; j < obstacle_wall.size(); j++) {
 						if (obstacle_wall[j].hasIntersected(missile.getCenter().x, missile.getCenter().y, missile.getCenter().z, MISSILE_EXPOLSION_RADIUS)) {
 							obstacle_wall[j].hitBy(missile);
