@@ -18,6 +18,8 @@
 #include <cassert>
 #include <random>
 #include <string>
+#include <sstream>
+#include <iomanip>
 
 using namespace std;
 
@@ -874,7 +876,8 @@ vector<CObstacle> obstacles;	// 랜덤 장애물 모음
 vector<CObstacle> obstacle_wall; // 장애물 (벽)
 
 CSphere missile;   // c 누르면 나가는 미사일
-
+ID3DXFont* DEGREEfont = NULL;
+ID3DXFont* FIREDISTANCEfont = NULL;
 ID3DXFont* TITLEfont = NULL;
 ID3DXFont* TIMEfont = NULL; // 글자 출력을 위한 객체
 ID3DXFont* ENDfont = NULL;
@@ -1052,6 +1055,18 @@ bool Setup()
 	int i;
 
 	// 글자출력 ---------------------
+	if (FAILED(D3DXCreateFont(Device, 40, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET,
+		OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Tahoma", &DEGREEfont)))
+	{
+		::MessageBox(0, "D3DXCreateFont() - FAILED", 0, 0);
+		return false;
+	}
+	if (FAILED(D3DXCreateFont(Device, 40, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET,
+		OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Tahoma", &FIREDISTANCEfont)))
+	{
+		::MessageBox(0, "D3DXCreateFont() - FAILED", 0, 0);
+		return false;
+	}
 	if (FAILED(D3DXCreateFont(Device, 350, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET,
 		OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Tahoma", &TITLEfont)))
 	{
@@ -1076,7 +1091,7 @@ bool Setup()
 		::MessageBox(0, "D3DXCreateFont() - FAILED", 0, 0);
 		return false;
 	}
-	if (FAILED(D3DXCreateFont(Device, 50, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET,
+	if (FAILED(D3DXCreateFont(Device, 40, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET,
 		OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Tahoma", &DISTANCEfont)))
 	{
 		::MessageBox(0, "D3DXCreateFont() - FAILED", 0, 0);
@@ -1368,16 +1383,22 @@ bool Display(float timeDelta)
 		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
 		Device->BeginScene();
 
-		string str = to_string((turnTime / 1000) - (int)(timediff / 1000));
-		char* time = new char[str.length() + 1];
-		str.copy(time, str.length());
-		time[str.length()] = '\0';
+		std::string time = "TIME: " + std::to_string((turnTime / 1000) - static_cast<int>(timediff / 1000));
 		// 글자출력-------------------------------------------------------------------------------------
 		RECT rect = { 10, 10, 0, 0 };  // 글자의 위치 (10, 10)에서 시작
-		TIMEfont->DrawText(NULL, time, -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
-		rect = { Width / 2, 10, 0, 0 };
+		TIMEfont->DrawText(NULL, time.c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+		rect = { 10, 50, 0, 0 };
+		ostringstream oss;
+		oss << "FIRE Degree: " << fixed << setprecision(2) << fireDegree;
+		string s = oss.str();
+		DEGREEfont->DrawText(NULL, s.c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+		rect = { 10, 90, 0, 0 };
+		oss.str("");  // 스트림 비움
+		oss << "FIRE Distance: " << std::fixed << std::setprecision(2) << fireDistance;
+		s = oss.str();  //발사거리 문자열로
+		FIREDISTANCEfont->DrawText(NULL, s.c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+		rect = { 10, 130, 0, 0 };
 		DISTANCEfont->DrawText(NULL, ("Distance: " + to_string(int(tank.getDistance()))).c_str(), -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
-
 
 		/*
 		Device->EndScene();
@@ -1508,6 +1529,7 @@ bool Display(float timeDelta)
 			RECT rect = { 0, screenRect.bottom / 5, screenRect.right, screenRect.bottom };
 			TITLEfont->DrawText(NULL, "Tank Game", -1, &rect, DT_CENTER, D3DCOLOR_XRGB(0, 0, 0));
 		}
+
 
 
 		Device->EndScene();
