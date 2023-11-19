@@ -875,15 +875,37 @@ vector<CObstacle> obstacle_wall; // 장애물 (벽)
 
 CSphere missile;   // c 누르면 나가는 미사일
 
-ID3DXFont* TITLE_font = NULL;
+ID3DXFont* TITLEfont = NULL;
 ID3DXFont* TIMEfont = NULL; // 글자 출력을 위한 객체
 ID3DXFont* ENDfont = NULL;
 ID3DXFont* PLAYERfont = NULL;
 ID3DXFont* DISTANCEfont = NULL;
 
+double fireDegree = 0; // blueball - 탱크 간 각도
+double fireDistance = 0; // blueball - 탱크 간 거리 (땅 기준)
+
+D3DXVECTOR3 tankLastCoord; // 탱크 이전 프레임 위치
+D3DXVECTOR3 blueballLastCoord; // bleuball 이전 프레임 위치
+
 // -----------------------------------------------------------------------------
 // Functions
 // -----------------------------------------------------------------------------
+
+void updateFireDegree() {
+	D3DXVECTOR3 targetCoord = g_target_blueball.getCenter(); // blue ball 위치
+	D3DXVECTOR3 tankCoord = tank.getHead(); // 탱크 위치
+	double radian = acos(
+		sqrt(pow(targetCoord.x - tankCoord.x, 2) + pow(targetCoord.z - tankCoord.z, 2)) /
+		sqrt(pow(targetCoord.x - tankCoord.x, 2) + pow(targetCoord.y - tankCoord.y, 2) + pow(targetCoord.z - tankCoord.z, 2))
+	);
+	fireDegree = radian * 180 / PI;
+}
+
+void updateFireDistance() {
+	D3DXVECTOR3 targetCoord = g_target_blueball.getCenter(); // blue ball 위치
+	D3DXVECTOR3 tankCoord = tank.getHead(); // 탱크 위치
+	fireDistance = sqrt(pow(tankCoord.x - targetCoord.x, 2) + pow(tankCoord.z - targetCoord.z, 2));  // 땅 거리
+}
 
 bool createBlock(float partitionWidth, float partitionHeight, float partitionDepth,
 	int partitionCount_x, int partitionCount_y, int partitionCount_z,
@@ -1031,7 +1053,7 @@ bool Setup()
 
 	// 글자출력 ---------------------
 	if (FAILED(D3DXCreateFont(Device, 350, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET,
-		OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Tahoma", &TITLE_font)))
+		OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Tahoma", &TITLEfont)))
 	{
 		::MessageBox(0, "D3DXCreateFont() - FAILED", 0, 0);
 		return false;
@@ -1218,7 +1240,7 @@ bool Display(float timeDelta)
 		up = D3DXVECTOR3(0.0f, 2.0f, 0.0f);
 
 		RECT rect = {200, 200, 0, 0 };
-		TITLE_font->DrawText(NULL, "Tank Game", -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+		TITLEfont->DrawText(NULL, "Tank Game", -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
 
 		MOVEMENT = MOVEMENT + 0.01;
 		startTime = currTime;
@@ -1357,8 +1379,7 @@ bool Display(float timeDelta)
 		}
 
 		// 블루볼 위치 변경
-		g_target_blueball.ballUpdate(timeDelta);;
-		// check whether any two balls hit together and update the direction of balls
+		g_target_blueball.ballUpdate(timeDelta);
 
 		// draw plane, walls, and spheres
 		tank.draw(Device, g_mWorld);
@@ -1452,6 +1473,16 @@ bool Display(float timeDelta)
 
 		//g_light.draw(Device);
 
+		D3DXVECTOR3 tankCoord = tank.getHead();
+		D3DXVECTOR3 blueballCoord = g_target_blueball.getCenter();
+		if (tankCoord != tankLastCoord || blueballCoord != blueballLastCoord) {
+			// 탱크나 블루볼 움직였으면, 각도 및 거리 재계산
+			updateFireDegree();
+			updateFireDistance();
+		}
+		tankLastCoord = tankCoord;
+		blueballLastCoord = blueballCoord;
+
 		Device->EndScene();
 		Device->Present(0, 0, 0, 0);
 		Device->SetTexture(0, NULL);
@@ -1513,12 +1544,16 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x >= 0) { theta = -theta; }	//4 사분면
 				if (targetpos.z - whitepos.z >= 0 && targetpos.x - whitepos.x <= 0) { theta = PI - theta; } //2 사분면
 				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0) { theta = PI + theta; } // 3 사분면
+				/*
 				double distance_land = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)); // xz만 고려한 거리
 
 				double theta_sky = acos(
 					sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)) /
 					sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.y - whitepos.y, 2) + pow(targetpos.z - whitepos.z, 2))
 				);
+				*/
+				double distance_land = fireDistance;  // 전역변수에서 가져옴
+				double theta_sky = fireDegree * PI / 180;  // 전역변수에서 가져옴
 				double distance_sky = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.y - whitepos.y, 2) + pow(targetpos.z - whitepos.z, 2));  // y좌표 고려한 거리
 				//double distance = sqrt( sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2)) + pow(targetpos.y - whitepos.y, 2)); // y좌표 포함 계산
 
