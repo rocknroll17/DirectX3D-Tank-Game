@@ -862,7 +862,7 @@ bool createBlock(float partitionWidth, float partitionHeight, float partitionDep
 	int partitionCount_x, int partitionCount_y, int partitionCount_z,
 	float x, float y, float z,
 	D3DXCOLOR wallColor = d3d::WHITE) {
-	// (partitionCount_land * partitionCount_sky) 크기의 벽을 생성함.
+	// (partitionCount_x * partitionCount_y * partitionCount_z) 크기의 block을 생성함.
 	// 각 partition의 크기는 (partitionWidth, partitionHeight, partitionDepth)
 	for (int i = 0; i < partitionCount_x; i++) {
 		for (int j = 0; j < partitionCount_y; j++) {
@@ -933,12 +933,59 @@ bool createWWall(float partitionWidth, float partitionHeight, float partitonDept
 	return true;
 }
 
-bool createObstacle() // create obstacle
+bool createWall(D3DXCOLOR wallColor) // create wall
+{
+	CWall wall;
+
+	for (int i = -1; i <= 1; i += 2) {
+		//앞뒤 기둥
+		if (false == wall.create(Device, -1, -1, WORLD_WIDTH - 1, 2.0f, 1.0f, wallColor)) return false;
+		wall.setPosition(0.0f, 1.0f, i * WORLD_DEPTH / 2);
+		lwall1.push_back(wall);
+		//앞뒤 벽
+		if (false == wall.create(Device, -1, -1, 1.0f, 2.5f, 1.5f, wallColor)) return false;
+		wall.setPosition(0, 1.25f, i * WORLD_DEPTH / 2);
+		swall1.push_back(wall);
+		//좌측 벽
+		if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, WORLD_DEPTH - 1, wallColor)) return false;
+		wall.setPosition(i * WORLD_WIDTH / 2, 1.0f, 0.0f);
+		lwall2.push_back(wall);
+	}
+
+	for (int i = -1; i <= 1; i += 2) {
+		for (int j = -1; j <= 1; j += 2) {
+			//중간 기둥
+			if (false == wall.create(Device, -1, -1, 1.5f, 2.5f, 1.0f, wallColor)) return false;
+			wall.setPosition(i * WORLD_WIDTH / 2, 1.25f, j * WORLD_WIDTH / 4);
+			swall2.push_back(wall);
+			//꼭짓점 기둥
+			if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, wallColor)) return false;
+			wall.setPosition(i * WORLD_WIDTH / 2, 1.5f, j * WORLD_DEPTH / 2);
+			swall2.push_back(wall);
+		}
+	}
+
+	g_legoWall.push_back(lwall1);
+	g_legoWall.push_back(lwall2);
+	g_legoWall.push_back(swall1);
+	g_legoWall.push_back(swall2);
+
+	return true;
+}
+
+bool createMap1() // 1번 맵
 {
 	float w = WORLD_WIDTH;
 	float d = WORLD_DEPTH;
 
-	// 상단부
+	// 벽
+	createWall(d3d::LIGHTBROWN);
+
+	// 바닥
+	if (false == g_legoPlane.create(Device, -1, -1, WORLD_WIDTH, 0.03f, WORLD_DEPTH, d3d::DARKGREEN)) return false;
+	g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
+
+	// 장애물
 	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4, 0.25f, d / 6 + 0.04 * d, d3d::DARKBROWN);
 	createDWall(0.02 * w, 0.7f, 0.02 * d, 8, 3, -w / 4, 0.35f, d / 6 - 0.115 * d, d3d::BROWN);
 	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4, 0.25f, d / 6 - 0.135 * d, d3d::DARKBROWN);
@@ -962,7 +1009,6 @@ bool createObstacle() // create obstacle
 	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.30 * w, 0.25f, d / 12 + 0.16 * d, d3d::DARKBROWN);
 	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.37 * w, 0.25f, d / 12 + 0.16 * d, d3d::DARKBROWN);
 
-	// 하단부
 	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4 - 0.1 * w, 0.25f, -d / 3, d3d::DARKBROWN);
 	createDWall(0.02 * w, 0.7f, 0.02 * d, 6, 3, -w / 4 - 0.1 * w, 0.35f, -d / 3 + 0.02 * d, d3d::BROWN);
 	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4 - 0.1 * w, 0.25f, -d / 3 + 0.14 * d, d3d::DARKBROWN);
@@ -988,54 +1034,97 @@ bool createObstacle() // create obstacle
 	createDWall(0.02 * w, 0.7f, 0.02 * d, 10, 3, 0.32 * w, 0.35f, -d / 6 - 0.2 * d, d3d::BROWN);
 	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.32 * w, 0.25f, -d / 6 - 0.22 * d, d3d::DARKBROWN);
 
-	// 블럭 
-	createBlock(0.25f, 0.25f, 0.25f, 10, 10, 10, 0.2 * w, 0, -0.03 * d, d3d::RED);
-	createBlock(0.25f, 0.25f, 0.25f, 10, 10, 10, -0.3 * w, 0, -0.07 * d, d3d::RED);
-	createBlock(0.3f, 0.3f, 0.3f, 12, 12, 12, -0.35 * w, 0, 0.35 * d, d3d::RED);
+	createBlock(0.25f, 0.25f, 0.25f, 10, 10, 10, 0.2 * w, 0.125f, -0.03 * d, d3d::BROWN);
+	createBlock(0.25f, 0.25f, 0.25f, 10, 10, 10, -0.3 * w, 0.125f, -0.07 * d, d3d::BROWN);
+	createBlock(0.25f, 0.25f, 0.25f, 10, 10, 10, -0.35 * w, 0.125f, 0.35 * d, d3d::BROWN);
 
 	return true;
 }
 
-
-bool createMap() // create plane + wall
+bool createMap2() // 2번 맵
 {
-	CWall wall;
+	float w = WORLD_WIDTH;
+	float d = WORLD_DEPTH;
 
-	if (false == g_legoPlane.create(Device, -1, -1, WORLD_WIDTH, 0.03f, WORLD_DEPTH, d3d::GREEN)) return false;
+	// 벽
+	createWall(d3d::DARKGRAY);
+
+	// 바닥
+	if (false == g_legoPlane.create(Device, -1, -1, WORLD_WIDTH, 0.03f, WORLD_DEPTH, d3d::WHITE)) return false;
 	g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
 
-	for (int i = -1; i <= 1; i += 2) {
-		//앞뒤 기둥
-		if (false == wall.create(Device, -1, -1, WORLD_WIDTH - 1, 2.0f, 1.0f, d3d::GRAY)) return false;
-		wall.setPosition(0.0f, 1.0f, i * WORLD_DEPTH / 2);
-		lwall1.push_back(wall);
-		//앞뒤 벽
-		if (false == wall.create(Device, -1, -1, 1.0f, 2.5f, 1.5f, d3d::GRAY)) return false;
-		wall.setPosition(0, 1.25f, i * WORLD_DEPTH / 2);
-		swall1.push_back(wall);
-		//좌측 벽
-		if (false == wall.create(Device, -1, -1, 1.0f, 2.0f, WORLD_DEPTH - 1, d3d::GRAY)) return false;
-		wall.setPosition(i * WORLD_WIDTH / 2, 1.0f, 0.0f);
-		lwall2.push_back(wall);
-	}
+	// 장애물
+	createWWall(0.02 * w, 0.7f, 0.02 * d, 18, 3, -w / 2 + 0.01 * w, 0.35f, d / 6, d3d::GRAY);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 2 + 0.375 * w, 0.25f, d / 6, d3d::GRAY);
+	createDWall(0.02 * w, 0.7f, 0.02 * d, 6, 3, -w / 2 + 0.375 * w, 0.35f, d / 6 - 0.12 * d, d3d::GRAY);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 2 + 0.375 * w, 0.25f, d / 6 - 0.14 * d, d3d::GRAY);
 
-	for (int i = -1; i <= 1; i += 2) {
-		for (int j = -1; j <= 1; j += 2) {
-			//중간 기둥
-			if (false == wall.create(Device, -1, -1, 1.5f, 2.5f, 1.0f, d3d::GRAY)) return false;
-			wall.setPosition(i * WORLD_WIDTH / 2, 1.25f, j * WORLD_WIDTH / 4);
-			swall2.push_back(wall);
-			//꼭짓점 기둥
-			if (false == wall.create(Device, -1, -1, 1.0f, 3.0f, 1.5f, d3d::GRAY)) return false;
-			wall.setPosition(i * WORLD_WIDTH / 2, 1.5f, j * WORLD_DEPTH / 2);
-			swall2.push_back(wall);
-		}
-	}
+	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 6, -0.07 * w, 0.25f, -d / 4.5, d3d::GRAY);
+	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 7, -0.04 * w, 0.25f, -2.5 * d / 9, d3d::GRAY);
 
-	g_legoWall.push_back(lwall1);
-	g_legoWall.push_back(lwall2);
-	g_legoWall.push_back(swall1);
-	g_legoWall.push_back(swall2);
+	createWWall(0.02 * w, 0.7f, 0.02 * d, 18, 3, -w / 2 + 0.01 * w, 0.35f, -d / 6, d3d::GRAY);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 2 + 0.375 * w, 0.25f, -d / 6, d3d::GRAY);
+	createDWall(0.02 * w, 0.7f, 0.02 * d, 6, 3, -w / 2 + 0.375 * w, 0.35f, -d / 6 + 0.02 * d, d3d::GRAY);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 2 + 0.375 * w, 0.25f, -d / 6 + 0.14 * d, d3d::GRAY);
+
+	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 6, -0.07 * w, 0.25f, d / 4.5, d3d::GRAY);
+	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 7, -0.04 * w, 0.25f, 2.5 * d / 9, d3d::GRAY);
+
+	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 7, 0, 0.25f, -d / 3, d3d::GRAY);
+	createWWall(0.03 * w, 0.7f, 0.02 * d, 7, 3, 0.035 * w, 0.35f, -d / 3, d3d::GRAY);
+	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 7, 0.25 * w, 0.25f, -d / 3, d3d::GRAY);
+	createDWall(0.03 * w, 0.7f, 0.02 * d, 13, 3, 0.25 * w, 0.35f, -d / 3 + 0.025 * d, d3d::GRAY);
+	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 7, 0.25 * w, 0.25f, -d / 3 + 0.29 * d, d3d::GRAY);
+	createWWall(0.03 * w, 0.7f, 0.02 * d, 7, 3, 0.035 * w, 0.35f, -d / 3 + 0.29 * d, d3d::GRAY);
+	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 7, 0, 0.25f, -d / 3 + 0.29 * d, d3d::GRAY);
+
+	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 7, 0, 0.25f, d / 3, d3d::GRAY);
+	createWWall(0.03 * w, 0.7f, 0.02 * d, 7, 3, 0.035 * w, 0.35f, d / 3, d3d::GRAY);
+	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 7, 0.25 * w, 0.25f, d / 3, d3d::GRAY);
+	createDWall(0.03 * w, 0.7f, 0.02 * d, 13, 3, 0.25 * w, 0.35f, d / 3 - 0.265 * d, d3d::GRAY);
+	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 7, 0.25 * w, 0.25f, d / 3 - 0.29 * d, d3d::GRAY);
+	createWWall(0.03 * w, 0.7f, 0.02 * d, 7, 3, 0.035 * w, 0.35f, d / 3 - 0.29 * d, d3d::GRAY);
+	createWWall(0.04 * w, 0.5f, 0.03 * d, 1, 7, 0, 0.25f, d / 3 - 0.29 * d, d3d::GRAY);
+
+	createBlock(0.25f, 0.25f, 0.25f, 14, 10, 5, 0.3 * w, 0.125f, -0.5f, d3d::GRAY);	
+
+	return true;
+}
+
+bool createMap3() // 3번 맵
+{
+	float w = WORLD_WIDTH;
+	float d = WORLD_DEPTH;
+
+	// 벽
+	createWall(d3d::DARKGRAY);
+
+	// 바닥
+	if (false == g_legoPlane.create(Device, -1, -1, WORLD_WIDTH, 0.03f, WORLD_DEPTH, d3d::WHITE)) return false;
+	g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
+
+	// 장애물
+	createWWall(0.02 * w, 0.7f, 0.02 * d, 26, 3, -w / 2 + 0.01 * w, 0.35f, -d / 6, d3d::GRAY);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, 0.035 * w, 0.25f, -d / 6, d3d::GRAY);
+	createBlock(0.25f, 0.25f, 0.25f, 15, 6, 2, 0.07 * w, 0.125f, -d / 6 - 0.125f, d3d::GRAY);
+
+	createDWall(0.02 * w, 0.7f, 0.02 * d, 22, 3, w / 4, 0.35f, -0.49 * d + 0.5f, d3d::GRAY);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, w / 4, 0.25f, -0.05 * d + 0.5f, d3d::GRAY);
+	createBlock(0.25f, 0.25f, 0.25f, 2, 6, 20, w / 4, 0.25f, 0.008f, d3d::GRAY);
+
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -0.035 * w, 0.25f, d / 6, d3d::GRAY);
+	createWWall(0.02 * w, 0.7f, 0.02 * d, 26, 3, -0.01 * w, 0.35f, d / 6, d3d::GRAY);
+	createBlock(0.25f, 0.25f, 0.25f, 15, 6, 2, -0.07 * w - 3.75f, 0.125f, d / 6 + 0.125f, d3d::GRAY);
+
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 5, -w / 4, 0.25f, 0.05 * d - 0.5f, d3d::GRAY);
+	createDWall(0.02 * w, 0.7f, 0.02 * d, 22, 3, -w / 4, 0.35f, 0.07 * d - 0.5f, d3d::GRAY);
+	createBlock(0.25f, 0.25f, 0.25f, 2, 6, 20, -w / 4, 0.25f, 0.05*d - 6.5f, d3d::GRAY);
+
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 6, w / 16, 0.25f, 0, d3d::GRAY);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 6, -w / 16, 0.25f, 0, d3d::GRAY);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 6, 0, 0.25f, w / 16, d3d::GRAY);
+	createWWall(0.03 * w, 0.5f, 0.02 * d, 1, 6, 0, 0.25f, -w / 16, d3d::GRAY);
+
 
 	return true;
 }
@@ -1081,7 +1170,7 @@ bool Setup()
 	D3DXMatrixIdentity(&g_mProj);
 
 	if (false == tank.create(Device, -1, -1, d3d::BROWN)) return false;
-	tank.setPosition(0, 0.2f, -WORLD_DEPTH / 2 + 5);
+	tank.setPosition(-0.4*WORLD_WIDTH, 0.2f, -0.4*WORLD_DEPTH);
 	tank.setLastCoord(tank.getCenter());
 
 	if (false == otank.create(Device, -1, -1, d3d::RED)) return false;
@@ -1091,10 +1180,12 @@ bool Setup()
 	// tank랑 blue ball 연결
 	g_target_blueball.linkTank(&tank);
 
-	// 벽, 바닥 생성
-	createMap();
-	// 장애물 생성
-	createObstacle();
+	// 1번 맵
+	// createMap1();
+	// 2번 맵
+	// createMap2();
+	// 3번 맵
+	// createMap3();
 
 	// create blue ball for set direction
 	if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
