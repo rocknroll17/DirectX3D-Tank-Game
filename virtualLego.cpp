@@ -1487,8 +1487,12 @@ bool Display(float timeDelta)
 		tankLastCoord = tankCoord;
 		blueballLastCoord = blueballCoord;
 		if (GAME_START == false) {
-			RECT rect = { 200, 200, 0, 0 };
-			TITLEfont->DrawText(NULL, "Tank Game", -1, &rect, DT_NOCLIP, D3DCOLOR_XRGB(0, 0, 0));
+			// 화면 크기 얻기
+			RECT screenRect;
+			GetClientRect(GetDesktopWindow(), &screenRect);
+			// 화면 중앙에 텍스트 출력
+			RECT rect = { 0, screenRect.bottom / 2, screenRect.right, screenRect.bottom };
+			TITLEfont->DrawText(NULL, "Tank Game", -1, &rect, DT_CENTER, D3DCOLOR_XRGB(0, 0, 0));
 		}
 
 
