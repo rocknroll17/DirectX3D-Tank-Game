@@ -58,8 +58,6 @@ D3DXMATRIX g_mProj;
 #define NUM_OBSTACLE 20	// 장애물 개수
 #define TANK_DISTANCE 35
 
-double fireDegree;
-double fireDistance;
 bool GAME_START = false;
 bool GAME_FINISH = false;
 float MOVEMENT = 0.0f;
@@ -873,14 +871,30 @@ ID3DXFont* ENDfont = NULL;
 ID3DXFont* PLAYERfont = NULL;
 ID3DXFont* DISTANCEfont = NULL;
 
+double fireDegree = 0; // blueball - 탱크 간 각도
+double fireDistance = 0; // blueball - 탱크 간 거리 (땅 기준)
+
+D3DXVECTOR3 tankLastCoord; // 탱크 이전 프레임 위치
+D3DXVECTOR3 blueballLastCoord; // bleuball 이전 프레임 위치
+
 // -----------------------------------------------------------------------------
 // Functions
 // -----------------------------------------------------------------------------
 
-void updateFireDegreeAndDistance() {
-	double degree, distance;
+void updateFireDegree() {
 	D3DXVECTOR3 targetCoord = g_target_blueball.getCenter(); // blue ball 위치
-	D3DXVECTOR3 tankCoord = tank.getCenter(); // 탱크 위치
+	D3DXVECTOR3 tankCoord = tank.getHead(); // 탱크 위치
+	double radian = acos(
+		sqrt(pow(targetCoord.x - tankCoord.x, 2) + pow(targetCoord.z - tankCoord.z, 2)) /
+		sqrt(pow(targetCoord.x - tankCoord.x, 2) + pow(targetCoord.y - tankCoord.y, 2) + pow(targetCoord.z - tankCoord.z, 2))
+	);
+	fireDegree = radian * 180 / PI;
+}
+
+void updateFireDistance() {
+	D3DXVECTOR3 targetCoord = g_target_blueball.getCenter(); // blue ball 위치
+	D3DXVECTOR3 tankCoord = tank.getHead(); // 탱크 위치
+	fireDistance = sqrt(pow(tankCoord.x - targetCoord.x, 2) + pow(tankCoord.z - targetCoord.z, 2));  // 땅 거리
 }
 
 bool createBlock(float partitionWidth, float partitionHeight, float partitionDepth,
@@ -1177,7 +1191,7 @@ bool testB = FALSE;
 double startTime = (double)timeGetTime();
 double currTime = (double)timeGetTime();
 double timediff = currTime - startTime;
-	
+
 
 // timeDelta represents the time between the current image frame and the last image frame.
 // the distance of moving balls should be "velocity * timeDelta"
@@ -1348,8 +1362,7 @@ bool Display(float timeDelta)
 		}
 
 		// 블루볼 위치 변경
-		g_target_blueball.ballUpdate(timeDelta);;
-		// check whether any two balls hit together and update the direction of balls
+		g_target_blueball.ballUpdate(timeDelta);
 
 		// draw plane, walls, and spheres
 		tank.draw(Device, g_mWorld);
@@ -1442,6 +1455,16 @@ bool Display(float timeDelta)
 		}
 
 		//g_light.draw(Device);
+
+		D3DXVECTOR3 tankCoord = tank.getHead();
+		D3DXVECTOR3 blueballCoord = g_target_blueball.getCenter();
+		if (tankCoord != tankLastCoord || blueballCoord != blueballLastCoord) {
+			// 탱크나 블루볼 움직였으면, 각도 및 거리 재계산
+			updateFireDegree();
+			updateFireDistance();
+		}
+		tankLastCoord = tankCoord;
+		blueballLastCoord = blueballCoord;
 
 		Device->EndScene();
 		Device->Present(0, 0, 0, 0);
