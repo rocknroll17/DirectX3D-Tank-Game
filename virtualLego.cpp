@@ -694,7 +694,7 @@ public:
 		}
 		if (distance < 0) {
 			isDistanceZero = TRUE;
-			distance = 50; // �ӽ� ���� �̰� ���ϸ� ��� distance < 0�̶� ��
+			distance = 50;
 		}
 
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
@@ -1171,11 +1171,14 @@ bool isFire = FALSE;
 
 int turnTime = 20000;
 
-bool testB = FALSE;
+bool threeTime = FALSE;
+bool zoomOutTiming = FALSE; //정재민
 
 double startTime = (double)timeGetTime();
 double currTime = (double)timeGetTime();
 double timediff = currTime - startTime;
+
+float zoomOutSpeed = 0.0; //정재민
 
 
 // timeDelta represents the time between the current image frame and the last image frame.
@@ -1198,11 +1201,12 @@ bool Display(float timeDelta)
 		tank.setPower(0, 0);
 	}
 
-	if (isFire && !missile.getCreated() && !testB) { /////////////
+	if (isFire && !missile.getCreated() && !threeTime) { /////////////
 		startTime = currTime;
 		timediff = 0;
 		turnTime = 3000;
-		testB = TRUE;
+		threeTime = TRUE;
+		zoomOutTiming = TRUE;
 	}
 
 	if (GAME_START == false) {
@@ -1282,6 +1286,12 @@ bool Display(float timeDelta)
 		}
 	}
 
+	if (zoomOutTiming) { //정재민
+		pos = D3DXVECTOR3(missile.getCenter()[0], missile.getCenter()[1] + 0.9f + zoomOutSpeed, missile.getCenter()[2] + 1.5f - 3.0f * isOriginTank);
+		target = D3DXVECTOR3(missile.getCenter().x, missile.getCenter().y, missile.getCenter().z);
+		zoomOutSpeed += 0.0018f;
+	}
+
 	up = D3DXVECTOR3(0.0f, 2.0f, 0.0f);
 	D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
 	Device->SetTransform(D3DTS_VIEW, &g_mView);
@@ -1301,8 +1311,11 @@ bool Display(float timeDelta)
 			x_camera = 0.0f;
 			y_camera = 0.5f;
 			isFire = FALSE;
-			testB = FALSE;
+			threeTime = FALSE;
 			turnTime = 20000;
+			TANK_SPEED = 0.45; //정재민
+			zoomOutTiming = FALSE; //정재민
+			zoomOutSpeed = 0.0; //정재민
 
 			startTime = currTime;
 
