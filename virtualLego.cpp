@@ -1507,7 +1507,7 @@ bool Display(float timeDelta)
 				if (obstacle_wall[i].hasIntersected(missile)) {
 					obstacle_wall[i].hitBy(missile);
 					// 만약 장애물 파괴시, 폭발한다 (= 주변 장애물도 다시 그림)
-					// 스파게티 코드지만 마감 얼마 안남았으니까 이대로 갑시다
+					
 					for (int j = 0; j < obstacle_wall.size(); j++) {
 						if (obstacle_wall[j].hasIntersected(missile.getCenter().x, missile.getCenter().y, missile.getCenter().z, MISSILE_EXPOLSION_RADIUS)) {
 							obstacle_wall[j].hitBy(missile);
