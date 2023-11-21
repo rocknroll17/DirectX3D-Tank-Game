@@ -1362,7 +1362,7 @@ bool Display(float timeDelta)
 			target = D3DXVECTOR3(tank.getHead()[0] + x_camera, tank.getHead()[1] + y_camera, tank.getHead()[2]);
 		}
 		else if (camera_option == 1) {
-			pos = D3DXVECTOR3(50.0, 20.0, 0.0);
+			pos = D3DXVECTOR3(70.0, 30.0, 0.0);
 			target = D3DXVECTOR3(0, 1, 0);
 		}
 		else {

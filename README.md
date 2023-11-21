@@ -9,8 +9,8 @@ Collaborator:
 정재민
 현재환
 
-PPT & 보고서:
+Report:
 나정원
 
-발표:
+PPT & Presenter:
 이진경
