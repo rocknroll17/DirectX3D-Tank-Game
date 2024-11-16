@@ -2,6 +2,8 @@
 
 A 3D tank game built using DirectX 3D, showcasing a fully interactive tank battle experience with customizable graphics settings and real-time gameplay features.
 ![image](https://github.com/user-attachments/assets/217c6b4e-c083-4fd3-aa33-72f169ac3746)
+Tank
+![20231118_213532](https://github.com/user-attachments/assets/c76cea3c-8967-4ae3-a29b-e16bc6df4728)
 
 
 ## Table of Contents
